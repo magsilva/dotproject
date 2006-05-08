@@ -1,0 +1,6 @@
+# Files to ignore at dotProject's root.
+
+./includes/config.php
+./files writable
+./files/temp
+./locales/en
