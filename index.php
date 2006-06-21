@@ -1,4 +1,4 @@
-<?php /* $Id: index.php,v 1.121.4.2 2006/03/12 07:28:22 cyberhorse Exp $ */
+<?php /* $Id: index.php,v 1.121.4.3 2006/06/01 14:00:13 cyberhorse Exp $ */
 
 /* {{{ Copyright (c) 2003-2005 The dotProject Development Team <core-developers@dotproject.net>
 
@@ -156,7 +156,7 @@ if ($AppUI->doLogin()) {
 	@include_once( "./locales/$AppUI->user_locale/locales.php" );
 	@include_once( "./locales/core.php" );
 	setlocale( LC_TIME, $AppUI->user_lang );
-	$redirect = @$_SERVER['QUERY_STRING'];
+	$redirect = $_SERVER['QUERY_STRING']?urlencode($_SERVER['QUERY_STRING']):'';
 	if (strpos( $redirect, 'logout' ) !== false) {
 		$redirect = '';
 	}

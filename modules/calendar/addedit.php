@@ -1,4 +1,4 @@
-<?php /* CALENDAR $Id: addedit.php,v 1.48.4.3 2006/03/13 21:34:55 gregorerhardt Exp $ */
+<?php /* CALENDAR $Id: addedit.php,v 1.48.4.4 2006/04/30 04:40:49 cyberhorse Exp $ */
 $event_id = intval( dPgetParam( $_GET, "event_id", 0 ) );
 $is_clash = isset($_SESSION['event_is_clash']) ? $_SESSION['event_is_clash'] : false;
 
@@ -395,7 +395,7 @@ function removeUser() {
 <tr>
 	<td align="right" nowrap="nowrap"><?php echo $AppUI->_( 'Show only on Working Days' );?>:</td>
 	<td>
-		<input type="checkbox" value="0" name="event_cwd" <?php echo (@$obj->event_cwd ? 'checked' : '');?>>
+		<input type="checkbox" value="1" name="event_cwd" <?php echo (@$obj->event_cwd ? 'checked' : '');?>>
 	</td>
 </tr>
 <tr>

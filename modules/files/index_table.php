@@ -1,5 +1,5 @@
 <?php
-/* FILES $Id: index_table.php,v 1.55.4.6 2006/04/18 11:23:21 pedroix Exp $ */
+/* FILES $Id: index_table.php,v 1.55.4.7 2006/04/21 23:33:12 pedroix Exp $ */
 // modified later by Pablo Roca (proca) in 18 August 2003 - added page support
 // Files modules: index page re-usable sub-table
 GLOBAL $AppUI, $deny1, $canRead, $canEdit, $canAdmin;
@@ -30,7 +30,7 @@ global $tabbed;
 // $xpg_sqlquery    - SELECT for the SELECT LIMIT
 // $xpg_result      - pointer to results from SELECT LIMIT
 
-$tab = $currentTabId;
+$tab = (!$company_id && !$project_id && !$task_id) ? $currentTabId : 0;
 $page = dPgetParam( $_GET, "page", 1);
 if (!isset($project_id))
         $project_id = dPgetParam( $_REQUEST, 'project_id', 0);
@@ -58,6 +58,8 @@ if ($tabbed) {
               $catsql = false;
       else
               $catsql = "file_category = " . --$tab ;
+} elseif ($company_id || $project_id || $task_id) {
+      $catsql = false;
 } else {
       if ($tab < 0)
               $catsql = false;

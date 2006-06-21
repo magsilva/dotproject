@@ -1,8 +1,8 @@
-<?php /* PROJECTS $Id: projects.class.php,v 1.29.4.6 2006/03/13 22:22:30 gregorerhardt Exp $ */
+<?php /* PROJECTS $Id: projects.class.php,v 1.29.4.7 2006/05/27 19:24:29 gregorerhardt Exp $ */
 /**
  *	@package dotProject
  *	@subpackage modules
- *	@version $Revision: 1.29.4.6 $
+ *	@version $Revision: 1.29.4.7 $
 */
 
 require_once( $AppUI->getSystemClass ('dp' ) );
@@ -179,7 +179,7 @@ class CProject extends CDpObject {
 			// Fix task start date from project start date offset
 			$origDate->setDate ($newTask->task_start_date);
 			$destDate->setDate ($origDate->getTime() + $timeOffset , DATE_FORMAT_UNIXTIME ); 
-			$destDate = $newTask->next_working_day( $destDate );
+			$destDate = $destDate->next_working_day( );
 			$newTask->task_start_date = $destDate->format(FMT_DATETIME_MYSQL);   
 			
 			// Fix task end date from start date + work duration

@@ -1,4 +1,4 @@
-<?php /* ADMIN $Id: viewuser.php,v 1.39.4.3 2006/03/07 22:16:02 gregorerhardt Exp $ */
+<?php /* ADMIN $Id: viewuser.php,v 1.39.4.4 2006/05/31 11:38:34 gregorerhardt Exp $ */
 GLOBAL $addPwT,$company_id, $dept_ids, $department, $min_view, $m, $a;
 $user_id = isset( $_GET['user_id'] ) ? $_GET['user_id'] : 0;
 
@@ -13,7 +13,7 @@ if (isset( $_POST['show_form'] )) {
 	$add_pwt = dPgetParam($_POST, 'add_pwt', 0 );
 	$AppUI->setState( 'addProjWithTasks', $add_pwt);	
 } else {
-	$AppUI->setState( 'addProjWithTasks', true);
+	$AppUI->setState( 'addProjWithTasks', false);
 }
 $addPwT = $AppUI->getState( 'addProjWithTasks' ) ? $AppUI->getState( 'addProjWithTasks' ) : 0;
 

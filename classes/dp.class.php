@@ -1,9 +1,9 @@
-<?php /* CLASSES $Id: dp.class.php,v 1.25.6.3 2006/03/08 19:23:12 gregorerhardt Exp $ */
+<?php /* CLASSES $Id: dp.class.php,v 1.25.6.4 2006/06/01 13:38:04 merlinyoda Exp $ */
 
 /**
  *	@package dotproject
  *	@subpackage modules
- *	@version $Revision: 1.25.6.3 $
+ *	@version $Revision: 1.25.6.4 $
  */
 
 require_once $AppUI->getSystemClass('query');
@@ -374,10 +374,10 @@ class CDpObject {
 		}
 
 		if (count($allow)) {
-		  $query->addWhere("$this->_tbl_key IN (" . implode(',', $allow) . ")");
+            $query->addWhere(((! $key)?'':"$key.")."$this->_tbl_key IN (" . implode(',', $allow) . ")");
 		}
 		if (count($deny)) {
-		  $query->addWhere("$this->_tbl_key NOT IN (" . implode(",", $deny) . ")");
+            $query->addWhere(((! $key)?'':"$key.")."$this->_tbl_key NOT IN (" . implode(",", $deny) . ")");
 		}
 	}
 }
