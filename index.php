@@ -69,7 +69,7 @@ if (!isset( $_SESSION['AppUI'] ) || isset($_GET['logout'])) {
     if (isset($_GET['logout']) && isset($_SESSION['AppUI']->user_id))
     {
         $AppUI =& $_SESSION['AppUI'];
-	$user_id = $AppUI->user_id;
+		$user_id = $AppUI->user_id;
         addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
     }
 
