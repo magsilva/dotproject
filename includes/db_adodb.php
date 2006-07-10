@@ -13,18 +13,20 @@ require_once( "$baseDir/lib/adodb/adodb.inc.php" );
 
 $db = NewADOConnection($dPconfig['dbtype']);
 
-function db_connect( $host='localhost', $dbname, $user='root', $passwd='', $persist=false ) {
-        global $db, $ADODB_FETCH_MODE;
+function db_connect($host='localhost', $dbname, $user='root', $passwd='', $persist=false)
+{
+	global $db, $ADODB_FETCH_MODE;
 
-	if ($persist) {
-                $db->PConnect($host, $user, $passwd, $dbname)
-			or die( 'FATAL ERROR: Connection to database server failed' );
-	} else {
-                $db->Connect($host, $user, $passwd, $dbname)
-			or die( 'FATAL ERROR: Connection to database server failed' );
+	if ($db == NULL) {
+		$db = NewADOConnection($dPconfig['dbtype']);
 	}
 
-        $ADODB_FETCH_MODE=ADODB_FETCH_BOTH;
+	if ($persist) {
+		$db->PConnect($host, $user, $passwd, $dbname) or die( 'FATAL ERROR: Connection to database server failed' );
+	} else {
+		$db->Connect($host, $user, $passwd, $dbname) or die( 'FATAL ERROR: Connection to database server failed' );
+	}
+	$ADODB_FETCH_MODE=ADODB_FETCH_BOTH;
 }
 
 function db_error() {
@@ -136,10 +138,5 @@ function db_dateTime2unix( $time ) {
         global $db;
 
         return $db->UnixDate($time);
-
-        // TODO - check if it's used anywhere...
-//	if ($time == '0000-00-00 00:00:00') {
-//		return -1;
-//	}
 }
 ?>
