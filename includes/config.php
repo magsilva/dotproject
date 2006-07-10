@@ -6,7 +6,7 @@
 ### FOR INFORMATION ON MANUAL CONFIGURATION AND FOR DOCUMENTATION SEE ./includes/config-dist.php ###
 
 $dPconfig['dbtype'] = 'mysql';
-$dPconfig['dbhost'] = 'localhost';
+$dPconfig['dbhost'] = '127.0.0.1';
 $dPconfig['dbname'] = 'dotproject';
 $dPconfig['dbuser'] = 'test';
 $dPconfig['dbpass'] = 'test';
