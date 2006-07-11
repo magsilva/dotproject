@@ -1,8 +1,8 @@
-<?php /* TASKS $Id: gantt.php,v 1.48.2.12 2006/06/04 15:48:38 gregorerhardt Exp $ */
+<?php /* TASKS $Id: gantt.php,v 1.48.2.13 2006/06/05 12:58:57 gregorerhardt Exp $ */
 
 /*
  * Gantt.php - by J. Christopher Pereira
- * TASKS $Id: gantt.php,v 1.48.2.12 2006/06/04 15:48:38 gregorerhardt Exp $
+ * TASKS $Id: gantt.php,v 1.48.2.13 2006/06/05 12:58:57 gregorerhardt Exp $
  */
 
 include ($dPconfig['root_dir'].'/lib/jpgraph/src/jpgraph.php');
@@ -336,7 +336,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 	        if ( $locale_char_set=='utf-8' && function_exists('utf8_decode') ) {
 	                $pname = utf8_decode($pname);
 	        }
-	        $pname = strlen( $pname ) > 34 ? substr( $pname, 0, 33 ).'.' : $pname ;
+	        $pname = strlen( $pname ) > 14 ? substr( $pname, 0, 5 ).'...'.substr( $pname, -5, 5 ): $pname ;
 		}
         //using new jpGraph determines using Date object instead of string
         $start = $a['task_start_date'];

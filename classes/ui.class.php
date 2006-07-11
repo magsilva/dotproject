@@ -1,4 +1,4 @@
-<?php /* CLASSES $Id: ui.class.php,v 1.85.4.1 2005/11/16 04:39:15 ajdonnison Exp $ */
+<?php /* CLASSES $Id: ui.class.php,v 1.85.4.2 2006/06/22 10:10:11 ajdonnison Exp $ */
 /**
 * @package dotproject
 * @subpackage core
@@ -31,7 +31,7 @@ require_once "$baseDir/classes/permissions.class.php";
 * The Application User Interface Class.
 *
 * @author Andrew Eddie <eddieajau@users.sourceforge.net>
-* @version $Revision: 1.85.4.1 $
+* @version $Revision: 1.85.4.2 $
 */
 class CAppUI {
 /** @var array generic array for holding the state of anything */
@@ -648,7 +648,7 @@ class CAppUI {
 
 		$auth_method = isset($dPconfig['auth_method']) ? $dPconfig['auth_method'] : 'sql';
 		if (@$_POST['login'] != 'login' && @$_POST['login'] != $this->_('login') && $_REQUEST['login'] != $auth_method)
-			die("You have chosen to log in using an unsupported or disabled login method '$_REQUEST[login]'");
+			die("You have chosen to log in using an unsupported or disabled login method");
 		$auth =& getauth($auth_method);
 		
 		$username = trim( db_escape( $username ) );

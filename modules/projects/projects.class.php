@@ -1,8 +1,8 @@
-<?php /* PROJECTS $Id: projects.class.php,v 1.29.4.7 2006/05/27 19:24:29 gregorerhardt Exp $ */
+<?php /* PROJECTS $Id: projects.class.php,v 1.29.4.8 2006/06/06 16:33:53 nybod Exp $ */
 /**
  *	@package dotProject
  *	@subpackage modules
- *	@version $Revision: 1.29.4.7 $
+ *	@version $Revision: 1.29.4.8 $
 */
 
 require_once( $AppUI->getSystemClass ('dp' ) );
@@ -183,7 +183,14 @@ class CProject extends CDpObject {
 			$newTask->task_start_date = $destDate->format(FMT_DATETIME_MYSQL);   
 			
 			// Fix task end date from start date + work duration
-			$newTask->calc_task_end_date();
+			//$newTask->calc_task_end_date();
+			if (!empty($newTask->task_end_date) && $newTask->task_end_date != '0000-00-00 00:00:00')
+			{
+				$origDate->setDate ($newTask->task_end_date);
+				$destDate->setDate ($origDate->getTime() + $timeOffset , DATE_FORMAT_UNIXTIME ); 
+				$destDate = $destDate->next_working_day();
+				$newTask->task_end_date = $destDate->format(FMT_DATETIME_MYSQL);
+			}
 			
 			// Dependencies
 			if (!empty($deps[$old_id])) {
