@@ -169,11 +169,12 @@ $a = '';
 $u = '';
 
 $def_m = !empty($dPconfig['default_view_m']) ? $dPconfig['default_view_m'] : 'calendar';
-$def_a = !empty($dPconfig['default_view_a']) ? $dPconfig['default_view_a'] : 'index';
+$def_a = 'index';
 
 // Set the module from the defaults or from the URL
 if (! isset($_GET['m'])) {
-	$m = $dPconfig['default_view_m'];
+	$m = $def_m;
+	$def_a = !empty($dPconfig['default_view_a']) ? $dPconfig['default_view_a'] : $def_a;
 	$tab = $dPconfig['default_view_tab'];
 } else {
 	$m = dPgetParam($_GET, 'm', getReadableModule());
@@ -181,7 +182,11 @@ if (! isset($_GET['m'])) {
 $AppUI->checkFileName($m);
 
 // Set the action from the defaults or from the URL
-$a = dPgetParam($_GET, 'a', $def_a);
+if (! isset($_GET['a'])) {
+	$a = $def_a;
+} else {
+	$a = dPgetParam($_GET, 'a', $def_a);
+}
 $AppUI->checkFileName($a);
 
 /* This check for $u implies that a file located in a subdirectory of depth higher than
@@ -295,7 +300,7 @@ if (! isset($_SESSION['all_tabs'][$m]) ) {
 
 $module_file = "$baseDir/modules/$m/" . ($u ? "$u/" : "") . "$a.php";
 if (file_exists($module_file)) {
-  require($module_file);
+	require($module_file);
 }
 else {
 	// TODO: make this part of the public module? 
