@@ -13,6 +13,11 @@
  * Copyright (C) 2006 magsilva
  */
 
+// TODO: Remover a referência ao baseDir (utilizar o $dPconfig['root_dir'])
+// $dPconfig['root_dir'] = $baseDir;
+// $dPconfig['base_url'] = $baseUrl;
+
+
 global $AppUI;
 global $baseDir;
 global $dPconfig;
@@ -72,6 +77,17 @@ function user_login($username, $password)
 	    $AppUI->registerLogin();
 	}
     addHistory('login', $AppUI->user_id, 'login', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
+}
+
+function user_logout()
+{
+    if (isset($_SESSION['AppUI']->user_id)) {
+       	addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
+		$AppUI->registerLogout($AppUI->user_id);
+    }
+	// destroy the current session and output login page
+	session_unset();
+	session_destroy();
 }
 
 function initialize()
