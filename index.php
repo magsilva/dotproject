@@ -71,6 +71,7 @@ if (!isset($_SESSION['AppUI'])) {
         	$AppUI =& $_SESSION['AppUI'];
 			$user_id = $AppUI->user_id;
         	addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
+			$AppUI->registerLogout($user_id);
     	}
 	} else {
 		$_SESSION['AppUI'] = new CAppUI;
@@ -93,11 +94,6 @@ $AppUI->updateLastAction($last_insert_id);
 // load default preferences if not logged in
 if ($AppUI->doLogin()) {
 	$AppUI->loadPrefs( 0 );
-}
-
-//Function register logout in user_acces_log
-if (isset($user_id) && isset($_GET['logout'])){
-    $AppUI->registerLogout($user_id);
 }
 
 // check is the user needs a new password
