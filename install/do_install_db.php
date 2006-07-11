@@ -1,4 +1,4 @@
-<?php // $Id: do_install_db.php,v 1.26.2.4 2006/04/21 07:36:37 ajdonnison Exp $
+<?php // $Id: do_install_db.php,v 1.26.2.6 2006/06/24 02:36:51 ajdonnison Exp $
 
 include_once 'check_upgrade.php';
 if ($_POST['mode'] == 'install' && dPcheckUpgrade() == 'upgrade')
@@ -52,7 +52,9 @@ $versionPath = array(
 	'2.0-beta',
 	'2.0',
 	'2.0.1',
-	'2.0.2'
+	'2.0.2',
+	'2.0.3',
+	'2.0.4'
 );
 
 $lastDBUpdate = '';

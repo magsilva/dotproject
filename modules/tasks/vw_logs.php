@@ -1,4 +1,4 @@
-<?php /* TASKS $Id: vw_logs.php,v 1.23.8.1 2006/04/09 10:51:33 cyberhorse Exp $ */
+<?php /* TASKS $Id: vw_logs.php,v 1.23.8.2 2006/06/15 14:44:13 merlinyoda Exp $ */
 global $AppUI, $task_id, $df, $canEdit, $m;
 
 $perms =& $AppUI->acl();
@@ -99,7 +99,7 @@ foreach ($logs as $row) {
 
 // dylan_cuthbert: auto-transation system in-progress, leave these lines
 	$transbrk = "\n[translation]\n";
-	$descrip = str_replace( "\n", "<br />", htmlspecialchars($row['task_log_description']) );
+	$descrip = str_replace( "\n", "<br />", ($row['task_log_description']) );
 	$tranpos = strpos( $descrip, str_replace( "\n", "<br />", $transbrk ) );
 	if ( $tranpos === false) $s .= $descrip;
 	else

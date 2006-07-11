@@ -1,4 +1,4 @@
-<?php /* $Id: index.php,v 1.121.4.2 2006/03/12 07:28:22 cyberhorse Exp $ */
+<?php /* $Id: index.php,v 1.121.4.4 2006/06/19 16:42:07 nybod Exp $ */
 
 /* {{{ Copyright (c) 2003-2005 The dotProject Development Team <core-developers@dotproject.net>
 
@@ -113,7 +113,7 @@ if (isset($_GET['logout'])) {
        	addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
 		$AppUI->registerLogout($AppUI->user_id);
     }
-    $redirect = @$_SERVER['QUERY_STRING'];
+	$redirect = $_SERVER['QUERY_STRING']?strip_tags($_SERVER['QUERY_STRING']):'';
 	if (strpos($redirect, 'logout') !== false) {
 		$redirect = '';
 	}

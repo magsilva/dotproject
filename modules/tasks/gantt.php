@@ -1,8 +1,12 @@
-<?php /* TASKS $Id: gantt.php,v 1.48.2.9 2006/03/15 08:44:51 gregorerhardt Exp $ */
+<?php /* TASKS $Id: gantt.php,v 1.48.2.13 2006/06/05 12:58:57 gregorerhardt Exp $ */
 
 /*
  * Gantt.php - by J. Christopher Pereira
+<<<<<<< .working
  * TASKS $Id: gantt.php,v 1.48.2.9 2006/03/15 08:44:51 gregorerhardt Exp $
+=======
+ * TASKS $Id: gantt.php,v 1.48.2.13 2006/06/05 12:58:57 gregorerhardt Exp $
+>>>>>>> .merge-right.r29
  */
 
 include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php");
@@ -257,8 +261,15 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
                 $name = utf8_decode($name);
         }
         $name = strlen( $name ) > 34 ? substr( $name, 0, 33 ).'.' : $name ;
-        $name = str_repeat(" ", $level).$name;
-
+        $name = str_repeat(' ', $level).$name;
+		
+		if ($caller == 'todo') { 
+			$pname = $a['project_name'];
+	        if ( $locale_char_set=='utf-8' && function_exists('utf8_decode') ) {
+	                $pname = utf8_decode($pname);
+	        }
+	        $pname = strlen( $pname ) > 14 ? substr( $pname, 0, 5 ).'...'.substr( $pname, -5, 5 ): $pname ;
+		}
         //using new jpGraph determines using Date object instead of string
         $start = $a["task_start_date"];
         $end_date = $a["task_end_date"];
