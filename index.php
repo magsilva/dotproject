@@ -19,7 +19,8 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 }}} */
 
-ini_set('display_errors', 1); // Ensure errors get to the user.
+// Ensure errors get to the user.
+ini_set('display_errors', 1);
 error_reporting(E_ALL & ~E_NOTICE);
 
 // If you experience a 'white screen of death' or other problems,
@@ -52,9 +53,6 @@ require_once "$baseDir/includes/session.php";
 // don't output anything. Usefull for fileviewer.php, gantt.php, etc.
 $suppressHeaders = dPgetParam($_GET, 'suppressHeaders', false);
 
-// manage the session variable(s)
-dPsessionStart(array('AppUI'));
-
 // write the HTML headers
 if (! $suppressHeaders) {
 	header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");	// Date in the past
@@ -64,22 +62,22 @@ if (! $suppressHeaders) {
 }
 
 // Initialize session
+dPsessionStart(array('AppUI'));
 if (!isset($_SESSION['AppUI'])) {
 	$_SESSION['AppUI'] = new CAppUI;
 }
 $AppUI =& $_SESSION['AppUI'];
 
 // Load the commonly used classes
-require_once( $AppUI->getSystemClass( 'date' ) );
-require_once( $AppUI->getSystemClass( 'dp' ) );
-require_once( $AppUI->getSystemClass( 'query' ) );
+require_once($AppUI->getSystemClass('date'));
+require_once($AppUI->getSystemClass('dp'));
+require_once($AppUI->getSystemClass('query'));
 
-require_once "$baseDir/misc/debug.php";
-
+require_once("$baseDir/misc/debug.php");
 
 // Load preferences
 if ($AppUI->doLogin()) {
-	$AppUI->loadPrefs( 0 );
+	$AppUI->loadPrefs();
 }
 
 // Load UI style
@@ -201,7 +199,7 @@ $AppUI->checkFileName($u);
 
 // Load configuration for the module to be executed.
 $m_config = dPgetConfig($m);
-@include_once "$baseDir/functions/" . $m . "_func.php";
+@include_once("$baseDir/functions/" . $m . "_func.php");
 
 // TODO: canRead/Edit assignements should be moved into each file
 
@@ -247,7 +245,7 @@ if ($u && file_exists("$baseDir/modules/$m/$u/$u.class.php")) {
 // TODO - MUST MOVE THESE INTO THE MODULE DIRECTORY
 if (isset( $_REQUEST["dosql"]) ) {
     //require("./dosql/" . $_REQUEST["dosql"] . ".php");
-    require  "$baseDir/modules/$m/" . ($u ? "$u/" : "") . $AppUI->checkFileName($_REQUEST["dosql"]) . ".php";
+    require("$baseDir/modules/$m/" . ($u ? "$u/" : "") . $AppUI->checkFileName($_REQUEST["dosql"]) . ".php");
 }
 
 // start output proper
