@@ -13,10 +13,12 @@
  * Copyright (C) 2006 magsilva
  */
 
-require_once("tasks.php");
-dotproject_initialize();
-user_initialize();
-user_login("admin", "admin");
+require_once("dotproject.class.php");
+require_once("user.class.php");
+
+$dot = new DotProject();
+$user = new User();
+$user->login("admin", "admin");
 require_once($baseDir . "/classes/date.class.php");
 
 // prepare time period for 'events'
@@ -30,7 +32,7 @@ $endPeriod = new CDate(Date_calc::endOfWeek($dd, $mm, $yy, FMT_TIMESTAMP_DATE, L
 $endPeriod->setTime(23, 59, 59);
  
 $company_id = 1;
-$tasks = getTasksForPeriod($startPeriod, $endPeriod, $company_id);
+$tasks = $user->getTasksForPeriod($startPeriod, $endPeriod, $company_id);
 
 var_dump($tasks);
 ?>
