@@ -50,10 +50,6 @@ END;
 	exit();
 }
 
-if (! isset($GLOBALS['OS_WIN'])) {
-	$GLOBALS['OS_WIN'] = (stristr(PHP_OS, "WIN") !== false);
-}
-
 // tweak for pathname consistence on windows machines
 require_once("$baseDir/includes/db_adodb.php");
 require_once("$baseDir/includes/db_connect.php");
