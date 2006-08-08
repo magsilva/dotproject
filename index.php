@@ -31,24 +31,36 @@ require_once('base.php');
 
 clearstatcache();
 if (is_file("$baseDir/includes/config.php")) {
-	require_once "$baseDir/includes/config.php";
+	require_once("$baseDir/includes/config.php");
 } else {
-	echo "<html><head><meta http-equiv='refresh' content='5; URL=".$baseUrl."/install/index.php'></head><body>";
-	echo "Fatal Error. You haven't created a config file yet.<br/><a href='./install/index.php'>
-		Click Here To Start Installation and Create One!</a> (forwarded in 5 sec.)</body></html>";
+	echo <<<END
+<html>
+<head>
+	<meta http-equiv='refresh' content='10; URL=".$baseUrl."/install/index.php'>
+</head>
+
+<body>
+
+Fatal Error. You haven not created a config file yet.
+<br/><a href='./install/index.php'>Click Here To Start Installation and Create One!</a>
+(You will be automatically forwarded in 10 seconds)
+</body>
+</html>
+END;
 	exit();
 }
 
-if (! isset($GLOBALS['OS_WIN']))
+if (! isset($GLOBALS['OS_WIN'])) {
 	$GLOBALS['OS_WIN'] = (stristr(PHP_OS, "WIN") !== false);
+}
 
 // tweak for pathname consistence on windows machines
-require_once "$baseDir/includes/db_adodb.php";
-require_once "$baseDir/includes/db_connect.php";
-require_once "$baseDir/includes/main_functions.php";
-require_once "$baseDir/classes/ui.class.php";
-require_once "$baseDir/classes/permissions.class.php";
-require_once "$baseDir/includes/session.php";
+require_once("$baseDir/includes/db_adodb.php");
+require_once("$baseDir/includes/db_connect.php");
+require_once("$baseDir/includes/main_functions.php");
+require_once("$baseDir/classes/ui.class.php");
+require_once("$baseDir/classes/permissions.class.php");
+require_once("$baseDir/includes/session.php");
 
 // don't output anything. Usefull for fileviewer.php, gantt.php, etc.
 $suppressHeaders = dPgetParam($_GET, 'suppressHeaders', false);
