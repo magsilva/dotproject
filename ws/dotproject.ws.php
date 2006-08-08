@@ -13,20 +13,27 @@
  * Copyright (C) 2006 magsilva
  */
 
+include_once('daomapper.class.php');
+
 class DotprojectWS
 {
 	public function ping()
 	{
 		return TRUE;
 	}
-}
 
+
+}
 
 ini_set("soap.wsdl_cache_enabled", "0");
 ini_set("session.auto_start", "0");
+ini_set("default_socket_timeout", "30");
 
 // session_start();
-$server = new SoapServer("dotproject.wsdl");
+$mapper = new DAOMapper();
+$classmap = $mapper->getMapping();
+var_dump($classmap);
+$server = new SoapServer("dotproject.wsdl", array('classmap' => $classmap));
 $server->setClass("DotprojectWS");
 $server->setPersistence(SOAP_PERSISTENCE_SESSION);
 $server->handle();
