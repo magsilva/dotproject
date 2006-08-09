@@ -50,8 +50,9 @@ END;
 	exit();
 }
 
-// tweak for pathname consistence on windows machines
-require_once("$baseDir/includes/db_connect.php");
+require_once("$baseDir/classes/dotproject.class.php");
+DotProject::connectToDatabase();
+
 require_once("$baseDir/includes/main_functions.php");
 require_once("$baseDir/classes/ui.class.php");
 require_once("$baseDir/classes/permissions.class.php");

@@ -29,20 +29,24 @@ Copyright (c) 2003-2005 The dotProject Development Team <core-developers@dotproj
 The full text of the GPL is in the COPYING file.
 */
 
-	// Function to scan the event queue and execute any functions required.
+/**
+ * Scan the event queue and execute any functions required.
+ */
+require_once 'base.php';
+require_once "$baseDir/includes/config.php";
+require_once "$baseDir/includes/main_functions.php";
 
-	require_once 'base.php';
-	require_once "$baseDir/includes/config.php";
-	require_once "$baseDir/includes/main_functions.php";
-	require_once "$baseDir/includes/db_connect.php";
-	require_once "$baseDir/classes/ui.class.php";
-	require_once "$baseDir/classes/event_queue.class.php";
-	require_once "$baseDir/classes/query.class.php";
+require_once("$baseDir/classes/dotproject.class.php");
+DotProject::connectToDatabase();
 
-	$AppUI = new CAppUI;
+require_once "$baseDir/classes/ui.class.php";
+require_once "$baseDir/classes/event_queue.class.php";
+require_once "$baseDir/classes/query.class.php";
 
-	echo "Scanning Queue ...\n";
-	$queue = new EventQueue;
-	$queue->scan();
-	echo "Done, $queue->event_count events processed\n";
+$AppUI = new CAppUI;
+
+echo "Scanning Queue ...\n";
+$queue = new EventQueue;
+$queue->scan();
+echo "Done, $queue->event_count events processed\n";
 ?>
