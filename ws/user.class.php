@@ -67,10 +67,12 @@ class User {
 	{
 		global $AppUI;
 		global $baseDir;
+		
+		// ou CTask::getTasksForPeriod(
 	
 		// convert to default db time stamp
-		$db_start = $start_date->format( FMT_DATETIME_MYSQL );
-		$db_end = $end_date->format( FMT_DATETIME_MYSQL );
+		$db_start = $start_date->format(FMT_DATETIME_MYSQL);
+		$db_end = $end_date->format(FMT_DATETIME_MYSQL);
 	
 		// filter tasks for not allowed projects
 		$tasks_filter = '';
@@ -93,7 +95,7 @@ class User {
 		// exclude read denied projects
 		$obj = new CProject();
 	
-		$deny = $obj->getDeniedRecords( $AppUI->user_id );
+		$deny = $obj->getDeniedRecords($AppUI->user_id);
 		$where .= count($deny) > 0 ? "\n\tAND task_project NOT IN (" . implode( ',', $deny ) . ')' : '';
 
 		// get any specifically denied tasks

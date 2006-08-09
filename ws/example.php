@@ -13,7 +13,7 @@
  * Copyright (C) 2006 magsilva
  */
 
-require_once("dotproject.class.php");
+require_once("../classes/dotproject.class.php");
 require_once("user.class.php");
 
 $dot = new DotProject();
@@ -39,9 +39,15 @@ $tasks = $user->getTasksForPeriod($startPeriod, $endPeriod, $company_id);
 
 
 include_once('task.dao.php');
-foreach ($tasks as $task) {
+$taskDAO = new TaskDAO(1);
+var_dump($taskDAO);
+/*
+foreach ($tasks as $taskdata) {
+	$task = new Task();
+	$task->load();
 	$taskDAO = new TaskDAO($task);
 	var_dump($taskDAO);
 }
+*/
 
 ?>
