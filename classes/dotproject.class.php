@@ -4,21 +4,32 @@ require_once(dirname(__FILE__) . '/../base.php');
 
 class DotProject
 {
+	var $database;
+
+	var $config;
+
 	// __construct()
 	/**
 	 * Initialize dotProject.
 	 */
 	function DotProject()
 	{
+		$this->loadConfiguration();
+		$this->connectToDatabase();
+	}
+
+	function loadConfiguration()
+	{
 		global $baseDir;
 		global $dPconfig;
 	
-		$dPconfig = array();
+		clearstatcache();
 		if (is_file("$baseDir/includes/config.php")) {
 			require_once("$baseDir/includes/config.php");
 			require_once("$baseDir/includes/db_adodb.php");
 		}
-		// throw exception or sinalize error if the file does not exist.
+
+		$this->config &= $dPconfig;
 	}
 	
 	/**
@@ -26,9 +37,14 @@ class DotProject
 	 */
 	function connectToDatabase()
 	{
-		global $db, $dPconfig;	
+		global $db;	
 
-		db_connect($dPconfig['dbhost'], $dPconfig['dbname'], $dPconfig['dbuser'], $dPconfig['dbpass'], $dPconfig['dbpersist']);
+		db_connect($this->config['dbhost'],
+			$this->config['dbname'],
+			$this->config['dbuser'],
+			$this->config['dbpass'],
+			$this->config['dbpersist']
+		);
 
 		/*
 		* Having successfully established the database connection now, we will
@@ -46,7 +62,18 @@ class DotProject
 			}
 		}
 		
+
+		$this->database = $db;
+
 		return $db;
+	}
+
+	function isReady()
+	{
+		if ($this->configuration != null && $this->database != null) {
+			return true;
+		}
+		return false;
 	}
 }
 

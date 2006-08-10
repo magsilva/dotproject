@@ -35,7 +35,8 @@ require_once "$baseDir/includes/main_functions.php";
 require_once "$baseDir/classes/ui.class.php";
 
 require_once("$baseDir/classes/dotproject.class.php");
-DotProject::connectToDatabase();
+$dot = new DotProject();
+$dot->connectToDatabase();
 
 require_once "$baseDir/includes/session.php";
 

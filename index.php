@@ -29,10 +29,10 @@ error_reporting(E_ALL & ~E_NOTICE);
 
 require_once('base.php');
 
-clearstatcache();
-if (is_file("$baseDir/includes/config.php")) {
-	require_once("$baseDir/includes/config.php");
-} else {
+require_once("$baseDir/classes/dotproject.class.php");
+$dot = new DotProject();
+
+if (! $dot->isReady()) {
 	echo <<<END
 <html>
 <head>
@@ -49,9 +49,6 @@ Fatal Error. You haven not created a config file yet.
 END;
 	exit();
 }
-
-require_once("$baseDir/classes/dotproject.class.php");
-DotProject::connectToDatabase();
 
 require_once("$baseDir/includes/main_functions.php");
 require_once("$baseDir/classes/ui.class.php");
