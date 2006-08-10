@@ -15,10 +15,6 @@
 */
 
 require_once $baseDir . '/includes/main_functions.php';
-
-require_once("$baseDir/classes/dotproject.class.php");
-DotProject::connectToDatabase();
-
 require_once $baseDir . '/classes/query.class.php';
 require_once $baseDir . '/classes/ui.class.php';
 require_once $baseDir . '/classes/event_queue.class.php';

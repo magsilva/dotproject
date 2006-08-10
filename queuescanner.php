@@ -32,14 +32,14 @@ The full text of the GPL is in the COPYING file.
 /**
  * Scan the event queue and execute any functions required.
  */
-require_once 'base.php';
-require_once "$baseDir/includes/config.php";
-require_once "$baseDir/includes/main_functions.php";
-
 require_once("$baseDir/classes/dotproject.class.php");
 $dot = new DotProject();
-$dot->connectToDatabase();
 
+if (! $dot->isReady()) {
+	exit();
+}
+
+require_once "$baseDir/includes/main_functions.php";
 require_once "$baseDir/classes/ui.class.php";
 require_once "$baseDir/classes/event_queue.class.php";
 require_once "$baseDir/classes/query.class.php";

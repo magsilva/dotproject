@@ -13,10 +13,9 @@
 require_once( "$baseDir/lib/adodb/adodb.inc.php" );
 
 
-
 function db_connect($host = 'localhost', $dbname, $user = 'root', $passwd = '', $persist = false)
 {
-	global $db, $ADODB_FETCH_MODE;
+	global $db, $ADODB_FETCH_MODE, $dPconfig;
 
 	if ($db == NULL) {
 		$db = NewADOConnection($dPconfig['dbtype']);
@@ -28,6 +27,8 @@ function db_connect($host = 'localhost', $dbname, $user = 'root', $passwd = '', 
 		$db->Connect($host, $user, $passwd, $dbname) or die('FATAL ERROR: Connection to database server failed');
 	}
 	$ADODB_FETCH_MODE = ADODB_FETCH_BOTH;
+	
+	return $db;
 }
 
 $db = NewADOConnection($dPconfig['dbtype']);
@@ -530,7 +531,8 @@ function db_dateTime2locale( $dateTime, $format ) {
 * @param boolean
 * @param boolean
 */
-function bindHashToObject( $hash, &$obj, $prefix=NULL, $checkSlashes=true, $bindAll=false ) {
+function bindHashToObject( $hash, &$obj, $prefix=NULL, $checkSlashes=true, $bindAll=false )
+{
 	is_array( $hash ) or die( "bindHashToObject : hash expected" );
 	is_object( $obj ) or die( "bindHashToObject : object expected" );
 

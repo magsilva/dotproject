@@ -28,16 +28,16 @@ Copyright (c) 2003-2005 The dotProject Development Team <core-developers@dotproj
 The full text of the GPL is in the COPYING file.
 */
 
-//file viewer
-require_once 'base.php';
+require_once("$baseDir/classes/dotproject.class.php");
+$dot = new DotProject();
+
+if (! $dot->isReady()) {
+	exit();
+}
+
 require_once "$baseDir/includes/config.php";
 require_once "$baseDir/includes/main_functions.php";
 require_once "$baseDir/classes/ui.class.php";
-
-require_once("$baseDir/classes/dotproject.class.php");
-$dot = new DotProject();
-$dot->connectToDatabase();
-
 require_once "$baseDir/includes/session.php";
 
 $loginFromPage = 'fileviewer.php';

@@ -27,16 +27,14 @@ error_reporting(E_ALL & ~E_NOTICE);
 // uncomment the following line of code:
 //error_reporting( E_ALL );
 
-require_once('base.php');
-
-require_once("$baseDir/classes/dotproject.class.php");
+require_once("classes/dotproject.class.php");
 $dot = new DotProject();
 
 if (! $dot->isReady()) {
 	echo <<<END
 <html>
 <head>
-	<meta http-equiv='refresh' content='10; URL=".$baseUrl."/install/index.php'>
+	<meta http-equiv='refresh' content='10; URL=$baseUrl/install/index.php'>
 </head>
 
 <body>
