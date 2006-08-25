@@ -17,7 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2006 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
 */
 
-require_once("../classes/dotproject.class.php");
+require_once(dirname(__FILE__) . "/../../../classes/dotproject.class.php");
 
 /**
 * This will look like this:
@@ -30,31 +30,24 @@ require_once("../classes/dotproject.class.php");
 * </sequence>
 * </complexType>
 */
-class TaskDAO
+class Task
 {
-	public $id;
+	/**
+	* @var string
+	*/
 	public $name;
+
+	/**
+	* @var string
+	*/
 	public $description;
-	public $startDate;
-	public $endDate;
-	public $estimatedDuration;
-	public $actualDuration;
-	public $project;
-	public $priority;
-	public $creator;
-	public $responsibles;
-	public $contacts;
-	public $resources;
-	public $dependencies;
-     
+
 	/**
 	 * Initialize a Data Access Object (DAO) for a task. We may get the data
 	 * from the database (direct access) or from a CTask object.
-	 * 
-	 * @arg $task If an integer, load from database. Otherwise, load
-	 * from the object.
+	 * @return void
 	 */
-	function TaskDAO($task = null)
+	public function __construct($task = null)
 	{
 		if ($task != null) {
 			if (is_int($task)) {
@@ -70,7 +63,7 @@ class TaskDAO
 	/**
 	 * Read the task's data from the database.
 	 */
-	function loadFromDatabase($task_id)
+	private function loadFromDatabase($task_id)
 	{
 		$dotproject = new DotProject();
 		$db = $dotproject->connectToDatabase();
@@ -131,7 +124,7 @@ class TaskDAO
 	/**
 	 * Read the task's data from a array.
 	 */
-	function loadFromArray($task)
+	private function loadFromArray($task)
 	{	
 		$this->id = $task['task_id'];
 		$this->name = $task['task_name'];
@@ -178,7 +171,7 @@ class TaskDAO
 	/**
 	 * Read the task's data from a CTask object.
 	 */
-	function loadFromObject($task)
+	private function loadFromObject($task)
 	{	
 		$this->id = $task->task_id;
 		$this->name = $task->task_name;

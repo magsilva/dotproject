@@ -28,7 +28,7 @@ $yy = 2006;
 $startPeriod = new CDate(Date_calc::beginOfWeek($dd, $mm, $yy, FMT_TIMESTAMP_DATE, LOCALE_FIRST_DAY));
 $startPeriod->setTime(0, 0, 0);
 $startPeriod->subtractSeconds( 1 );
-$dd = 11;
+$dd = 30;
 $mm = 08;
 $yy = 2006;
 $endPeriod = new CDate(Date_calc::endOfWeek($dd, $mm, $yy, FMT_TIMESTAMP_DATE, LOCALE_FIRST_DAY));
@@ -39,15 +39,13 @@ $tasks = $user->getTasksForPeriod($startPeriod, $endPeriod, $company_id);
 
 
 include_once('task.dao.php');
-$taskDAO = new TaskDAO(1);
-var_dump($taskDAO);
-/*
+
+// $taskDAO = new TaskDAO(1);
+// var_dump($taskDAO);
+
 foreach ($tasks as $taskdata) {
-	$task = new Task();
-	$task->load();
-	$taskDAO = new TaskDAO($task);
+	$taskDAO = new TaskDAO($taskdata);
 	var_dump($taskDAO);
 }
-*/
 
 ?>

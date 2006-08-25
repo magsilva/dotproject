@@ -140,6 +140,15 @@ class DotProject
 		}
 		return false;
 	}
+
+	/**
+	* Connects to the database. Actually, just return the DB connection created at the
+	* object initialization.
+	*/
+	function connectToDatabase()
+	{
+		return $this->database;
+	}
 }
 
 ?>

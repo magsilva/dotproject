@@ -1,4 +1,4 @@
-m<?php
+<?php
 /*
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
@@ -13,34 +13,18 @@ m<?php
  * Copyright (C) 2006 magsilva
  */
 
-
-require_once("../classes/dotproject.class.php");
-include_once('daomapper.class.php');
+include_once('Task.class.php');
 
 class DotprojectWS
 {
-	public function ping()
-	{
-		return TRUE;
-	}
-
+	/**
+	* Gets the task.
+	* @param int The task id.
+	* @return Task
+	*/
 	public function GetTask($id)
 	{
-		return TaskDAO($id);
+		return new Task($id);
 	}
 }
-
-ini_set("soap.wsdl_cache_enabled", "0");
-ini_set("session.auto_start", "0");
-ini_set("default_socket_timeout", "30");
-
-// session_start();
-$mapper = new DAOMapper();
-$classmap = $mapper->getMapping();
-
-$server = new SoapServer("dotproject.wsdl", array('classmap' => $classmap));
-$server->setClass("DotprojectWS");
-$server->setPersistence(SOAP_PERSISTENCE_SESSION);
-$server->handle();
-
 ?>
