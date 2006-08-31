@@ -279,6 +279,7 @@ if ( ! $min_view && $f2 != 'all' ) {
 }
 
 // patch 2.12.04 ADD GROUP BY clause for assignee count
+$from = '(' . $from . ')';
 $tsql = "SELECT $select FROM $from $join WHERE $where" .
   "\nGROUP BY task_id" .
   "\nORDER BY project_id, task_start_date";
