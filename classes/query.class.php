@@ -432,6 +432,7 @@ class DBQuery {
     if (isset($this->table_list)) {
       if (is_array($this->table_list)) {
 	$intable = false;
+	$q .= '(';
 	foreach ($this->table_list as $table_id => $table) {
 	  if ($intable)
 	    $q .= ",";
@@ -441,6 +442,7 @@ class DBQuery {
 	  if (! is_numeric($table_id))
 	    $q .= " as $table_id";
 	}
+	$q .= ')';
       } else {
 	$q .= $this->_table_prefix . $this->table_list;
       }
