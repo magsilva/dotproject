@@ -647,7 +647,7 @@ class CAppUI {
 		require_once "$baseDir/classes/authenticator.class.php";
 
 		$auth_method = isset($dPconfig['auth_method']) ? $dPconfig['auth_method'] : 'sql';
-		$auth =& getauth($auth_method);
+		$auth =& getAuth($auth_method);
 		
 		$username = trim( db_escape( $username ) );
 		$password = trim( db_escape( $password ) );

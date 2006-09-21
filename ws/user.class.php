@@ -1,17 +1,21 @@
 <?php
 /*
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations
- * under the License.
- * 
- * Copyright (C) 2006 magsilva
- */
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+Copyright (C) 2006 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
+*/
 
 global $AppUI;
 global $baseDir;
@@ -31,23 +35,28 @@ class User {
 		// manage the session variable(s)
 		dPsessionStart(array('AppUI'));
 	
-		// check if session has previously been initialised
-		if (!isset( $_SESSION['AppUI'] ) || isset($_REQUEST['logout'])) {
-    		if (isset($_REQUEST['logout']) && isset($_SESSION['AppUI']->user_id)) {
-			$AppUI =& $_SESSION['AppUI'];
-			$user_id = $AppUI->user_id;
-			addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
-	    	}
+		// check if session has been previously initialised
+		if ($this->somebodyIsAuthenticated()) {
+			$this->logout();
+		} else {
 			$_SESSION['AppUI'] = new CAppUI;
 		}	
-		$AppUI = $_SESSION['AppUI'];
-		$last_insert_id =$AppUI->last_insert_id;
-	
+		$AppUI =& $_SESSION['AppUI'];
+		
 		// load default preferences if not logged in
+		// TODO: Analyse the usefulness of this code and (probably) remove it.
 		if ($AppUI->doLogin()) {
-			$AppUI->loadPrefs( 0 );
+			$AppUI->loadPrefs(0);
 		}
 	}
+	
+	function logout()
+	{
+		$AppUI =& $_SESSION['AppUI'];
+		$user_id = $AppUI->user_id;
+		addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
+		$AppUI->registerLogout($AppUI->user_id);
+	}	
 
 	function login($username, $password)
 	{
@@ -61,6 +70,16 @@ class User {
 		    $AppUI->registerLogin();
 		}
 		addHistory('login', $AppUI->user_id, 'login', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
+	}
+	
+	function somebodyIsAuthenticated()
+	{
+		if (!isset( $_SESSION['AppUI'] ) || isset($_REQUEST['logout'])) {
+    		if (isset($_REQUEST['logout']) && isset($_SESSION['AppUI']->user_id)) {
+    			return TRUE;
+    		}
+		}
+		return FALSE;
 	}
 
 	function getTasksForPeriod($start_date, $end_date, $company_id=0)
