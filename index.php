@@ -25,7 +25,7 @@ error_reporting(E_ALL & ~E_NOTICE);
 
 // If you experience a 'white screen of death' or other problems,
 // uncomment the following line of code:
-error_reporting( E_ALL );
+// error_reporting( E_ALL );
 
 // An user can login from 'index.php' and 'fileviewer.php'.
 $loginFromPage = 'index.php';

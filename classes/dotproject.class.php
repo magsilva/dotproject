@@ -17,7 +17,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Copyright (C) 2006 Marco Aurelio Graciotto Silva <magsilva@gmail.com>
 
 Contributions:
-	Neilson 
+	Neilson Carlos <neilsoncarlos@gmail.com>
 */
 
 
