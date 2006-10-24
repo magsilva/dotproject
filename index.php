@@ -25,33 +25,15 @@ error_reporting(E_ALL & ~E_NOTICE);
 
 // If you experience a 'white screen of death' or other problems,
 // uncomment the following line of code:
-//error_reporting( E_ALL );
+error_reporting( E_ALL );
+
+// An user can login from 'index.php' and 'fileviewer.php'.
+$loginFromPage = 'index.php';
+
 
 require_once("classes/dotproject.class.php");
-$dot = new DotProject();
+$dP = new DotProject();
 
-if (! $dot->isReady()) {
-	echo <<<END
-<html>
-<head>
-	<meta http-equiv='refresh' content='10; URL=$baseUrl/install/index.php'>
-</head>
-
-<body>
-
-Fatal Error. You haven not created a config file yet.
-<br/><a href='./install/index.php'>Click Here To Start Installation and Create One!</a>
-(You will be automatically forwarded in 10 seconds)
-</body>
-</html>
-END;
-	exit();
-}
-
-require_once("$baseDir/includes/main_functions.php");
-require_once("$baseDir/classes/ui.class.php");
-require_once("$baseDir/classes/permissions.class.php");
-require_once("$baseDir/includes/session.php");
 
 // don't output anything. Usefull for fileviewer.php, gantt.php, etc.
 $suppressHeaders = dPgetParam($_GET, 'suppressHeaders', false);
@@ -64,13 +46,6 @@ if (! $suppressHeaders) {
 	header("Pragma: no-cache");	// HTTP/1.0
 }
 
-// Initialize session
-dPsessionStart(array('AppUI'));
-if (!isset($_SESSION['AppUI'])) {
-	$_SESSION['AppUI'] = new CAppUI;
-}
-$AppUI =& $_SESSION['AppUI'];
-
 // Load the commonly used classes
 require_once($AppUI->getSystemClass('date'));
 require_once($AppUI->getSystemClass('dp'));
@@ -78,54 +53,39 @@ require_once($AppUI->getSystemClass('query'));
 
 require_once("$baseDir/misc/debug.php");
 
-// Load preferences
-if ($AppUI->doLogin()) {
-	$AppUI->loadPrefs();
-}
-
-// Load UI style
-$uistyle = $AppUI->getPref( 'UISTYLE' ) ? $AppUI->getPref( 'UISTYLE' ) : $dPconfig['host_style'];
+// Load default UI style
 $AppUI->checkStyle();
 
-// Load locale
-$AppUI->setUserLocale();
-@include_once("$baseDir/locales/$AppUI->user_locale/locales.php");
-@include_once("$baseDir/locales/core.php");
-setlocale( LC_TIME, $AppUI->user_lang );
-if (! $suppressHeaders && isset($locale_char_set)) {
-	header("Content-type: text/html;charset=$locale_char_set");
-}
+// Function for update lost action in 'user_access_log'.
+$AppUI->updateLastAction($AppUI->last_insert_id);
 
 
-// Load permission check library
-require_once "$baseDir/includes/permissions.php";
-
-// An user can login from 'index.php' and 'fileviewer.php'.
-$loginFromPage = 'index.php';
 
 
 /**
  * Authentication actions.
  */
 
-// Logout the user
-if (isset($_GET['logout'])) {
-    if (isset($_SESSION['AppUI']->user_id)) {
-       	addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
-		$AppUI->registerLogout($AppUI->user_id);
-    }
-	$redirect = $_SERVER['QUERY_STRING']?strip_tags($_SERVER['QUERY_STRING']):'';
-	if (strpos($redirect, 'logout') !== false) {
-		$redirect = '';
-	}
-
-	// destroy the current session and output login page
-	session_unset();
-	session_destroy();
-	require "$baseDir/style/$uistyle/login.php";
-	exit;
+// Load default preferences if not logged in
+if ($AppUI->doLogin()) {
+	$AppUI->loadPrefs( 0 );
 }
 
+/*
+ * Load default user configuration (for those actions that will redirect the
+ * user. We make this conditional because we must set a HTTP header (and that
+ * can only be set once per HTTP response).
+ */
+if (isset($_POST['lostpass']) || isset($_REQUEST['login']) || $AppUI->doLogin()) {
+	$uistyle = $AppUI->getPref( 'UISTYLE' ) ? $AppUI->getPref( 'UISTYLE' ) : $dPconfig['host_style'];
+	$AppUI->setUserLocale();
+	@include_once "$baseDir/locales/$AppUI->user_locale/locales.php";
+	@include_once "$baseDir/locales/core.php";
+	setlocale( LC_TIME, $AppUI->user_lang );
+	if (! $suppressHeaders && isset($locale_char_set)) {
+		header("Content-type: text/html;charset=$locale_char_set");
+	}
+}
 
 // Request a new password
 if (dPgetParam($_POST, 'lostpass', 0)) {
@@ -156,20 +116,50 @@ if (isset($_REQUEST['login'])) {
 	$AppUI->redirect($redirect);
 }
 
+// If not logged in, redirect to the 'login' page.
+if ($AppUI->doLogin()) {
+	// $redirect is a variable required by 'login.php'
+	$redirect = $_SERVER['QUERY_STRING']?strip_tags($_SERVER['QUERY_STRING']):'';
+	if (strpos( $redirect, 'logout' ) !== false) {
+		$redirect = '';
+	}
+	
+	require "$baseDir/style/$uistyle/login.php";
+	// destroy the current session and output login page
+	session_unset();
+	session_destroy();
+	exit;
+}
+
+
+
+// Load specific user configuration.
+$uistyle = $AppUI->getPref( 'UISTYLE' ) ? $AppUI->getPref( 'UISTYLE' ) : $dPconfig['host_style'];
+$AppUI->setUserLocale();
+@include_once "$baseDir/locales/$AppUI->user_locale/locales.php";
+@include_once "$baseDir/locales/core.php";
+setlocale( LC_TIME, $AppUI->user_lang );
+if (! $suppressHeaders && isset($locale_char_set)) {
+	header("Content-type: text/html;charset=$locale_char_set");
+}
+
+
 
 /**
- * Modules actions (initialization).
+ * Module and action selection. If a module is set, the default action (def_a)
+ * is always 'index'.
  */
 
-// Function for update lost action in user_access_log
-$AppUI->updateLastAction($AppUI->last_insert_id);
+// Load permission check library
+require_once("$baseDir/includes/permissions.php");
 
 // Clear out main url parameters
 $m = '';
 $a = '';
 $u = '';
 
-$def_m = !empty($dPconfig['default_view_m']) ? $dPconfig['default_view_m'] : 'calendar';
+// Config the default module and action
+$def_m = $dPconfig['default_view_m'];
 $def_a = 'index';
 
 // Set the module from the defaults or from the URL
@@ -190,12 +180,14 @@ if (! isset($_GET['a'])) {
 }
 $AppUI->checkFileName($a);
 
-/* This check for $u implies that a file located in a subdirectory of depth higher than
- * one in relation to the module base can't be executed. So it won't be possible to
- * run, for example, the file module/directory1/directory2/file.php. Also it won't be
- * possible to run modules/module/abc.zyz.class.php, as dots are not allowed in the
- * request parameters.
-*/
+/*
+ * This check for $u implies that a file located in a subdirectory of depth
+ * higher than one in relation to the module base can't be executed. So it
+ * won't be possible to run, for example, the file
+ * module/directory1/directory2/file. php. Also it won't be possible to run
+ * modules/module/abc.zyz.class.php, as dots are not allowed in the request
+ * parameters.
+ */
 $u = dPgetParam($_GET, 'u', '');
 $AppUI->checkFileName($u);
 
@@ -216,10 +208,9 @@ $canAuthor = $perms->checkModule($m, 'add');
 $canDelete = $perms->checkModule($m, 'delete');
 
 /*
- *
- * TODO: Permissions should be handled by each file.
- * Denying access from index.php still doesn't asure
- * someone won't access directly skipping this security check.
+ * TODO: Permissions should be handled by each file. Denying access from index.
+ * php still doesn't assure someone won't access directly skipping this security
+ * check.
  *
 // bounce the user if they don't have at least read access
 if (!(
@@ -233,9 +224,11 @@ if (!(
 }
 */
 
-// include the module class file - we use file_exists instead of @ so
-// that any parse errors in the file are reported, rather than errors
-// further down the track.
+/*
+ * Include  the module class file - we use file_exists instead of @ so
+ * that any parse errors in the included files are reported, rather than
+ * get the errors further down the track.
+ */
 $modclass = $AppUI->getModuleClass($m);
 if (file_exists($modclass)) {
 	include_once($modclass);
@@ -302,8 +295,7 @@ if (! isset($_SESSION['all_tabs'][$m]) ) {
 $module_file = "$baseDir/modules/$m/" . ($u ? "$u/" : "") . "$a.php";
 if (file_exists($module_file)) {
 	require($module_file);
-}
-else {
+} else {
 	// TODO: make this part of the public module? 
 	// TODO: internationalise the string.
 	$titleBlock = new CTitleBlock('Warning', 'log-error.gif');

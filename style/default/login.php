@@ -12,16 +12,14 @@
 </head>
 
 <body bgcolor="#f0f0f0" onload="document.loginform.username.focus();">
-
 <br /><br /><br /><br />
-
 <?php //please leave action argument empty ?>
+<!--form action="./index.php" method="post" name="loginform"-->
 <form method="post" action="<?php echo $loginFromPage; ?>" name="loginform">
+<table align="center" border="0" width="250" cellpadding="6" cellspacing="0" class="std">
 <input type="hidden" name="login" value="<?php echo time();?>" />
 <input type="hidden" name="lostpass" value="0" />
 <input type="hidden" name="redirect" value="<?php echo $redirect;?>" />
-
-<table align="center" border="0" width="250" cellpadding="6" cellspacing="0" class="std">
 <tr>
 	<th colspan="2"><em><?php echo $dPconfig['company_name'];?></em></th>
 </tr>

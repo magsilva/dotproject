@@ -66,10 +66,10 @@
 			$data_update_script = "opener.setDepartment('" . $_POST[$id_field] . "', '" . db_escape($r_data[$name_field]) . "');\n";
 		}
 	
-		// Let's figure out which fields are going to be updated
+		// Let's figure out which fields are going to
+		// be updated
 		foreach ($update_fields as $record_field => $contact_field){
-			// Applied patch from http://sourceforge.net/tracker/index.php?func=detail&aid=1393607&group_id=21656&atid=372485
-			$data_update_script .= "opener.document.changecontact.$contact_field.value = '" . str_replace("'", "\\", $r_data[$record_field]) . "';\n";
+			$data_update_script .= "opener.document.changecontact.$contact_field.value = '".$r_data[$record_field]."';\n";
 		}
 		?>
 			<script language='javascript'>

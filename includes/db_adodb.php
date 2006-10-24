@@ -10,17 +10,18 @@
 	originally written for WEBO project, see webo source for "real life" usages
 */
 
-require_once( "$baseDir/lib/adodb/adodb.inc.php" );
+require_once("$baseDir/lib/adodb/adodb.inc.php");
+
+global $db;
+$db = db_connect($dPconfig['dbtype'], $dPconfig['dbhost'], $dPconfig['dbname'], $dPconfig['dbuser'], $dPconfig['dbpass'], $dPconfig['dbpersist']);
 
 
-function db_connect($host = 'localhost', $dbname, $user = 'root', $passwd = '', $persist = false)
+function db_connect($dbdriver = 'mysql', $host = 'localhost', $dbname, $user = 'root', $passwd = '', $persist = false)
 {
-	global $db, $ADODB_FETCH_MODE, $dPconfig;
-
-	if ($db == NULL) {
-		$db = NewADOConnection($dPconfig['dbtype']);
-	}
-
+	global $ADODB_FECTH_MODE;
+	
+	$db = NewADOConnection($dbdriver);
+	
 	if ($persist) {
 		$db->PConnect($host, $user, $passwd, $dbname) or die('FATAL ERROR: Connection to database server failed');
 	} else {
@@ -31,7 +32,12 @@ function db_connect($host = 'localhost', $dbname, $user = 'root', $passwd = '', 
 	return $db;
 }
 
-$db = NewADOConnection($dPconfig['dbtype']);
+function db_close()
+{
+	global $db;
+	
+	$db->Close();
+}
 
 function db_error()
 {
@@ -62,7 +68,7 @@ function db_insert_id()
 
 function db_exec($sql)
 {
-	global $AppUI, $db, $baseDir;
+	global $db, $baseDir;
 	if (! is_object($db)) {
 		dprint(__FILE__,__LINE__, 0, "Database object does not exist");
 	}

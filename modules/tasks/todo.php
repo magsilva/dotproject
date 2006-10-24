@@ -1,4 +1,4 @@
-<?php /* TASKS $Id: todo.php,v 1.50.2.5 2006/04/15 19:04:01 pedroix Exp $ */
+<?php /* TASKS $Id: todo.php,v 1.50.2.6 2006/06/04 14:23:16 gregorerhardt Exp $ */
 global $showEditCheckbox, $this_day, $other_users, $baseDir, $dPconfig, $user_id;
 
 $showEditCheckbox = true;
@@ -168,6 +168,7 @@ if ($m == 'tasks' && $a == 'todo') {
   // Tabbed information boxes
   $tabBox = new CTabBox( "?m=tasks&a=todo", "{$dPconfig['root_dir']}/modules/", $tab );
   $tabBox->add( 'tasks/todo_tasks_sub', 'My Tasks' );
+  $tabBox->add( 'tasks/todo_gantt_sub', 'My Gantt' );
 	// Wouldn't it be better to user $tabBox->loadExtras('tasks', 'todo'); and then
 	// add tasks_tab.todo.my_open_requests.php in helpdesk?  
   if ($AppUI->isActiveModule('helpdesk')){ 

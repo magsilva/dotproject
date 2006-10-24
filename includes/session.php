@@ -15,6 +15,7 @@
 */
 
 require_once $baseDir . '/includes/main_functions.php';
+require_once $baseDir . '/includes/db_adodb.php';
 require_once $baseDir . '/classes/query.class.php';
 require_once $baseDir . '/classes/ui.class.php';
 require_once $baseDir . '/classes/event_queue.class.php';
@@ -167,7 +168,7 @@ function dpSessionStart($start_vars = 'AppUI')
 	if (isset($dPconfig['session_handling'])
 		&& strtolower($dPconfig['session_handling']) == 'app') 
 	{
-		ini_set('session.save_handler', 'user');
+		@ini_set('session.save_handler', 'user');
 	
 		session_set_save_handler(
 			'dPsessionOpen', 

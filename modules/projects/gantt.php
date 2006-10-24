@@ -1,4 +1,4 @@
-<?php /* TASKS $Id: gantt.php,v 1.20.4.5 2006/03/20 11:20:14 cyberhorse Exp $ */
+<?php /* TASKS $Id: gantt.php,v 1.20.4.6 2006/05/30 17:57:14 nybod Exp $ */
 include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php");
 include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
 
@@ -53,7 +53,7 @@ if (!($department > 0) && $company_id != 0) {
         $q->addWhere('project_company = '.$company_id);
 }
 if ($showInactive != '1') {
-        $q->addWhere('project_active = 1');
+        $q->addWhere('project_status != 7');
 }
 $pjobj->setAllowedSQL($AppUI->user_id, $q);
 $q->addGroup('project_id');
@@ -75,10 +75,14 @@ $graph->SetFrame(false);
 $graph->SetBox(true, array(0,0,0), 2);
 $graph->scale->week->SetStyle(WEEKSTYLE_FIRSTDAY);
 
-$jpLocale = dPgetConfig( 'jpLocale' );
+/*$jpLocale = dPgetConfig( 'jpLocale' );
 if ($jpLocale) {
         $graph->scale->SetDateLocale( $jpLocale );
 }
+** the jpgraph date locale is now set
+** automatically by the user's locale settings
+*/
+$graph->scale->SetDateLocale( $AppUI->user_lang[0] );
 
 if ($start_date && $end_date) {
         $graph->SetDateRange( $start_date, $end_date );
@@ -180,7 +184,7 @@ foreach($projects as $p) {
 //        $start->addDays(0);
         $start = $start->getDate();
 
-        $progress = $p['project_percent_complete'];
+	$progress = $p['project_percent_complete'] + 0;
 
         $caption = "";
         if(!$start || $start == "0000-00-00"){
@@ -206,7 +210,7 @@ foreach($projects as $p) {
         $actual_enddate = new CDate($actual_end);
         $actual_enddate = $actual_enddate->after($startdate) ? $actual_enddate : $enddate;
         $bar = new GanttBar($row++, array($name, $startdate->format($df), $enddate->format($df), $actual_enddate->format($df)), $start, $actual_end, $cap, 0.6);
-        $bar->progress->Set($progress/100);
+        $bar->progress->Set(min(($progress/100), 1));
 
         $bar->title->SetFont(FF_FONT1,FS_NORMAL,10);
         $bar->SetFillColor("#".$p['project_color_identifier']);
@@ -249,13 +253,13 @@ foreach($projects as $p) {
                          if ($t["task_end_date"] == null)
                                  $t["task_end_date"] = $t["task_start_date"];
 
-                         if ($t["task_milestone"] != 1)
-                         {
                                 $tStart = ($t["task_start_date"] > "0000-00-00 00:00:00") ? $t["task_start_date"] : date("Y-m-d H:i:s");
                                 $tEnd = ($t["task_end_date"] > "0000-00-00 00:00:00") ? $t["task_end_date"] : date("Y-m-d H:i:s");
                                 $tStartObj = new CDate($tStart);
                                 $tEndObj = new CDate($tEnd);
 
+ 			if ($t["task_milestone"] != 1)
+ 			{
                                 $bar2 = new GanttBar($row++, array(substr(" --".$t["task_name"], 0, 20)."...", $tStartObj->format($df),  $tEndObj->format($df), ' '), $tStart, $tEnd, ' ', $t['task_dynamic'] == 1 ? 0.1 : 0.6);
 
                                 $bar2->title->SetColor( bestColor( '#ffffff', '#'.$p['project_color_identifier'], '#000000' ) );
@@ -264,7 +268,7 @@ foreach($projects as $p) {
                          }
                          else
                          {
-                                 $bar2  = new MileStone ($row++, "-- " . $t["task_name"], $t["task_start_date"], (substr($t["task_start_date"], 0, 10)));
+ 				$bar2  = new MileStone ($row++, "-- " . $t["task_name"], $t["task_start_date"], $tStartObj->format($df));
                                  $bar2->title->SetColor("#CC0000");
                                  $graph->Add($bar2);
                          }

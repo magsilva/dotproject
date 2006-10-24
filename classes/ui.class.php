@@ -26,7 +26,8 @@ define ("UI_OUTPUT_RAW", 0x20);
 
 // $baseDir is set in index.php and fileviewer.php and is the base directory
 // of the dotproject installation.
-require_once "$baseDir/classes/permissions.class.php";
+require_once("$baseDir/classes/permissions.class.php");
+
 /**
 * The Application User Interface Class.
 *
@@ -292,7 +293,7 @@ class CAppUI {
 			}
 			$lang = $LANGUAGES[$loc];
 		}
-		list($base_locale, $english_string, $native_string, $default_language, $lcs) = $lang;
+		@list($base_locale, $english_string, $native_string, $default_language, $lcs) = $lang;
 		if (! isset($lcs))
 			$lcs = (isset($locale_char_set)) ? $locale_char_set : 'utf-8';
 
@@ -496,7 +497,8 @@ class CAppUI {
 * @param string A marker for a historic 'place, only -1 or an empty string is valid.
 */
 	function redirect( $params='', $hist='' ) {
-		$session_id = SID;
+		// TODO: What is SID??
+		@$session_id = SID;
 
 		session_write_close();
 	// are the params empty

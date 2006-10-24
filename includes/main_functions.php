@@ -1,4 +1,4 @@
-<?php /* INCLUDES $Id: main_functions.php,v 1.89.4.5 2006/04/21 03:36:16 ajdonnison Exp $ */
+<?php /* INCLUDES $Id: main_functions.php,v 1.89.4.6 2006/05/27 19:24:29 gregorerhardt Exp $ */
 ##
 ## Global General Purpose Functions
 ##
@@ -672,6 +672,12 @@ function formatHours($hours)
 	} 
 }
 
+/**
+ * PHP doesn't come with a signum function
+ */
+function dPsgn($x) {
+   return $x ? ($x>0 ? 1 : -1) : 0;
+}
 
 /**
  * This function is now deprecated and will be removed.
