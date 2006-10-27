@@ -1,0 +1,10 @@
+
+Requirements:
+- PEAR Log
+
+
+
+Instructions:
+1. Install PEAR's Log:
+
+	pear install Log

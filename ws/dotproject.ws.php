@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Copyright (C) 2006 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
+Copyright (C) 2006 Marco Aurï¿½lio Graciotto Silva <magsilva@gmail.com>
 */
 
 
@@ -68,7 +68,7 @@ class DPWebService
 		ini_set("session.auto_start", "0");
 		ini_set("default_socket_timeout", "30");
 		
-		$this->exception_handler = new ExceptionHandler();
+		$this->exception_handler = new ExceptionHandler('dp-ws.log');
 		$this->error_handler = new ErrorHandler();
 		$this->assertion_handler = new AssertionHandler();
 	}
