@@ -1,0 +1,52 @@
+<?php
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+Copyright (C) 2006 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
+*/
+
+require_once('TestCase.class.php');
+require_once( dirname( __FILE__ ) . '/../ws/IssueHandler.class.php' );
+
+/**
+ * Basic issue handler class. It gathers generic system information (usually
+ * useful for any debugging purpose.
+ */
+class IssueHandlerStub extends IssueHandler
+{
+}
+
+class IssueHandlerTest extends TestCase
+{
+	protected $handler;
+ 
+	protected function setUp()
+	{
+		$this->handler = new IssueHandlerStub();
+	}
+
+	/**
+	 * Test the report functionality. Actually, we should run the test with a
+	 * known php.ini, but, for now, that's not implemented. However, the code
+	 * has been reviewed by the developer, using the prettyPrint()
+	 * functionality.
+	 */
+    public function testReport()
+    {
+    	//$this->prettyPrint($this->handler->createReport());
+    }
+}
+
+?>

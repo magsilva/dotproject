@@ -51,12 +51,16 @@ class DAOMapper
 	 */
 	function setDir($dir)
 	{
-		if ($dir == null || ! is_dir($dir)) {
+		if ($dir == null) {
 			$dir = getcwd();
 		}
+
+		if (! is_dir($dir)) {
+			throw new Exception("Directory does not exist.");
+		}
 		
-		if ($dir{strlen($dir)} != '/') {
-			$dir{strlen($dir)} = '/';
+		if ($dir{strlen($dir) - 1} != '/') {
+			$dir .= '/';
 		}
 		
 		$this->targetDir = $dir;

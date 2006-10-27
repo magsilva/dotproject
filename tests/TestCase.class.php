@@ -40,6 +40,50 @@ abstract class TestCase extends PHPUnit2_Framework_TestCase
 		if ($var{0} != '/') {
 			self::fail($message);
 		}
+	}
+	
+	private function prettyPrintSingle($var)
+	{
+		if (is_bool($var)) {
+			if ($var) {
+				echo "True";
+			} else {
+				echo "False";
+			}
+		} else if (is_null($var)) {
+			echo "Null";
+		} else if (empty($var)) {
+			echo "Not set";
+		} else {
+			echo "$var";
+		}
+		echo "\n";
+	}
+	
+	private function prettyPrintContainer($var)
+	{
+		static $depth = -1;
+
+		echo "\n";
+		
+		$depth++;
+		foreach ($var as $key => $value) {
+			for ($i = 0; $i < $depth; $i++) {
+				echo "\t";
+			}
+			echo "$key: ";
+			$this->prettyPrint($value);
+		}
+		$depth--;
+	}
+	
+	protected function prettyPrint($var)
+	{
+		if (is_array($var)) {
+			$this->prettyPrintContainer($var);
+		} else {
+			$this->prettyPrintSingle($var);
+		}
 	}	
 }
 

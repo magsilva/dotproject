@@ -16,11 +16,37 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copyright (C) 2006 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
 */
- 
-include("tasks.php");
 
+require_once('IssueHandler.class.php');
+require_once('Exception.class.php');
 
-dotproject_initialize();
-var_dump($dPconfig);
- 
+/**
+ * Sets the default exception handler if an exception is not caught within a
+ * try/catch block.
+ */
+class ExceptionHandler extends IssueHandler
+{
+	public function __construct()
+	{
+		// The exception_handler must be defined before calling set_exception_handler().
+		set_exception_handler($this->handle_exception);
+	}
+	
+	public function __destruct()
+	{
+		parent::__destruct();
+			
+		restore_exception_handler();
+	}
+
+	/**
+	 * This handler function needs to accept one parameter, which will be the
+	 * exception object that was thrown. Execution will stop after the
+	 * exception_handler is called.
+	 */
+	public function handle_exception($exception)
+	{
+	}
+}
+
 ?>
