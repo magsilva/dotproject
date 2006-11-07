@@ -14,7 +14,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Copyright (C) 2006 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
+Copyright (C) 2006 Marco Aurï¿½lio Graciotto Silva <magsilva@gmail.com>
 */
 
 /**
@@ -149,7 +149,11 @@ abstract class IssueHandler
 		$report['Predefined variables']['HTTP POST'] = $_POST; 
 		$report['Predefined variables']['HTTP Cookie'] = $_COOKIE; 
 		$report['Predefined variables']['Uploaded files'] = $_FILES;
-		$report['Predefined variables']['Session'] = $_SESSION;
+		if (isset($_SESSION)) {
+			$report['Predefined variables']['Session'] = $_SESSION;
+		} else {
+			$report['Predefined variables']['Session'] = null;
+		}
 
 		$report['Session'] = array();
 		$report['Session']['Name'] = session_name();

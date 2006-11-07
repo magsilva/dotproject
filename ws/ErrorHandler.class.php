@@ -9,41 +9,124 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
+ * 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Copyright (C) 2006 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
+Copyright (C) 2006 Marco Aurelio Graciotto Silva <magsilva@gmail.com>
 */
 
+/**
+ * @package FailureHandler
+ */
+
+/**
+ * ErrorHandler's parent class.
+ */
 require_once('IssueHandler.class.php');
+
+/**
+ * Classes for the exceptions thrown by the ErrorHandler class.
+ */
 require_once('Exception.class.php');
 
 /**
- * The ErrorHandler transforms every error into an Exception. There are two
- * exceptions thrown by this class: SystemException e UserException.
+ * The ErrorHandler transforms every error into an Exception.
+ * 
+ * An useful PHP's feature is the error handling mechanism ({@link
+ * http://br.php.net/manual/en/ref.errorfunc.php}). Everytime an error, internal
+ * or triggered intentionally by the application (using the 'trigger_error'
+ * statement), takes place, a function is called to handle the error. This
+ * feature is used here to wrap every error into an exception. Those exceptions
+ * will be handled then be handled by the exception handler.
+ * 
+ * This approach, wrap errors within exceptions, is a rather useful one for PHP 5
+ * applications written with a object-orientation concept. It allows an unified
+ * technique to handle application's and system's errors.
+ * 
+ * An alternative would do the way around: catch any exception and call
+ * 'trigger_error'. However, not every object-oriented language support this
+ * technique, favoring the use of exceptions. That's why we do wrap errors
+ * within exceptions.
+ * 
+ * @author Marco Aurelio Graciotto Silva
+ * @license GPL
+ * @since November/2006
+ * @package FailureHandler
  */
 class ErrorHandler extends IssueHandler
 {
+	/**
+	 * Previous state for error level. This is set by the object's constructor
+	 * and restored when garbage collected.
+	 * @var int
+	 */
 	private $previous_error_level;
 	
+	/**
+	 * Previous state for startup errors verbosity. This is set by the object's
+	 * constructor and restored when garbage collected.
+	 * @var bool
+	 */
 	private $previous_display_startup_errors;
 
+	/**
+	 * Previous state for repeated errors handling. This is set by the object's
+	 * constructor and restored when garbage collected.
+	 * @var bool
+	 */
 	private $previous_ignore_repeated_errors;
 	
-	private $previous_ignore_repeated_source;
+	/**
+	 * Previous state for repeated errors in the same file handling. This is set
+	 * by the object's constructor and restored when garbage collected.
+	 * @var bool
+	 */	private $previous_ignore_repeated_source;
 	
+	/**
+	 * Previous state for user errors handling. This is set by the object's
+	 * constructor and restored when garbage collected.
+	 * @var bool
+	 */
 	private $previous_ignore_user_abort;
 	
+	/**
+	 * Previous state for memory leaks detection and report. This is set by
+	 * the object's constructor and restored when garbage collected.
+	 * @var bool
+	 */
 	private $previous_report_memleaks;
 	
+	/**
+	 * Previous state for error reporting using HTML. This is set by the object's
+	 * constructor and restored when garbage collected.
+	 * @var bool
+	 */
 	private $previous_html_errors;
 	
+	/**
+	 * Previous state for and old PHP compatibility warning (actually an old
+	 * PHP bug some software relied on to work properly). This is set by the
+	 * object's  constructor and restored when garbage collected.
+	 * @var bool
+	 */
 	private $previous_bug_compat_warn;
 	
+	/**
+	 * Set error handling configuration.
+	 * 
+	 * Several PHP's error handling configuration are set, being as strict as
+	 * possible (detecting and reporting any error found) while not sending messages
+	 * to the user (console messages, etc).
+	 * 
+	 * The default error handling is also set to an static method from this class
+	 * ({@link error_handler()}).
+	 */
 	public function __construct()
 	{
+		parent::__construct();
+		
 		// Report all PHP errors
 		$this->previous_error_level = error_reporting(E_ALL | E_STRICT);
 		
@@ -61,6 +144,13 @@ class ErrorHandler extends IssueHandler
 		set_error_handler( array( &$this, 'error_handler' ) );
 	}
 	
+	/**
+	 * Restore the original error handling settings.
+	 * 
+	 * Restore all the settings done by the constructor. All the error
+	 * handling settings are set to the value before this object initialization.
+	 * The error handling is set to the one before the initialization too.
+	 */
 	public function __destruct()
 	{
 		parent::__destruct();
@@ -79,7 +169,15 @@ class ErrorHandler extends IssueHandler
 		restore_error_handler();
 	}
 	
-		
+	/**
+	 * Translate the error type to a string.
+	 * 
+	 * Translate the error type to a string (one a human being can understand).
+	 * The translation is in English (no i18n for now).
+	 * 
+	 * @param int $errno The error code.
+	 * @return string The translated error message.
+	 */
 	public function translateErrorType($errno)
 	{
 		$errortype = array (
@@ -97,11 +195,36 @@ class ErrorHandler extends IssueHandler
 			E_USER_NOTICE        => 'User notice',
 			E_STRICT             => 'Runtime notice',
 		);
-		// PHP 6 subject: E_RECOVERABLE_ERRROR => 'Catchable fatal error'
+
+		/*
+		 * PHP 6 defined a new error type, E_RECOVERABLE_ERROR. The following
+		 * code is required only when running with PHP 6.
+		 */	
+		if ( ! defined('E_RECOVERABLE_ERROR')) {	
+			define('E_RECOVERABLE_ERROR', 0);
+		}
+		if (version_compare(phpversion(), '6.0.0') > 0) {
+			$errortype[E_RECOVERABLE_ERROR] = 'Catchable fatal error';
+		}
 		
 		return $errortype[$errno];
 	}
 
+	/**
+	 * Create a SystemException object.
+	 * 
+	 * Create a SystemException object (but do not throw it). This exception will be
+	 * created whenever an internal or system error is detected.
+	 * 
+	 * @param int $errno The error code.
+	 * @param string $errstr The error message.
+	 * @param string $errfile The file's name the error was found in.
+	 * @param int $errline The line's number of the file the error was found in.
+	 * @param array The active symbol table at the point the error occurred.
+	 * 
+	 * @return SystemException A SystemException object initialized with the parameters the
+	 * method received.
+	 */
 	private function create_system_exception($errno, $errstr, $errfile, $errline, $errcontext)
 	{
 		$exception = new SystemException($errno, $errstr, $errfile, $errline, $errcontext);
@@ -109,6 +232,21 @@ class ErrorHandler extends IssueHandler
 		return $exception;
 	}
 
+	/**
+	 * Create an UserException object.
+	 * 
+	 * Create an UserException object (but do not throw it). This exception will
+	 * be created whenever the application causes an error ('trigger_error()').
+	 * 
+	 * @param int $errno The error code.
+	 * @param string $errstr The error message.
+	 * @param string $errfile The file's name the error was found in.
+	 * @param int $errline The line's number of the file the error was found in.
+	 * @param array The active symbol table at the point the error occurred.
+	 * 
+	 * @return UserException A UserException object initialized with the parameters the
+	 * method received.
+	 */
 	private function create_user_exception($errno, $errstr, $errfile, $errline, $errcontext)
 	{
 		$exception = new UserException($errno, $errstr, $errfile, $errline, $errcontext);
@@ -118,6 +256,8 @@ class ErrorHandler extends IssueHandler
 
 	
 	/**
+	 * Handle application errors.
+	 * 
 	 * This function can be used for defining your own way of handling errors
 	 * during runtime, for example in applications in which you need to do
 	 * cleanup of data/files when a critical error happens, or when you need to
@@ -132,19 +272,24 @@ class ErrorHandler extends IssueHandler
 	 * 
 	 * handler ( int errno, string errstr [, string errfile [, int errline [, array errcontext]]] )
 	 * 
-	 * @param errno The first parameter, errno, contains the level of the error
+	 * @param int $errno The first parameter, errno, contains the level of the error
 	 * raised, as an integer.
-	 * @param errstr The second parameter, errstr, contains the error message,
+	 * @param string $errstr The second parameter, errstr, contains the error message,
 	 * as a string.
-	 * @param errfile The third parameter is optional, errfile, which contains
+	 * @param string $errfile The third parameter is optional, errfile, which contains
 	 * the filename that the error was raised in, as a string.
-	 * @param errline The fourth parameter is optional, errline, which contains
+	 * @param int $errline The fourth parameter is optional, errline, which contains
 	 * the line number the error was raised at, as an integer.
-	 * @param errcontext The fifth parameter is optional, errcontext, which  is
+	 * @param array $errcontext The fifth parameter is optional, errcontext, which  is
 	 * an array that points to the active symbol table at the point the error
 	 * occurred. In other words, errcontext will contain an array of every
 	 * variable that existed in the scope the error was triggered in. User error
 	 * handler must not modify error context.
+	 * 
+	 * @throws SystemException Thrown on system errors.
+	 * @throws UserException Thrown on applications errors (expected by the software,
+	 * usually as a side effect of an 'trigger_error()' statement.
+	 * 
 	 */
 	function error_handler($errno, $errstr, $errfile, $errline, $errcontext)
 	{
@@ -217,6 +362,8 @@ class ErrorHandler extends IssueHandler
 		}	 
 
 		throw $exception;
+		// Just to be on the safe side (the PHP specification says it will exit as
+		// soon as an exception is thrown, but extra care is never too much).
 		exit();
 	}
 }
