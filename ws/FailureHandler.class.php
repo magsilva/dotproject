@@ -32,6 +32,10 @@ Copyright (C) 2006 Marco Aurelio Graciotto Silva <magsilva@gmail.com>
  * is the ExceptionHandler class.
  * 
  * @package FailureHandler
+ * @author Marco Aurelio Graciotto Silva
+ * @license GPL
+ * @since November/2006
+ * @package FailureHandler
  */
 
 /*
@@ -73,6 +77,10 @@ class FailureHandler
 		$this->exception_handler = ExceptionHandler::instance();
 	}
 	
+	/**
+	 * Finalize the default application handling features and restores
+	 * the previous handler's configuration.
+	 */
 	public function __destruct()
 	{
 	}
