@@ -18,10 +18,6 @@ Copyright (C) 2006 Marco Aurelio Graciotto Silva <magsilva@gmail.com>
 */
 
 /**
- * @package FailureHandler
- */
-
-/**
  * ErrorHandler's parent class.
  */
 require_once('IssueHandler.class.php');
@@ -125,8 +121,6 @@ class ErrorHandler extends IssueHandler
 	 */
 	public function __construct()
 	{
-		parent::__construct();
-		
 		// Report all PHP errors
 		$this->previous_error_level = error_reporting(E_ALL | E_STRICT);
 		
@@ -153,8 +147,6 @@ class ErrorHandler extends IssueHandler
 	 */
 	public function __destruct()
 	{
-		parent::__destruct();
-		
 		error_reporting($this->previous_error_level);
 		ini_set('display_startup_errors', $this->previous_display_startup_errors);
 		ini_set('ignore_repeated_errors', $this->previous_ignore_repeated_errors);

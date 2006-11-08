@@ -23,14 +23,6 @@ Copyright (C) 2006 Marco Aurelio Graciotto Silva <magsilva@gmail.com>
  */
 abstract class IssueHandler
 {
-	protected function __construct()
-	{
-	}
-	
-	protected function __destruct()
-	{
-	}
-	
 	public function createReport()
 	{
 		$report = array();

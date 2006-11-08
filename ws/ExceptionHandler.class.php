@@ -14,42 +14,93 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Copyright (C) 2006 Marco Aur�lio Graciotto Silva <magsilva@gmail.com>
+Copyright (C) 2006 Marco Aurelio Graciotto Silva <magsilva@gmail.com>
 */
 
+/**
+ * Base class for ExceptionHandler.
+ */
 require_once('IssueHandler.class.php');
-require_once('Exception.class.php');
+
+/**
+ * Required by the exception logging feature. This is from the PEAR
+ * Log module.
+ */
 require_once('Log.php');
 
 /**
- * Sets the default exception handler if an exception is not caught within a
- * try/catch block.
+ * Handle exceptions in the application.
  * 
- * Every exception caught is registered in a log file or database (that's why
- * the dependency to PEAR's Log package).
+ * Sets the default exception handler and handle any exception not caught by a
+ * try/catch block. Every exception caught is registered in a log file or
+ * database (that's why the dependency to PEAR's Log package).
+ * 
+ * This class implements the Singleton pattern. An instance can be created only
+ * by means of the {@link instance()} method.
+ * 
+ * @package FailureHandler
+ * @author Marco Aurelio Graciotto Silva
+ * @license GPL
+ * @since November/2006
  */
 class ExceptionHandler extends IssueHandler
 {
+	/**
+	 * The PEAR Log instance, used to register all the exceptions caught by
+	 * the exception handler.
+	 * 
+	 * This variable is set by the constructor and cannot be modified after
+	 * that. Actually, it shouldn't be static, but, as the exception handling
+	 * function must be static and it uses this var, it's required that $log
+	 * be static too.
+	 * 
+	 * @var Log
+	 */
 	private static $log;
 	
 	/**
-	 * @param $filename The file where the records will be made. If a relative
-	 * filename is set, the base dir will the be one this file is located.
-	 * This argument is optional. So, if not supplied, the filename will be set
-	 * to 'out.log'.  
+	 * Holds the unique instance of this class (Singleton pattern implementation).
+	 * 
+	 * @var ExceptionHandler
 	 */
-	public function __construct($filename = null)
+	private static $instance;
+	
+	/**
+	 * The log filename.
+	 * @var string
+	 */
+	private $filename;
+	
+	/**
+	 * Create a new instance of the ExceptionHandler and change the default
+	 * exception handler.
+	 * 
+	 * The application's default exception handler is set to {@link
+	 * handle_exception}. The log mechanism is initialized, registering all
+	 * the exceptions into a file.
+	 * 
+	 * The exception logging format is as follows:
+	 * Date + 'TEST' + Error level + exception message + stack trace
+	 * 
+	 * Example:
+	 * <pre>
+	 * Nov 08 14:30:17 TEST [info] exception 'Exception' with message 'Dummy'
+	 * in /home/msilva/Projects/ideais/dotproject/tests/ExceptionHandlerExample.php:23
+	 * Stack trace:
+	 * #0 {main}
+	 * <pre>
+	 *
+	 * @param string $filename The log filename. If a relative filename is given,
+	 * the base dir will the be one this file (ExceptinHandler.class.php) is
+	 * located. This argument is optional. So, if not supplied, the filename will
+	 * be set to 'out.log'.  
+	 */
+	private function __construct($filename = null)
 	{
 		// The exception_handler must be defined before calling set_exception_handler().
 		set_exception_handler(array( 'ExceptionHandler', 'handle_exception' ));
 
-		if ($filename == null) {
-			$filename = dirname(__FILE__) . '/out.log';
-		} else {
-			if ($filename{0} != '/') {
-				$filename = dirname(__FILE__) . '/' . $filename;
-			}
-		}
+		$this->filename = ExceptionHandler::generate_absolute_log_filename($filename);
 		$ident = 'TEST';
 		$conf = array();
 		/*
@@ -67,13 +118,51 @@ class ExceptionHandler extends IssueHandler
 		 * PEAR_LOG_NONE    (9) = No message
 		 */
 		$level = PEAR_LOG_DEBUG;
-		self::$log = &Log::factory('file', $filename, $ident, $conf, $level);
+		self::$log = &Log::factory('file', $this->filename, $ident, $conf, $level);
+	}
+
+	/**
+	 * compile the absolute filename for a log filename.
+	 * 
+	 * @param string $filename The log filename. If a relative filename is given,
+	 * the base dir will the be one this file (ExceptinHandler.class.php) is
+	 * located. This argument is optional. So, if not supplied, the filename will
+	 * be set to 'out.log'.
+	 * @return string The absolute log filename.
+	 */
+	public static function generate_absolute_log_filename($filename = null)
+	{
+		if ($filename == null) {
+			$filename = dirname(__FILE__) . '/out.log';
+		} else {
+			if ($filename{0} != '/') {
+				$filename = dirname(__FILE__) . '/' . $filename;
+			}
+		}
+		
+		return $filename;
 	}
 	
+	/**
+	 * Get the log filename.
+	 * 
+	 * @return string The log filename.
+	 */
+	public function get_log_filename()
+	{
+		return $this->filename;
+	}
+	
+	
+	/**
+	 * Restore the previous error handling function and destroy the static
+	 * objects.
+	 */
 	public function __destruct()
 	{
-		parent::__destruct();
 		restore_exception_handler();
+		self::$instance = null;
+		self::$log = null;
 	}
 
 	/**
@@ -86,6 +175,31 @@ class ExceptionHandler extends IssueHandler
 	public static function handle_exception($exception)
 	{
 		self::$log->log($exception->__toString());
+	}
+	
+	/**
+	 * Create the ExceptionHandler instance. This implements the Singleton
+	 * pattern.
+	 * 
+	 * @param string $filename The log filename. If a relative filename is given,
+	 * the base dir will the be one this file (ExceptinHandler.class.php) is
+	 * located. This argument is optional. So, if not supplied, the filename will
+	 * be set to 'out.log'.
+	 * 
+	 * @throws UserException If there is an active ExceptionHandler and this filename
+	 * argument is different from the one of the running instance, an UserException
+	 * will be thrown. 
+	 */
+	public static function instance($filename = null)
+	{
+		if (self::$instance == null) {
+			self::$instance = new ExceptionHandler($filename);
+		} else {
+			if (ExceptionHandler::generate_absolute_log_filename($filename) != self::$instance->get_log_filename()) {
+				throw new UserException('Cannot set the log filename for an active ExceptionHandler');
+			}
+		}
+		return self::$instance;
 	}
 }
 
