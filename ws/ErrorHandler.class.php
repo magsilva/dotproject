@@ -136,6 +136,12 @@ class ErrorHandler extends IssueHandler
 		
 		// Set the function called whenever an error happens.
 		set_error_handler( array( &$this, 'error_handler' ) );
+		
+		// The new error format contains a reference to a page describing the error or 
+		// function causing the error. Additional you have to set docref_ext to match
+		// the file extensions of your copy.
+		ini_set('docref_root', 'http://br2.php.net/manual/en/' );
+		ini_set('docref_ext', '.php');
 	}
 	
 	/**
