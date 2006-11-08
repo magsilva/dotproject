@@ -14,30 +14,28 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Copyright (C) 2006 Marco Aur�lio Graciotto Silva <magsilva@gmail.com>
+Copyright (C) 2006 Marco Aurelio Graciotto Silva <magsilva@gmail.com>
 */
 
+require_once('FailureHandler.class.php');
+require_once('DAOMapper.class.php');
+require_once('WebService.class.php');
+require_once('../classes/dotproject.class.php');
 
-require_once("../classes/dotproject.class.php");
-include_once('DAOMapper.class.php');
-
-
-require_once('AssertionHandler.class.php');
-require_once('ErrorHandler.class.php');
-require_once('ExceptionHandler.class.php');
-
-class DPWebService
+class DPWebService extends WebService
 {
-	private static $instance;
+	protected $exception_handler;
 	
-	private $exception_handler;
+	protected $assertion_handler;
 	
-	private $assertion_handler;
+	protected $error_handler;
 	
-	private $error_handler;
+	protected $daomapper;
 	
-	private function __construct()
+	public function __construct()
 	{
+		parent::__construct();
+		
 		// Whether to warn when arguments are passed by reference at function call time.
 		// This method is deprecated and is likely to be unsupported in future versions
 		// of PHP/Zend. The encouraged method of specifying which arguments should be
@@ -56,44 +54,34 @@ class DPWebService
 		// line, and also because people using carriage-returns as item separators under
 		// Unix systems would experience non-backwards-compatible behaviour. 
 		ini_set('auto_detect_line_endings', 1);
-		
-    	// The new error format contains a reference to a page describing the error or 
-    	// function causing the error. Additional you have to set docref_ext to match
-    	// the file extensions of your copy.
-    	// TODO: Set the docref_root.
-		ini_set('docref_root', "http://br2.php.net/manual/en/" );
-		ini_set('docref_ext', '.php');
-
-		ini_set("soap.wsdl_cache_enabled", "0");
-		ini_set("session.auto_start", "0");
-		ini_set("default_socket_timeout", "30");
-		
-		$this->exception_handler = new ExceptionHandler('dp-ws.log');
+				
+		$this->exception_handler = ExceptionHandler::instance('dp-ws.log');
 		$this->error_handler = new ErrorHandler();
 		$this->assertion_handler = new AssertionHandler();
+
+		$this->daomapper = new DAOMapper();
+
+		$this->start();
+ 	}
+	
+	/**
+	 * Finalize the DotProject web service.
+	 */
+	public function __destruct()
+	{
+		parent::__destruct();
 	}
 	
-	private function __destruct()
-	{
-		$this->exception_handler = new ExceptionHandler();
-		$this->error_handler = new ErrorHandler();
-		$this->assertion_handler = new AssertionHandler();
+	protected function get_wsdl()
+	{ 
+		return "dotproject.wsdl";
 	}
 
-	public static function instance()
+	protected function get_mapping()
 	{
-		if (!isset(self::$instance)) {
-			$c = __CLASS__;
-			self::$instance = new $c;
-		}
-		return self::$instance;
+		return $this->mapper->getMapping();
 	}
 
-}
-
-
-class DotprojectWS
-{
 	public function ping()
 	{
 		return TRUE;
@@ -105,16 +93,6 @@ class DotprojectWS
 	}
 }
 
-
-$dPWebService = DPWebService::instance();
-
-// session_start();
-$mapper = new DAOMapper();
-$classmap = $mapper->getMapping();
-
-$server = new SoapServer("dotproject.wsdl", array('classmap' => $classmap));
-$server->setClass("DotprojectWS");
-$server->setPersistence(SOAP_PERSISTENCE_SESSION);
-$server->handle();
+$dPWebService = new DPWebService();
 
 ?>

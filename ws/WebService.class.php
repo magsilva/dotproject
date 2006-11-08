@@ -19,6 +19,9 @@ Copyright (C) 2006 Marco Aurelio Graciotto Silva <magsilva@gmail.com>
 
 /**
  * Basic web service class.
+ * 
+ * Basic web service class. Any class that want to provide web services, must
+ * extend this class
  *  
  * @package WebService
  * @author Marco Aurelio Graciotto Silva
@@ -60,7 +63,6 @@ abstract class WebService
 		$this->previous_default_socket_timeout = ini_set("default_socket_timeout", "30");
 	}
 	
-	
 	/**
 	 * Finalize the web service.
 	 * 
@@ -73,5 +75,38 @@ abstract class WebService
 		 ini_set("session.auto_start", $this->previous_session_auto_start);
 		 ini_set("default_socket_timeout", $this->previous_default_socket_timeout);
 	}
+	
+	/**
+	 * Start the web service.
+	 */
+	protected function start()
+	{
+		if ($this->get_mapping() != null) {
+			$server = new SoapServer($this->get_wsdl());
+		} else {
+			$server = new SoapServer($this->get_wsdl(), array('classmap' => $this->get_mapping()));
+		}
+		$server->setClass(get_class($this));
+		$server->setPersistence(SOAP_PERSISTENCE_SESSION);
+		$server->handle();
+	}
+
+	/**
+	 * Get the WSDL required by {@link start()}.
+	 * 
+	 * The WSDL is an XML file that describe the Web Services made available
+	 * by the application.
+	 * 
+	 * @return string The WSDL filename.
+	 */
+	abstract protected function get_wsdl();
+	
+	/**
+	 * Get the mapping between classes and XML elements.
+	 * 
+	 * @return array The mapping between classes and XML elements or the value
+	 * NULL (if no mapping must be done).
+	 */
+	abstract protected function get_mapping();
 }
 ?>

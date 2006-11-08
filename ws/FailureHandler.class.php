@@ -86,5 +86,5 @@ class FailureHandler
 	}
 }
 
-$fh = new FailureHandler();
+// $fh = new FailureHandler();
 ?>
