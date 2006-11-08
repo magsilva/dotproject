@@ -14,12 +14,24 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Copyright (C) 2006 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
+Copyright (C) 2006 Marco Aurelio Graciotto Silva <magsilva@gmail.com>
 */
 
 
 /**
  * Map a class to its DAO class.
+ * 
+ * Some classes have data stored in files or databases. We want to isolate
+ * the application logic from that. So, we implemented the DAO (Data Access
+ * Object) pattern. For every class that store data somewhere else, there
+ * must be a DAO class. For example, a class 'Example' would be defined in
+ * 'Example.class.php' and its DAO class would be named 'ExampleDAO' and
+ * defined in 'Example.dao.php'.
+ * 
+ * @author Marco Aurelio Graciotto Silva
+ * @license GPL
+ * @since November/2006
+ * @package FailureHandler
  */
 class DAOMapper
 {
@@ -38,18 +50,23 @@ class DAOMapper
 	/**
 	 * Create a new DAOMapper.
 	 * 
-	 * @arg $dir Directory to be used as base. May be left unassigned (the default
-	 * value is the current directory name).
+	 * @arg string $dir Directory to be used as home. May be left unassigned
+	 * (the default value is the current directory's name).
 	 */
-	function DAOMapper($dir = null)
+	public function __construct($dir = null)
 	{
 		$this->setDir($dir);
+		$this->mapDAO();
 	}	
 
 	/**
 	 * Change the directory used as basedir.
+	 * 
+	 * @param string $dir Directory be used as home. May be left unassigned (the
+	 * default value is the current directory's name).
+	 * @throws Exception If the directory does not exist, an exception is thrown.
 	 */
-	function setDir($dir)
+	public function setDir($dir)
 	{
 		if ($dir == null) {
 			$dir = getcwd();
@@ -59,6 +76,11 @@ class DAOMapper
 			throw new Exception("Directory does not exist.");
 		}
 		
+		/*
+		 * Always end the dirname with a slash (extra '/' are never a problem
+		 * when appending a file or directory name to it, but a missing '/' can
+		 * be troublesome.
+		 */
 		if ($dir{strlen($dir) - 1} != '/') {
 			$dir .= '/';
 		}
@@ -67,14 +89,22 @@ class DAOMapper
 	}
 
 	/**
+	 * Find the PHP files that have DAO classes' definitions and load (include) their
+	 * content.
+	 * 
 	 * Find the PHP files that have DAO classes' definitions. Only one class definition
 	 * per file is allowed. The DAO class filename _must_ be suffixed with '.dao.php'
 	 * (actually, the this- >daoFileSuffix value).
+	 * 
+	 * All the files found are included (include_once), so the DAO classes defined in
+	 * those files are visible for the application.
+	 * 
+	 * @return array The DAO class files found.
 	 */
-	function findFiles()
+	public function findFiles()
 	{
-		if ($caching = false && $this->files == null) {
-			return;
+		if ($this->caching == true && $this->files != null) {
+			return $this->files;
 		}
 		
 		$daoFiles = glob($this->targetDir . '*' . $this->daoFileSuffix, GLOB_NOSORT | GLOB_NOESCAPE);
@@ -91,15 +121,23 @@ class DAOMapper
 	}
 
 	/**
-	 * Maps the class and its DAO class. It uses the filename as pattern. A class named
-	 * 'TaskDAO' maps a DAO class for the 'Task' class.
+	 * Maps the class and its DAO class.
 	 * 
-	 * The array format is 'ClassName' => 'DAOClassName' (e.g. 'Task' => 'TaskDAO').
+	 * Maps the class and its DAO class. It uses the filename as pattern. A
+	 * class named 'TaskDAO' maps a DAO class for the 'Task' class.
+	 * 
+	 * The array format is 'ClassName' => 'DAO ClassName' (e.g. 'Task' => 'TaskDAO').
+	 * 
+	 * @return array The map between class and dao class files.
 	 */
-	function mapDAO($files)
+	public function mapDAO($files = null)
 	{
-		if ($caching = false && $this->classmap == null) {
-			return;
+		if ($files == null) {
+			$files = $this->findFiles();
+		}
+		
+		if ($this->caching == true && $this->classmap != null) {
+			return $this->classmap;
 		}
 
 		$this->classmap = array();
@@ -116,25 +154,17 @@ class DAOMapper
 	}
 	
 	/**
-	 * Create the mapping of DAO classes.
-	 */
-	function createMapping()
-	{
-		$files = $this->findFiles();
-		$this->mapDAO($files);
-	}
-	
-	/**
 	 * Return the mapping of a class to its DAO class.
+	 * 
+	 * @return array Mapping of classes/DAO classes.
 	 */
-	function getMapping()
+	public function getMapping()
 	{
 		if ($this->classmap == null) {
-			$this->createMapping();
+			$this->mapDAO();
 		}
 		return $this->classmap;
 	}
-	
 }
 
 ?>
