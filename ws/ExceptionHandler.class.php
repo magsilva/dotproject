@@ -38,6 +38,9 @@ require_once('Log.php');
  * This class implements the Singleton pattern. An instance can be created only
  * by means of the {@link instance()} method.
  * 
+ * @todo Email the system report (IssueHandler->getReport())
+ * @todo Log the system report (IssueHandler->getReport())
+ * 
  * @package FailureHandler
  * @author Marco Aurelio Graciotto Silva
  * @license GPL

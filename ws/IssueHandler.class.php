@@ -18,11 +18,28 @@ Copyright (C) 2006 Marco Aurelio Graciotto Silva <magsilva@gmail.com>
 */
 
 /**
- * Basic issue handler class. It gathers generic system information (usually
- * useful for any debugging purpose.
+ * Basic issue handler class.
+ * 
+ * The IssueHandler class gathers generic system information (usually
+ * useful for any debugging purpose). It's not useful on its own (that's
+ * why it's abstract), but is the parent class for any handler (exception,
+ * assertion and error handlers).
+ * 
+ * @package FailureHandler
+ * @author Marco Aurelio Graciotto Silva
+ * @license GPL
+ * @since November/2006
  */
 abstract class IssueHandler
 {
+	/**
+	 * Create a detailed system report.
+	 * 
+	 * Report a full system report. This may useful to track down errors
+	 * in remote applications (as is the case for PHP applications).
+	 * 
+	 * @return array System report.
+	 */
 	public function createReport()
 	{
 		$report = array();
@@ -184,3 +201,5 @@ abstract class IssueHandler
 		return $report;
 	}
 }
+
+?>
