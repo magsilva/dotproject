@@ -19,7 +19,7 @@ Copyright (C) 2006 Marco Aurelio Graciotto Silva <magsilva@gmail.com>
 
 require_once( dirname( __FILE__ ) . '/../ws/ExceptionHandler.class.php' );
 
-$handler = new ExceptionHandler('dp-ws.log');
+$handler = ExceptionHandler::instance('dp-ws.log');
 throw new Exception('Dummy');
 
 ?>

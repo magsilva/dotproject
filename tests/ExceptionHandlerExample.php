@@ -19,7 +19,7 @@ Copyright (C) 2006 Marco Aurelio Graciotto Silva <magsilva@gmail.com>
 
 require_once( dirname( __FILE__ ) . '/../ws/ExceptionHandler.class.php' );
 
-$handler = new ExceptionHandler();
+$handler = ExceptionHandler::instance();
 throw new Exception('Dummy');
 
 ?>
