@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema targetNamespace="http://ideais.sf.net/schema/v1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:ideais="http://ideais.sf.net/schema/v1" xmlns:dotproject="http://www.dotproject.org">
+
+    <xsd:element name="Project" type="tns:DotProject_Project">
+    </xsd:element>
+    
+
+    <xsd:complexType name="DotProject_Project">
+    	<xsd:sequence>
+    		<xsd:element name="id" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="name" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="shortname" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="description" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="company" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="departament" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="owner" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="url" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="demourl" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="start_date" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="end_date" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="actual_end_date" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="status" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="percent_complete" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="color_identifier" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="target_budget" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="actual_budget" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="creator" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="active" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="private" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="departaments" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="contacts" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="priority" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="type" type="xsd:string">
+    		</xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="Project">
+    	<xsd:sequence>
+    		<xsd:element name="Name" type="xsd:string">
+    		</xsd:element>
+            <xsd:element name="ASCIIName" type="xsd:string">
+    		</xsd:element>
+            <xsd:element name="Description" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="Owner" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="CreationDate" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="TargetEndDate" type="xsd:string">
+    		</xsd:element>
+    		<xsd:element name="ActualEndDate" type="xsd:string">
+    		</xsd:element>
+    	</xsd:sequence></xsd:complexType>
+</xsd:schema>
