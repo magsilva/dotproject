@@ -1,6 +1,0 @@
-- Compare the 'phpgacl' (included with dotProject) with the original code.
-- Find files that use (require/include) the 'session.php'.
-- Check the utilization of global variables within each file included at dotproject.class.php.
-  * Make sure that the code included will be used just after the global variables are defined at index.php.
-- Upgrade the phpgacl and smarty (libs/).
-- http://www.dotproject.net/vbulletin/showthread.php?t=5443

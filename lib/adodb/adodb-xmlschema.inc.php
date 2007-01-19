@@ -10,9 +10,9 @@
  * build a database on any ADOdb-supported platform using a simple
  * XML schema.
  *
- * Last Editor: $Author: jlim $
+ * Last Editor: $Author: gregorerhardt $
  * @author Richard Tango-Lowy & Dan Cech
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.2.4.1 $
  *
  * @package axmls
  * @tutorial getting_started.pkg
@@ -243,6 +243,17 @@ class dbTable extends dbObject {
 	var $drop_field = array();
 	
 	/**
+	* @var array List of rows of data that needs to be loaded into
+	* table once created.
+	* @access private
+	*/
+	var $row_data = array();
+	var $current_row = 0;
+	var $row_field = 0;
+
+	var $html_table;
+
+	/**
 	* Iniitializes a new table object.
 	*
 	* @param string $prefix DB Object prefix
@@ -251,6 +262,8 @@ class dbTable extends dbObject {
 	function dbTable( &$parent, $attributes = NULL ) {
 		$this->parent =& $parent;
 		$this->name = $this->prefix($attributes['NAME']);
+		$trans_table = get_html_translation_table(HTML_ENTITIES);
+		$this->html_table = array_flip($trans_table);
 	}
 	
 	/**
@@ -305,6 +318,10 @@ class dbTable extends dbObject {
 			case 'DEFTIMESTAMP':
 				// Add a field option to the table object
 				$this->addFieldOpt( $this->current_field, $this->currentElement );
+				break;
+			case 'ROW':
+				$this->row_data[$this->current_row] = array();
+				$this->row_field = 0;
 				break;
 			default:
 				// print_r( array( $tag, $attributes ) );
@@ -1209,7 +1226,7 @@ class dbQuerySet extends dbObject {
 * @tutorial getting_started.pkg
 *
 * @author Richard Tango-Lowy & Dan Cech
-* @version $Revision: 1.12 $
+* @version $Revision: 1.2.4.1 $
 *
 * @package axmls
 */

@@ -83,42 +83,42 @@ if ($caller == 'todo') {
 	$q->addOrder('task_priority DESC');
 ##############################################################
 } else {
-// pull tasks
-$q = new DBQuery;
-$q->addTable('tasks', 't');
-$q->addQuery('t.task_id, task_parent, task_name, task_start_date, task_end_date, task_duration, task_duration_type, task_priority, task_percent_complete, task_order, task_project, task_milestone, project_name, task_dynamic');
-$q->addJoin('projects', 'p', 'project_id = t.task_project');
-$q->addWhere('project_status != 7');
-$q->addOrder('project_id, task_start_date');
-if ($project_id) {
+	// pull tasks
+	$q = new DBQuery;
+	$q->addTable('tasks', 't');
+	$q->addQuery('t.task_id, task_parent, task_name, task_start_date, task_end_date, task_duration, task_duration_type, task_priority, task_percent_complete, task_order, task_project, task_milestone, project_name, task_dynamic');
+	$q->addJoin('projects', 'p', 'project_id = t.task_project');
+	$q->addWhere('project_status != 7');
+	$q->addOrder('project_id, task_start_date');
+	if ($project_id) {
 	        $q->addWhere('task_project = '.$project_id);
-}
-switch ($f) {
-        case 'all':
-                $q->addWhere('task_status > -1');
-                break;
-        case 'myproj':
-                $q->addWhere('task_status > -1');
+	}
+	switch ($f) {
+	        case 'all':
+	                $q->addWhere('task_status > -1');
+	                break;
+	        case 'myproj':
+	                $q->addWhere('task_status > -1');
 	                $q->addWhere('project_owner = '.$AppUI->user_id);
-                break;
-        case 'mycomp':
-                $q->addWhere('task_status > -1');
+	                break;
+	        case 'mycomp':
+	                $q->addWhere('task_status > -1');
 	                $q->addWhere('project_company = '.$AppUI->user_company);
-                break;
-        case 'myinact':
-                $q->addTable('user_tasks', 'ut');
-                $q->addWhere('task_project = p.project_id');
+	                break;
+	        case 'myinact':
+	                $q->addTable('user_tasks', 'ut');
+	                $q->addWhere('task_project = p.project_id');
 	                $q->addWhere('ut.user_id = '.$AppUI->user_id);
-                $q->addWhere('ut.task_id = t.task_id');
-                break;
-        default:
-                $q->addTable('user_tasks', 'ut');
-                $q->addWhere('task_status > -1');
-                $q->addWhere('task_project = p.project_id');
+	                $q->addWhere('ut.task_id = t.task_id');
+	                break;
+	        default:
+	                $q->addTable('user_tasks', 'ut');
+	                $q->addWhere('task_status > -1');
+	                $q->addWhere('task_project = p.project_id');
 	                $q->addWhere('ut.user_id = '.$AppUI->user_id);
-                $q->addWhere('ut.task_id = t.task_id');
-                break;
-}
+	                $q->addWhere('ut.task_id = t.task_id');
+	                break;
+	}
 
 }
 
@@ -152,7 +152,7 @@ foreach ($proTasks as $row) {
                         $row['task_end_date'] = '';
                 }
         }
-
+		
 		$ted = new CDate($row['task_end_date']);
 
 		if ($ted->after(new CDate($end_max)))
@@ -200,11 +200,11 @@ if ($caller == 'todo') {
 	        $graph->scale->actinfo->SetColTitles(array( $AppUI->_('Task name', UI_OUTPUT_RAW), $AppUI->_('Project name', UI_OUTPUT_RAW), $AppUI->_('Dur.', UI_OUTPUT_RAW), $AppUI->_('Start', UI_OUTPUT_RAW), $AppUI->_('Finish', UI_OUTPUT_RAW)),array(180,50, 60, 60,60));
 	}
 } else {
-if ($showWork=='1') {
+	if ($showWork=='1') {
 	        $graph->scale->actinfo->SetColTitles(array( $AppUI->_('Task name', UI_OUTPUT_RAW), $AppUI->_('Work', UI_OUTPUT_RAW), $AppUI->_('Start', UI_OUTPUT_RAW), $AppUI->_('Finish', UI_OUTPUT_RAW)),array(230,60, 60,60));
-} else {
+	} else {
 	        $graph->scale->actinfo->SetColTitles(array( $AppUI->_('Task name', UI_OUTPUT_RAW), $AppUI->_('Dur.', UI_OUTPUT_RAW), $AppUI->_('Start', UI_OUTPUT_RAW), $AppUI->_('Finish', UI_OUTPUT_RAW)),array(230,60, 60,60));
-}
+	}
 
 }
 $graph->scale->tableTitle->Set($projects[$project_id]['project_name']);
@@ -292,15 +292,15 @@ function findgchild( &$tarr, $parent, $level=0 ){
 reset($projects);
 //$p = &$projects[$project_id];
 foreach ($projects as $p) {
-$tnums = count( $p['tasks'] );
+	$tnums = count( $p['tasks'] );
 
-for ($i=0; $i < $tnums; $i++) {
-        $t = $p['tasks'][$i];
+	for ($i=0; $i < $tnums; $i++) {
+	        $t = $p['tasks'][$i];
 	        if ($t['task_parent'] == $t['task_id']) {
-                showgtask( $t );
+	                showgtask( $t );
 	                findgchild( $p['tasks'], $t['task_id'] );
 	        }
-        }
+	}
 }
 
 $hide_task_groups = false;
@@ -351,7 +351,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
         $start = $start->getDate();
 
         $progress = $a['task_percent_complete'] + 0;
-
+	
 	if ($progress > 100) 
 		$progress = 100;
 	elseif ($progress < 0)

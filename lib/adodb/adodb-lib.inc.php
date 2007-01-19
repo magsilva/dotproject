@@ -7,7 +7,7 @@ global $ADODB_INCLUDED_LIB;
 $ADODB_INCLUDED_LIB = 1;
 
 /* 
- @version V4.93 10 Oct 2006 (c) 2000-2006 John Lim (jlim\@natsoft.com.my). All rights reserved.
+ @version V4.72 21 Feb 2006 (c) 2000-2006 John Lim (jlim\@natsoft.com.my). All rights reserved.
   Released under both BSD license and Lesser GPL library license. 
   Whenever there is any discrepancy between the two licenses, 
   the BSD license will take precedence. See License.txt. 
@@ -16,69 +16,6 @@ $ADODB_INCLUDED_LIB = 1;
   Less commonly used functions are placed here to reduce size of adodb.inc.php. 
 */ 
 
-function adodb_probetypes(&$array,&$types,$probe=8)
-{
-// probe and guess the type
-	$types = array();
-	if ($probe > sizeof($array)) $max = sizeof($array);
-	else $max = $probe;
-	
-	
-	for ($j=0;$j < $max; $j++) {
-		$row =& $array[$j];
-		if (!$row) break;
-		$i = -1;
-		foreach($row as $v) {
-			$i += 1;
-
-			if (isset($types[$i]) && $types[$i]=='C') continue;
-			
-			//print " ($i ".$types[$i]. "$v) ";
-			$v = trim($v);
-			
-			if (!preg_match('/^[+-]{0,1}[0-9\.]+$/',$v)) {
-				$types[$i] = 'C'; // once C, always C
-				
-				continue;
-			}
-			if ($j == 0) { 
-			// If empty string, we presume is character
-			// test for integer for 1st row only
-			// after that it is up to testing other rows to prove
-			// that it is not an integer
-				if (strlen($v) == 0) $types[$i] = 'C';
-				if (strpos($v,'.') !== false) $types[$i] = 'N';
-				else  $types[$i] = 'I';
-				continue;
-			}
-			
-			if (strpos($v,'.') !== false) $types[$i] = 'N';
-			
-		}
-	}
-}
-
-function  &adodb_transpose(&$arr, &$newarr, &$hdr)
-{
-	$oldX = sizeof(reset($arr));
-	$oldY = sizeof($arr);	
-	
-	if ($hdr) {
-		$startx = 1;
-		$hdr = array();
-		for ($y = 0; $y < $oldY; $y++) {
-			$hdr[] = $arr[$y][0];
-		}
-	} else
-		$startx = 0;
-
-	for ($x = $startx; $x < $oldX; $x++) {
-		$newarr[] = array();
-		for ($y = 0; $y < $oldY; $y++) {
-			$newarr[$x-$startx][] = $arr[$y][$x];
-		}
-	}
-}
 
 // Force key to upper. 
 // See also http://www.php.net/manual/en/function.array-change-key-case.php
@@ -105,7 +42,7 @@ function _adodb_replace(&$zthis, $table, $fieldArray, $keyCol, $autoQuote, $has_
 			$keyCol = array($keyCol);
 		}
 		foreach($fieldArray as $k => $v) {
-			if ($autoQuote && !is_numeric($v) and strncmp($v,"'",1) !== 0 and strcasecmp($v,$zthis->null2null)!=0) {
+			if ($autoQuote && !is_numeric($v) and strncmp($v,"'",1) !== 0 and strcasecmp($v,'null')!=0) {
 				$v = $zthis->qstr($v);
 				$fieldArray[$k] = $v;
 			}
@@ -219,7 +156,7 @@ function _adodb_getmenu(&$zthis, $name,$defstr='',$blank1stItem=true,$multiple=f
 		if ($fieldsize > 2) {
             $group = rtrim($zthis->fields[2]);
         }
-/* 
+ 
         if ($optgroup != $group) {
             $optgroup = $group;
             if ($firstgroup) {
@@ -230,7 +167,7 @@ function _adodb_getmenu(&$zthis, $name,$defstr='',$blank1stItem=true,$multiple=f
                 $s .="\n<optgroup label='". htmlspecialchars($group) ."'>";
             }
 		}
-*/
+	
 		if ($hasvalue) 
 			$value = " value='".htmlspecialchars($zval2)."'";
 		
@@ -360,14 +297,14 @@ function _adodb_getcount(&$zthis, $sql,$inputarr=false,$secs2cache=0)
 {
 	$qryRecs = 0;
 	
-	 if (!empty($zthis->_nestedSQL) || preg_match("/^\s*SELECT\s+DISTINCT/is", $sql) || 
+	 if (preg_match("/^\s*SELECT\s+DISTINCT/is", $sql) || 
 	 	preg_match('/\s+GROUP\s+BY\s+/is',$sql) || 
 		preg_match('/\s+UNION\s+/is',$sql)) {
 		// ok, has SELECT DISTINCT or GROUP BY so see if we can use a table alias
 		// but this is only supported by oracle and postgresql...
 		if ($zthis->dataProvider == 'oci8') {
 			
-			$rewritesql = preg_replace('/(\sORDER\s+BY\s[^)]*)/is','',$sql);
+			$rewritesql = preg_replace('/(\sORDER\s+BY\s.*)/is','',$sql);
 			
 			// Allow Oracle hints to be used for query optimization, Chris Wrye
 			if (preg_match('#/\\*+.*?\\*\\/#', $sql, $hint)) {
@@ -376,16 +313,18 @@ function _adodb_getcount(&$zthis, $sql,$inputarr=false,$secs2cache=0)
 				$rewritesql = "SELECT COUNT(*) FROM (".$rewritesql.")"; 
 			
 		} else if (strncmp($zthis->databaseType,'postgres',8) == 0)  {
-			$rewritesql = preg_replace('/(\sORDER\s+BY\s[^)]*)/is','',$sql);
-			$rewritesql = "SELECT COUNT(*) FROM ($rewritesql) _ADODB_ALIAS_";
+			
+			$info = $zthis->ServerInfo();
+			if (substr($info['version'],0,3) >= 7.1) { // good till version 999
+				$rewritesql = preg_replace('/(\sORDER\s+BY\s[^)]*)/is','',$sql);
+				$rewritesql = "SELECT COUNT(*) FROM ($rewritesql) _ADODB_ALIAS_";
+			}
 		}
 	} else {
 		// now replace SELECT ... FROM with SELECT COUNT(*) FROM
 		$rewritesql = preg_replace(
 					'/^\s*SELECT\s.*\s+FROM\s/Uis','SELECT COUNT(*) FROM ',$sql);
 
-		
-		
 		// fix by alexander zhukov, alex#unipack.ru, because count(*) and 'order by' fails 
 		// with mssql, access and postgresql. Also a good speedup optimization - skips sorting!
 		// also see http://phplens.com/lens/lensforum/msgs.php?id=12752
@@ -393,13 +332,10 @@ function _adodb_getcount(&$zthis, $sql,$inputarr=false,$secs2cache=0)
 			$rewritesql = preg_replace('/(\sORDER\s+BY\s.*)/is','',$rewritesql);
 		else
 			$rewritesql = preg_replace('/(\sORDER\s+BY\s[^)]*)/is','',$rewritesql);
+		 
 	}
 	
-	
-	
 	if (isset($rewritesql) && $rewritesql != $sql) {
-		if (preg_match('/\sLIMIT\s+[0-9]+/i',$sql,$limitarr)) $rewritesql .= $limitarr[1];
-		 
 		if ($secs2cache) {
 			// we only use half the time of secs2cache because the count can quickly
 			// become inaccurate if new records are added
@@ -418,8 +354,6 @@ function _adodb_getcount(&$zthis, $sql,$inputarr=false,$secs2cache=0)
 	if (preg_match('/\s*UNION\s*/is', $sql)) $rewritesql = $sql;
 	else $rewritesql = preg_replace('/(\sORDER\s+BY\s.*)/is','',$sql); 
 	
-	if (preg_match('/\sLIMIT\s+[0-9]+/i',$sql,$limitarr)) $rewritesql .= $limitarr[0];
-		
 	$rstest = &$zthis->Execute($rewritesql,$inputarr);
 	if (!$rstest) $rstest = $zthis->Execute($sql,$inputarr);
 	
@@ -442,6 +376,7 @@ function _adodb_getcount(&$zthis, $sql,$inputarr=false,$secs2cache=0)
 		$rstest->Close();
 		if ($qryRecs == -1) return 0;
 	}
+	
 	return $qryRecs;
 }
 
@@ -616,7 +551,7 @@ function _adodb_getupdatesql(&$zthis,&$rs, $arrFields,$forceUpdate=false,$magicq
                 //********************************************************//
                 if (is_null($arrFields[$upperfname])
 					|| (empty($arrFields[$upperfname]) && strlen($arrFields[$upperfname]) == 0)
-                    || $arrFields[$upperfname] === $zthis->null2null
+                    || $arrFields[$upperfname] === 'null'
                     )
                 {
                     switch ($force) {
@@ -638,7 +573,7 @@ function _adodb_getupdatesql(&$zthis,&$rs, $arrFields,$forceUpdate=false,$magicq
 						default:
                         case 3:
                             //Set the value that was given in array, so you can give both null and empty values
-                            if (is_null($arrFields[$upperfname]) || $arrFields[$upperfname] === $zthis->null2null) {
+                            if (is_null($arrFields[$upperfname]) || $arrFields[$upperfname] === 'null') {
                                 $setFields .= $field->name . " = null, ";
                             } else {
                                 $setFields .= _adodb_column_sql($zthis, 'U', $type, $upperfname, $fnameq,$arrFields, $magicq);
@@ -779,7 +714,7 @@ static $cacheCols;
             /********************************************************/
             if (is_null($arrFields[$upperfname])
                 || (empty($arrFields[$upperfname]) && strlen($arrFields[$upperfname]) == 0)
-                || $arrFields[$upperfname] === $zthis->null2null
+                || $arrFields[$upperfname] === 'null'
 				)
                {
                     switch ($force) {
@@ -801,7 +736,7 @@ static $cacheCols;
 						default:
                         case 3:
                             //Set the value that was given in array, so you can give both null and empty values
-							if (is_null($arrFields[$upperfname]) || $arrFields[$upperfname] === $zthis->null2null) { 
+							if (is_null($arrFields[$upperfname]) || $arrFields[$upperfname] === 'null') { 
 								$values  .= "null, ";
 							} else {
                         		$values .= _adodb_column_sql($zthis, 'I', $type, $upperfname, $fnameq, $arrFields, $magicq);
@@ -1082,47 +1017,5 @@ function _adodb_backtrace($printOrArr=true,$levels=9999,$skippy=0)
 	
 	return $s;
 }
-/*
-function _adodb_find_from($sql) 
-{
-
-	$sql = str_replace(array("\n","\r"), ' ', $sql);
-	$charCount = strlen($sql);
-	
-	$inString = false;
-	$quote = '';
-	$parentheseCount = 0;
-	$prevChars = '';
-	$nextChars = '';
-	
-
-	for($i = 0; $i < $charCount; $i++) {
-
-    	$char = substr($sql,$i,1);
-	    $prevChars = substr($sql,0,$i);
-    	$nextChars = substr($sql,$i+1);
-
-		if((($char == "'" || $char == '"' || $char == '`') && substr($prevChars,-1,1) != '\\') && $inString === false) {
-			$quote = $char;
-			$inString = true;
-		}
-
-		elseif((($char == "'" || $char == '"' || $char == '`') && substr($prevChars,-1,1) != '\\') && $inString === true && $quote == $char) {
-			$quote = "";
-			$inString = false;
-		}
-
-		elseif($char == "(" && $inString === false)
-			$parentheseCount++;
-
-		elseif($char == ")" && $inString === false && $parentheseCount > 0)
-			$parentheseCount--;
-
-		elseif($parentheseCount <= 0 && $inString === false && $char == " " && strtoupper(substr($prevChars,-5,5)) == " FROM")
-			return $i;
-
-	}
-}
-*/
 
 ?>

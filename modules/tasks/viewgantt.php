@@ -216,12 +216,12 @@ function showFullProject() {
 	<td>
 <?php
 if ($a != 'todo') {
-$q = new DBQuery;
-$q->addTable('tasks');
-$q->addQuery('COUNT(*) AS N');
-$q->addWhere("task_project=$project_id");
-$cnt = $q->loadList();
-$q->clear();
+	$q = new DBQuery;
+	$q->addTable('tasks');
+	$q->addQuery('COUNT(*) AS N');
+	$q->addWhere("task_project=$project_id");
+	$cnt = $q->loadList();
+	$q->clear();
 } else {
 	if (empty($tasks))
 		$cnt[0]['N'] = 0;

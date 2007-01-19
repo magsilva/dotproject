@@ -63,13 +63,11 @@ $gacl = &$gacl_api;
 
 $db = &$gacl->db;
 
-
-if (! isset($AppUI)) 
+if (! isset($_SESSION['AppUI']))
   die ("You must log into dotProject first");
-  
-if ( $AppUI->user_id != 1 ) {
+if ( $_SESSION['AppUI']->user_id != 1 ) {
   // bit of a chicken and egg here, but allow other users to manage acls.
-  if (! $gacl->acl_check("application", "access", "user", $AppUI->user_id, "sys", "acl"))
+  if (! $gacl->acl_check("application", "access", "user", $_SESSION['AppUI']->user_id, "sys", "acl"))
     die ("You do not have the appropriate permissions for this task");
 }
 // End of dotproject login check.

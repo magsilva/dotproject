@@ -10,8 +10,6 @@ require_once( $AppUI->getLibraryClass( 'PEAR/Date' ) );
 require_once( $AppUI->getModuleClass( 'tasks' ) );
 require_once( $AppUI->getModuleClass( 'companies' ) );
 
-require_once($baseDir . '/integration/bindings.php');
-
 /**
  * The Project Class
  */
@@ -53,22 +51,21 @@ class CProject extends CDpObject {
 		return NULL; // object is ok
 	}
 
-	function load($oid=null, $strip = true)
-	{
-		$result = parent::load($oid, $strip);
-		if ($result && $oid) {
+        function load($oid=null , $strip = true) {
+                $result = parent::load($oid, $strip);
+                if ($result && $oid)
+                {
 			$q = new DBQuery;
 			$q->addTable('projects');
 			$q->addQuery('SUM(t1.task_duration*t1.task_duration_type*t1.task_percent_complete) / 
-				SUM(t1.task_duration*t1.task_duration_type) 
-				AS project_percent_complete');
+                                        SUM(t1.task_duration*t1.task_duration_type) 
+                                        AS project_percent_complete');
 			$q->addJoin('tasks', 't1', 'projects.project_id = t1.task_project');
 			$q->addWhere(" project_id = $oid");
-			$this->project_percent_complete = $q->loadResult();
-		}
-        return $result;
-	}
-	
+                        $this->project_percent_complete = $q->loadResult();
+                }
+                return $result;
+        }
 // overload canDelete
 	function canDelete( &$msg, $oid=null ) {
 		// TODO: check if user permissions are considered when deleting a project
@@ -305,8 +302,8 @@ class CProject extends CDpObject {
                 return $q->loadList();
         }
 
-	function store()
-	{
+	function store() {
+
 		$msg = $this->check();
 		if( $msg ) {
 			return get_class( $this )."::store-check failed - $msg";
@@ -314,48 +311,48 @@ class CProject extends CDpObject {
 
 		if( $this->project_id ) {
 			$ret = db_updateObject( 'projects', $this, 'project_id', false );
-        	addHistory('projects', $this->project_id, 'update', $this->project_name, $this->project_id);
-        	integration_notify('update', $this);
+        		addHistory('projects', $this->project_id, 'update', $this->project_name, $this->project_id);
 		} else {
 			$ret = db_insertObject( 'projects', $this, 'project_id' );
-	        addHistory('projects', $this->project_id, 'add', $this->project_name, $this->project_id);
-        	integration_notify('create', $this);      	
+		        addHistory('projects', $this->project_id, 'add', $this->project_name, $this->project_id);
 		}
 		
-		// Split out related departments and store them.
+		//split out related departments and store them seperatly.
 		$q = new DBQuery;
 		$q->setDelete('project_departments');
 		$q->addWhere('project_id='.$this->project_id);
 		$q->exec();
 		$q->clear();
-		if ($this->project_departments) {
-			$departments = explode(',', $this->project_departments);
-			foreach ($departments as $department) {
+                if ($this->project_departments)
+                {
+        		$departments = explode(',',$this->project_departments);
+        		foreach($departments as $department){
 				$q->addTable('project_departments');
 				$q->addInsert('project_id', $this->project_id);
 				$q->addInsert('department_id', $department);
 				$q->exec();
 				$q->clear();
-			}
-		}
+        		}
+                }
 		
-		// Split out related contacts and store them.
+		//split out related contacts and store them seperatly.
 		$q->setDelete('project_contacts');
 		$q->addWhere('project_id='.$this->project_id);
 		$q->exec();
 		$q->clear();
-		if ($this->project_contacts) {
-			$contacts = explode(',',$this->project_contacts);
-			foreach($contacts as $contact) {
-				if ($contact) {
-					$q->addTable('project_contacts');
-					$q->addInsert('project_id', $this->project_id);
-					$q->addInsert('contact_id', $contact);
-					$q->exec();
-					$q->clear();
-				}
-        	}
-		}
+                if ($this->project_contacts)
+                {
+        		$contacts = explode(',',$this->project_contacts);
+        		foreach($contacts as $contact){
+							if ($contact) {
+								$q->addTable('project_contacts');
+								$q->addInsert('project_id', $this->project_id);
+								$q->addInsert('contact_id', $contact);
+								$q->exec();
+								$q->clear();
+							}
+        		}
+                }
 
 		if( !$ret ) {
 			return get_class( $this )."::store failed <br />" . db_error();

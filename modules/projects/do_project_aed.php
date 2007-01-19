@@ -51,9 +51,8 @@ if ($del) {
 	} else {
 		$isNotNew = @$_POST['project_id'];
 		
-		if ( $importTask_projectId = dPgetParam( $_POST, 'import_tasks_from', '0' ) ) {
+		if ( $importTask_projectId = dPgetParam( $_POST, 'import_tasks_from', '0' ) )
 			$obj->importTasks ($importTask_projectId);
-		}
 
  		$custom_fields = New CustomFields( $m, 'addedit', $obj->project_id, "edit" );
  		$custom_fields->bind( $_POST );

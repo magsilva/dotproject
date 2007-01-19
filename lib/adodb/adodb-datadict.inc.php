@@ -1,7 +1,7 @@
 <?php
 
 /**
-  V4.93 10 Oct 2006  (c) 2000-2006 John Lim (jlim#natsoft.com.my). All rights reserved.
+  V4.72 21 Feb 2006  (c) 2000-2006 John Lim (jlim@natsoft.com.my). All rights reserved.
   Released under both BSD license and Lesser GPL library license. 
   Whenever there is any discrepancy between the two licenses, 
   the BSD license will take precedence.
@@ -517,7 +517,10 @@ class ADODB_DataDict {
 								break;
 				case 'UNSIGNED': $funsigned = true; break;
 				case 'AUTOINCREMENT':
-				case 'AUTO':	$fautoinc = true; $fnotnull = true; break;
+				case 'AUTO':	$fautoinc = true; $fnotnull = true;
+				  if (substr($this->connection->databaseType,0,5) == 'mysql')
+				     $fprimary = $v;
+				   break;
 				case 'KEY':
 				case 'PRIMARY':	$fprimary = $v; $fnotnull = true; break;
 				case 'DEF':
@@ -555,6 +558,13 @@ class ADODB_DataDict {
 			
 			// some databases do not allow blobs to have defaults
 			if ($ty == 'X') $fdefault = false;
+			
+			// Mysql doesn't like datetimes with lengths.
+			if ($ty == 'T' && $fsize == 14 && substr($this->connection->databaseType,0,5) == 'mysql')
+				$ftype = 'TIMESTAMP';
+			// VARCHAR with no length is TINYTEXT
+			if ($ftype == 'VARCHAR')
+			 	$ftype = 'TINYTEXT';
 			
 			//--------------------
 			// CONSTRUCT FIELD SQL

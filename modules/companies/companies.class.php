@@ -62,28 +62,4 @@ class CCompany extends CDpObject {
 		return CDpObject::canDelete( $msg, $oid, $tables );
 	}
 }
-
-function getDepartmentSelectionList($company_id, $checked_array = array(), $dept_parent=0, $spaces = 0){
-	global $departments_count;
-	$parsed = '';
-
-	if($departments_count < 6) $departments_count++;
-	
-	$q  = new DBQuery;
-	$q->addTable('departments');
-	$q->addQuery('dept_id, dept_name');
-	$q->addWhere("dept_parent = '$dept_parent' and dept_company = '$company_id'");
-	$depts_list = $q->loadHashList("dept_id");
-
-	foreach($depts_list as $dept_id => $dept_info){
-		$selected = in_array($dept_id, $checked_array) ? "selected" : "";
-
-		$parsed .= "<option value='$dept_id' $selected>".str_repeat("&nbsp;", $spaces).$dept_info["dept_name"]."</option>";
-		$parsed .= getDepartmentSelectionList($company_id, $checked_array, $dept_id, $spaces+5);
-	}
-	
-	return $parsed;
-}
-
-
 ?>

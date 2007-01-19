@@ -1,6 +1,6 @@
 <?php
 $coarseness 		 = dPgetParam( $_POST, "coarseness", 1 );
-$do_report 		         = dPgetParam( $_POST, "do_report", 0 );
+$do_report 		 = dPgetParam( $_POST, "do_report", 0 );
 $hideNonWd		 = dPgetParam($_POST, "hideNonWd", 0);
 $log_start_date          = dPgetParam( $_POST, "log_start_date", 0 );
 $log_end_date 	         = dPgetParam( $_POST, "log_end_date", 0 );
@@ -63,7 +63,7 @@ function setCalendar( idate, fdate ) {
 	   <?php echo $AppUI->_( 'Days' );?>
 	   <input type="radio" name="coarseness" value="7" <?php if ($coarseness == 7) echo "checked" ?> />
 	   <?php echo $AppUI->_( 'Weeks' );?>
-	</td>
+</td>
 	<td nowrap='nowrap'>
 	   <?php 
 	       echo $AppUI->_( 'Tasks created by' );
@@ -86,7 +86,6 @@ function setCalendar( idate, fdate ) {
 		<input class="button" type="submit" name="do_report" value="<?php echo $AppUI->_('submit');?>" />
 	</td>
 </tr>
-
 </table>
 </form>
 
@@ -111,7 +110,7 @@ if($do_report) {
 	                AND \"".$end_date->format( FMT_DATETIME_MYSQL )."\" 
 	           OR task_end_date	BETWEEN \"".$start_date->format( FMT_DATETIME_MYSQL )."\" 
 	                AND \"".$end_date->format( FMT_DATETIME_MYSQL )."\" 
-							OR (task_start_date <= \"".$start_date->format( FMT_DATETIME_MYSQL )."\"
+		   OR ( task_start_date <= \"".$start_date->format( FMT_DATETIME_MYSQL )."\"
 	                AND task_end_date >= \"".$end_date->format( FMT_DATETIME_MYSQL )."\") )");
 	$q->addWhere('task_end_date IS NOT NULL');
 	$q->addWhere("task_end_date != '0000-00-00 00:00:00'");
@@ -123,9 +122,9 @@ if($do_report) {
 	$q->addWhere('t.task_project = p.project_id');
 	$q->addWhere('t.task_id = ut.task_id');
 	
-    if($user_id){
+	if($user_id){
 		$q->addWhere("t.task_owner = '$user_id'");
-    }
+    	}
 	if($project_id != 0){
 		$q->addWhere("t.task_project='$project_id'");
 	}
@@ -168,7 +167,7 @@ if($do_report) {
 			$day_difference   = $task_end_date->dateDiff($task_start_date);
 			$actual_date      = $task_start_date;
 	
-			$users                 = $task->getAssignedUsers();
+			$users            = $task->getAssignedUsers();
 			
 			if ($coarseness == 1)
 				userUsageDays();
@@ -386,15 +385,15 @@ GLOBAL $task_start_date, $task_end_date, $day_difference, $hours_added, $actual_
 				}
 				$actual_date->addDays(1);
 			}
-		}
-	
+}
+
 
 
 
 function showDays(){
 GLOBAL  $allocated_hours_sum, $end_date, $start_date, $AppUI, $user_list, $user_names, $user_usage, $hideNonWd, $table_header, $table_rows, $df, $working_days_count, $total_hours_capacity, $total_hours_capacity_all;
 
-		$days_difference = $end_date->dateDiff($start_date);
+		$days_difference =  $end_date->dateDiff($start_date);
 
 		$actual_date     = $start_date;
 		$working_days_count = 0;
@@ -403,7 +402,7 @@ GLOBAL  $allocated_hours_sum, $end_date, $start_date, $AppUI, $user_list, $user_
 		$table_header = "<tr><th>".$AppUI->_("User")."</th>";
 		for($i=0; $i<=$days_difference; $i++){
 			if(($actual_date->isWorkingDay()) || (!$actual_date->isWorkingDay() && !$hideNonWd)) {
-			$table_header .= "<th>".utf8_encode(Date_Calc::getWeekdayAbbrname($actual_date->day, $actual_date->month, $actual_date->year, 3))."<br><table><td style='font-weight:normal; font-size:70%'>".$actual_date->format( $df )."</td></table></th>";
+			$table_header .= "<th>".utf8_encode(Date_Calc::getWeekdayAbbrname($actual_date->day, $actual_date->month, $actual_date->year, 3))."<br><table><td style='font-weight:normal; font-size:70%'>".$actual_date->format( $df )."</td></table></th>";	
 			} 
 			if($actual_date->isWorkingDay()){
 				$working_days_count++;
@@ -419,7 +418,7 @@ GLOBAL  $allocated_hours_sum, $end_date, $start_date, $AppUI, $user_list, $user_
 			if(isset($user_usage[$user_id])) {
 				$table_rows .= "<tr><td nowrap='nowrap'>(".$user_data["user_username"].") ".$user_data["contact_first_name"]." ".$user_data["contact_last_name"]."</td>";
 				$actual_date = $start_date;
-				for($i=0; $i<=$days_difference; $i++){
+				for($i=0; $i<=$days_difference; $i++){	
 		if(($actual_date->isWorkingDay()) || (!$actual_date->isWorkingDay() && !$hideNonWd)) {
 					$table_rows .= "<td>";
 					if(isset($user_usage[$user_id][$actual_date->format("%Y%m%d")])){
@@ -456,7 +455,7 @@ GLOBAL  $allocated_hours_sum, $end_date, $start_date, $AppUI, $user_list, $user_
 				
 			}
 		}
-			$total_hours_capacity = $working_days_count*dPgetConfig("daily_working_hours")*count($user_usage);
+		$total_hours_capacity = $working_days_count*dPgetConfig("daily_working_hours")*count($user_usage);
 		$total_hours_capacity_all = $working_days_count*dPgetConfig("daily_working_hours")*count($user_list);
-	}		
-	?>
+}
+?>		

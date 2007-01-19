@@ -1,7 +1,7 @@
 <?php
 /*
 
-  version V4.93 10 Oct 2006 (c) 2000-2006 John Lim. All rights reserved.
+  version V4.72 21 Feb 2006 (c) 2000-2006 John Lim. All rights reserved.
 
   Released under both BSD license and Lesser GPL library license. 
   Whenever there is any discrepancy between the two licenses, 
@@ -63,7 +63,7 @@ class ADODB_oci8 extends ADOConnection {
 	var $_stmt;
 	var $_commit = OCI_COMMIT_ON_SUCCESS;
 	var $_initdate = true; // init date to YYYY-MM-DD
-	var $metaTablesSQL = "select table_name,table_type from cat where table_type in ('TABLE','VIEW') and table_name not like 'BIN\$%'"; // bin$ tables are recycle bin tables
+	var $metaTablesSQL = "select table_name,table_type from cat where table_type in ('TABLE','VIEW')";
 	var $metaColumnsSQL = "select cname,coltype,width, SCALE, PRECISION, NULLS, DEFAULTVAL from col where tname='%s' order by colno"; //changed by smondino@users.sourceforge. net
 	var $_bindInputArray = true;
 	var $hasGenID = true;
@@ -75,7 +75,6 @@ class ADODB_oci8 extends ADOConnection {
 	var $noNullStrings = false;
 	var $connectSID = false;
 	var $_bind = false;
-	var $_nestedSQL = true;
 	var $_hasOCIFetchStatement = false;
 	var $_getarray = false; // currently not working
 	var $leftOuter = '';  // oracle wierdness, $col = $value (+) for LEFT OUTER, $col (+)= $value for RIGHT OUTER
@@ -119,8 +118,8 @@ class ADODB_oci8 extends ADOConnection {
 	   		$fld->type = $rs->fields[1];
 	   		$fld->max_length = $rs->fields[2];
 			$fld->scale = $rs->fields[3];
-			if ($rs->fields[1] == 'NUMBER') {
-				if ($rs->fields[3] == 0) $fld->type = 'INT';
+			if ($rs->fields[1] == 'NUMBER' && $rs->fields[3] == 0) {
+				$fld->type ='INT';
 	     		$fld->max_length = $rs->fields[4];
 	    	}	
 		   	$fld->not_null = (strncmp($rs->fields[5], 'NOT',3) === 0);
@@ -279,21 +278,6 @@ NATSOFT.DOMAIN =
 		return "TO_DATE(".adodb_date($this->fmtDate,$d).",'".$this->NLS_DATE_FORMAT."')";
 	}
 
-	function BindDate($d)
-	{
-		$d = ADOConnection::DBDate($d);
-		if (strncmp($d,"'",1)) return $d;
-		
-		return substr($d,1,strlen($d)-2);
-	}
-	
-	function BindTimeStamp($d)
-	{
-		$d = ADOConnection::DBTimeStamp($d);
-		if (strncmp($d,"'",1)) return $d;
-		
-		return substr($d,1,strlen($d)-2);
-	}
 	
 	// format and return date string in database timestamp format
 	function DBTimeStamp($ts)
@@ -397,8 +381,6 @@ NATSOFT.DOMAIN =
 		$this->transCnt += 1;
 		$this->autoCommit = false;
 		$this->_commit = OCI_DEFAULT;
-		
-		if ($this->_transmode) $this->Execute("SET TRANSACTION ".$this->_transmode);
 		return true;
 	}
 	

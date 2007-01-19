@@ -509,12 +509,12 @@ class CTask extends CDpObject {
                         $pTask->load($this->task_parent);
                         $pTask->updateDynamics();
 												
-												if ($oTsk->task_parent != $this->task_parent)
-												{
-													$old_parent = new CTask();
-													$old_parent->load($oTsk->task_parent);
-													$old_parent->updateDynamics();
-												}
+			if ($oTsk->task_parent != $this->task_parent)
+			{
+				$old_parent = new CTask();
+				$old_parent->load($oTsk->task_parent);
+				$old_parent->updateDynamics();
+			}
                 }
 
                 // update dependencies
@@ -1162,8 +1162,8 @@ class CTask extends CDpObject {
 		$new_end_date = new CDate($newTask->task_end_date);
                 $new_end_date->addDuration( $duration, 1);
 		$new_end_date = $new_end_date->format( FMT_DATETIME_MYSQL );
-
-                $sql = "UPDATE tasks
+                
+		$sql = "UPDATE tasks
                 SET
                                 task_start_date = '$new_start_date',
                                 task_end_date = '$new_end_date'
