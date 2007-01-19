@@ -6,7 +6,6 @@ $perms =& $AppUI->acl();
 $canRead = $perms->checkModuleItem( $m, 'view', $project_id );
 $canEdit = $perms->checkModuleItem( $m, 'edit', $project_id );
 $canEditT = $perms->checkModule( 'tasks', 'add');
-
 if (!$canRead) {
 	$AppUI->redirect( "m=public&a=access_denied" );
 }
@@ -37,9 +36,10 @@ $projectPriorityColor = dPgetSysVal( 'ProjectPriorityColor' );
 
 $working_hours = $dPconfig['daily_working_hours'];
 
+// TODO: Why are you not using the load() feature from CProject?
 // load the record data
 // GJB: Note that we have to special case duration type 24 and this refers to the hours in a day, NOT 24 hours
-$q  = new DBQuery;
+$q = new DBQuery;
 $q->addTable('projects');
 $q->addQuery("company_name,
 	CONCAT_WS(' ',contact_first_name,contact_last_name) user_name,
@@ -63,7 +63,6 @@ if (!db_loadObject( $sql, $obj )) {
 } else {
 	$AppUI->savePlace();
 }
-
 
 // worked hours
 // now milestones are summed up, too, for consistence with the tasks duration sum
