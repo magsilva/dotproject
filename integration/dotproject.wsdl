@@ -30,7 +30,7 @@
 
 <service name='DotprojectService'> 
   <port name='PingPort' binding='PingBinding'> 
-    <soap:address location='http://localhost/~magsilva/Projects/ideais/dotproject/ws/dotproject.ws.php'/> 
+   <soap:address location='http://localhost/~magsilva/Projects/ideais/dotproject/integration/dotproject.ws.php'/> 
   </port> 
 </service>
 </definitions>
