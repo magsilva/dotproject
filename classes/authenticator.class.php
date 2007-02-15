@@ -44,9 +44,7 @@
 		{
 			global $db, $AppUI;
 			if (!isset($_REQUEST['userdata'])) { // fallback to SQL Authentication if PostNuke fails.
-				if ($this->fallback)
-					return parent::authenticate($username, $password);
-				else {
+				if (! $this->fallback) {
 					die($AppUI->_('You have not configured your PostNuke site correctly'));
 				}
 			}
@@ -179,8 +177,7 @@
 		}
 	}	
 
-	class LDAPAuthenticator extends SQLAuthenticator
-	{
+class LDAPAuthenticator extends SQLAuthenticator {
 		var $ldap_host;
 		var $ldap_port;
 		var $ldap_version;
@@ -204,70 +201,74 @@
 			$this->base_dn = $dPconfig["ldap_base_dn"];
 			$this->ldap_search_user = $dPconfig["ldap_search_user"];
 			$this->ldap_search_pass = $dPconfig["ldap_search_pass"];
+			// Anonymous bind
+			if (is_string($this->ldap_search_user) && strlen(trim($this->ldap_search_user)) == 0) {
+				$this->ldap_search_user = NULL;
+				$this->ldap_search_pass = NULL;
+			}
 			$this->filter = $dPconfig["ldap_user_filter"];
 		}
 
 		function authenticate($username, $password)
 		{
 			GLOBAL $dPconfig;
+			
+			// Anonymous binding
+			if (is_null($username) && ! is_null($password)) {
+				return false;
+			} 
+			
+			// User binding
+			if (!is_null($username) && strlen($password) == 0) {
+				return false;
+			}
+			
 			$this->username = $username;
 
-			if (strlen($password) == 0) return false; // LDAP will succeed binding with no password on AD (defaults to anon bind)
-			if ($this->fallback == true)
-			{
-				if (parent::authenticate($username, $password)) return true;	
-			}
-			// Fallback SQL authentication fails, proceed with LDAP
-
-			if (!$rs = @ldap_connect($this->ldap_host, $this->ldap_port))
-			{
+			$rs = @ldap_connect($this->ldap_host, $this->ldap_port);
+			if (! $rs) {
 				return false;
 			}
 			@ldap_set_option($rs, LDAP_OPT_PROTOCOL_VERSION, $this->ldap_version);
 			@ldap_set_option($rs, LDAP_OPT_REFERRALS, 0);
 
-			//$ldap_bind_dn = "cn=".$this->ldap_search_user.",".$this->base_dn;
 			$ldap_bind_dn = $this->ldap_search_user;	
-
-			if (!$bindok = @ldap_bind($rs, $ldap_bind_dn, $this->ldap_search_pass))
-			{
+			$bindok = @ldap_bind($rs, $ldap_bind_dn, $this->ldap_search_pass);
+			if (! $bindok) {
 				// Uncomment for LDAP debugging
 				/*	
 				$error_msg = ldap_error($rs);
 				die("Couldnt Bind Using ".$ldap_bind_dn."@".$this->ldap_host.":".$this->ldap_port." Because:".$error_msg);
 				*/
 				return false;
-			}
-			else
-			{
+			}	else {
 				$filter_r = str_replace("%USERNAME%", $username, $this->filter);
 				$result = @ldap_search($rs, $this->base_dn, $filter_r);
-				if (!$result) return false; // ldap search returned nothing or error
+				if (! $result) {
+					return false; // ldap search returned nothing or error
+				}
 				
 				$result_user = ldap_get_entries($rs, $result);
-				if ($result_user["count"] == 0) return false; // No users match the filter
+				if ($result_user["count"] == 0) {
+					return false; // No users match the filter
+				}
 
 				$first_user = $result_user[0];
 				$ldap_user_dn = $first_user["dn"];
 
-				// Bind with the dn of the user that matched our filter (only one user should match sAMAccountName or uid etc..)
-
-				if (!$bind_user = @ldap_bind($rs, $ldap_user_dn, $password))
-				{
+				// Bind with the dn of the user that matched our filter (only one 
+				// user should match sAMAccountName or uid etc..)
+				$bind_user = @ldap_bind($rs, $ldap_user_dn, $password);
+				if (! $bind_user) {
 					/*
 					$error_msg = ldap_error($rs);
 					die("Couldnt Bind Using ".$ldap_user_dn."@".$this->ldap_host.":".$this->ldap_port." Because:".$error_msg);
 					*/
 					return false;
-				}
-				else
-				{
-					if ($this->userExists($username))
-					{
+				} else {
+					if ($this->userExists($username)) {
 						return true;
-					}
-					else
-					{
+					}	else {
 						$this->createsqluser($username, $password, $first_user); 
 					}
 					return true;
