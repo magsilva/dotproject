@@ -1,0 +1,21 @@
+##
+## DO NOT MODIFY THIS FILE BY HAND!
+##
+"Add Department"=>"Adicionar Departamento",
+"Department Company"=>"Companhia do Departamento",
+"Department Name"=>"Nome do Departamento",
+"Department Parent"=>"Departamento Mestre",
+"Edit Department"=>"Editar Departamento",
+"Select Unit"=>"Selecionar Unidade",
+"Telephone"=>"Telefone",
+"View Department"=>"Ver Departamento",
+"badCompany"=>"Esta companhia é inválida. Você não pode adicionar um departamento.",
+"delDept"=>"Você tem certeza que deseja apagar este departamento?",
+"delete department"=>"apagar departamento",
+"departmentDelete"=>"Você tem certeza que deseja apagar este departamento?",
+"deptIndexPage"=>"Por favor acesse o departamento pela companhia",
+"deptValidName"=>"Por favor informe um nome de departamento válido",
+"deptWithProject"=>"Você não pode apagar este departamento por que há projetos associados a ele",
+"deptWithSub"=>"Você não pode apagar este departamento por que há departamentos filho",
+"edit this department"=>"editar este departamento",
+"view this department"=>"ver este departamento",
