@@ -53,11 +53,11 @@ class OpenJms4PHP
 	}               
 }
 
-$jms = new OpenJms4PHP("http://localhost:8191/JMSService?wsdl");
-$result=$jms->PostMsgToQueue("queue/testQueue","test message");
-echo "<pre>";
+$jms = new OpenJms4PHP('http://localhost:8191/JMSService?wsdl');
+$result=$jms->PostMsgToQueue('queue/testQueue', 'test message');
+echo '<pre>';
 print_r($result);
-echo "</pre>";
+echo '</pre>';
 
 /*
 $response = $client->echo(array("in0" => "come back to me"));

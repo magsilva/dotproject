@@ -641,7 +641,8 @@ class CAppUI {
 * @param string The user password
 * @return boolean True if successful, false if not
 */
-	function login( $username, $password ) {
+	function login($username, $password, $phase, $redirect)
+	{
 		global $dPconfig, $baseDir;
 
 		require_once "$baseDir/classes/authenticator.class.php";
@@ -651,29 +652,28 @@ class CAppUI {
 			die("You have chosen to log in using an unsupported or disabled login method");
 		}
 		
-		$auth =& getauth($auth_method);
-		
+		$auth =& getAuth($auth_method);
 		$username = trim(db_escape($username));
 		$password = trim(db_escape($password));
-
-		if (!$auth->authenticate($username, $password)) {
+		if (! $auth->authenticate($username, $password, $phase, $redirect)) {
 			if ($auth->fallback) {
-				$auth =& getauth("default");
-				if (! $auth->authenticate($username, $password)) {
+				$auth =& getAuth("default");
+				if (! $auth->authenticate($username, $password, $phase, $redirect)) {
 					return false;
 				}
 			} 
 		}
-	
+		
 		$user_id = $auth->userId($username);
 		$username = $auth->username; // Some authentication schemes may collect username in various ways.
 		// Now that the password has been checked, see if they are allowed to
 		// access the system
-		if (! isset($GLOBALS['acl']))
-		  $GLOBALS['acl'] =& new dPacl;
+		if (! isset($GLOBALS['acl'])) {
+			$GLOBALS['acl'] =& new dPacl;
+		}
 		if ( ! $GLOBALS['acl']->checkLogin($user_id)) {
-		  dprint(__FILE__, __LINE__, 1, "Permission check failed");
-		  return false;
+			dprint(__FILE__, __LINE__, 1, "Permission check failed");
+			return false;
 		}
 
 		$q  = new DBQuery;
@@ -690,8 +690,8 @@ class CAppUI {
 			return false;
 		}
 
-// load the user preferences
-		$this->loadPrefs( $this->user_id );
+		// load the user preferences
+		$this->loadPrefs($this->user_id);
 		$this->setUserLocale();
 		$this->checkStyle();
 		return true;

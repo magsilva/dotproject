@@ -44,6 +44,18 @@ if( is_file( "$baseDir/includes/config.php" ) ) {
 if (! isset($GLOBALS['OS_WIN']))
 	$GLOBALS['OS_WIN'] = (stristr(PHP_OS, "WIN") !== false);
 
+
+$d = dir(dirname(__FILE__) . '/lib');
+while (false !== ($entry = $d->read())) {
+	if ($entry != '.' && $entry != '..') {
+		$entry = $d->path . '/' .$entry;
+		if (is_dir($entry)) {
+			set_include_path(get_include_path() . PATH_SEPARATOR . realpath($entry));
+		}
+	}
+}
+$d->close();
+
 // tweak for pathname consistence on windows machines
 require_once "$baseDir/includes/db_adodb.php";
 require_once "$baseDir/includes/db_connect.php";
@@ -120,22 +132,29 @@ if (dPgetParam( $_POST, 'lostpass', 0 )) {
 // support alternative authentication methods such as the PostNuke
 // and HTTP auth methods now supported.
 if (isset($_REQUEST['login'])) {
-
-	$username = dPgetParam( $_POST, 'username', '' );
-	$password = dPgetParam( $_POST, 'password', '' );
-	$redirect = dPgetParam( $_REQUEST, 'redirect', '' );
-	$AppUI->setUserLocale();
-	@include_once( "$baseDir/locales/$AppUI->user_locale/locales.php" );
-	@include_once "$baseDir/locales/core.php";
-	$ok = $AppUI->login( $username, $password );
-	if (!$ok) {
-		$AppUI->setMsg( 'Login Failed');
-	} else {
-	           //Register login in user_acces_log
-	           $AppUI->registerLogin();
+	$username = dPgetParam($_POST, 'username', '');
+	if (empty($username)) {
+		$username = dPgetParam($_REQUEST, 'username', '');
 	}
-        addHistory('login', $AppUI->user_id, 'login', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
-	$AppUI->redirect( "$redirect" );
+	$password = dPgetParam($_POST, 'password', '');
+	$phase = dPgetParam($_REQUEST, 'phase', '');
+	$redirect = dPgetParam($_REQUEST, 'redirect', '');
+	$AppUI->setUserLocale();
+	@include_once("$baseDir/locales/$AppUI->user_locale/locales.php");
+	@include_once("$baseDir/locales/core.php");
+	$ok = $AppUI->login($username, $password, $phase, $redirect);
+	// If the authentication method requires two phases, it won't execute
+	// any of the code below (it will probably redirect to another site).
+	if ($ok === false) {
+		$AppUI->setMsg('Login Failed');
+	} else if ($ok === true) {
+		//Register login in user_acces_log
+		$AppUI->registerLogin();
+		addHistory('login', $AppUI->user_id, 'login', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
+		$AppUI->redirect("$redirect");
+	} else if (is_int($ok)) {
+		$phase = $ok;
+	}
 }
 
 // supported since PHP 4.2
@@ -167,8 +186,9 @@ if ($AppUI->doLogin()) {
 
 	require "$baseDir/style/$uistyle/login.php";
 	// destroy the current session and output login page
-	session_unset();
-	session_destroy();
+	// TODO:
+	// session_unset();
+	// session_destroy();
 	exit;
 }
 $AppUI->setUserLocale();
