@@ -160,8 +160,6 @@ function dPsessionConvertTime($key)
 
 function dpSessionStart($start_vars = 'AppUI')
 {
-	session_start();
-	/*
 	global $dPconfig;
 
 	session_name('dotproject');
@@ -200,6 +198,5 @@ function dpSessionStart($start_vars = 'AppUI')
 	} else if (! empty($start_vars)) {
 		session_register($start_vars);
 	}
-	*/
 }
 ?>

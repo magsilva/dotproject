@@ -44,18 +44,6 @@ if( is_file( "$baseDir/includes/config.php" ) ) {
 if (! isset($GLOBALS['OS_WIN']))
 	$GLOBALS['OS_WIN'] = (stristr(PHP_OS, "WIN") !== false);
 
-
-$d = dir(dirname(__FILE__) . '/lib');
-while (false !== ($entry = $d->read())) {
-	if ($entry != '.' && $entry != '..') {
-		$entry = $d->path . '/' .$entry;
-		if (is_dir($entry)) {
-			set_include_path(get_include_path() . PATH_SEPARATOR . realpath($entry));
-		}
-	}
-}
-$d->close();
-
 // tweak for pathname consistence on windows machines
 require_once "$baseDir/includes/db_adodb.php";
 require_once "$baseDir/includes/db_connect.php";

@@ -14,9 +14,7 @@ require_once('Services/Yadis/Yadis.php');
 require_once('Auth/OpenID/Consumer.php');
 require_once('Auth/OpenID/FileStore.php');
 
-/*
- * Authenticator class
- */
+
 function &getAuth($auth_mode)
 {
 	switch($auth_mode) {
@@ -36,6 +34,9 @@ function &getAuth($auth_mode)
 	return $auth;
 }
 
+/*
+ * Authenticator class
+ */
 class OpenIdAuthenticator extends SQLAuthenticator
 {
 	/**

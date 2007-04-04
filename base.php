@@ -38,4 +38,16 @@ if (@$pathInfo) {
 global $dPconfig;
 $dPconfig = array();
 
+
+$d = dir(dirname(__FILE__) . '/lib');
+while (false !== ($entry = $d->read())) {
+	if ($entry != '.' && $entry != '..') {
+		$entry = $d->path . '/' .$entry;
+		if (is_dir($entry)) {
+			set_include_path(realpath($entry) .  PATH_SEPARATOR . get_include_path());
+		}
+	}
+}
+$d->close();
+
 ?>
