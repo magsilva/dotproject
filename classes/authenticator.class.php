@@ -1,18 +1,9 @@
-
-l<?php
+<?php
 // $Id: authenticator.class.php,v 1.13 2005/04/15 11:32:03 mosen Exp $
 
-/**
- * Required by OpenID checkup.
- */
-require_once('Auth/OpenID.php');
-require_once('Services/Yadis/Yadis.php');
-
-/**
- * Require the OpenID consumer code.
- */
 require_once('Auth/OpenID/Consumer.php');
 require_once('Auth/OpenID/FileStore.php');
+require_once('Auth/OpenID/SReg.php');
 
 
 function &getAuth($auth_mode)
@@ -51,140 +42,8 @@ class OpenIdAuthenticator extends SQLAuthenticator
 	var $user_id;
 	var $username;
 	
-	function checkMath()
-	{
-		global $_Auth_OpenID_math_extensions;
-		$ext = Auth_OpenID_detectMathLibrary($_Auth_OpenID_math_extensions);
-		if (! isset($ext['extension']) || !isset($ext['class'])) {
-			// Your PHP installation does not include big integer math
-			// support. This support is required if you wish to run a
-			// secure OpenID server without using SSL.
-			return false;
-		} else {
-			switch ($ext['extension']) {
-				case 'bcmath':
-					break;
-				case 'gmp':
-					break;
-				default:
-					$class = $ext['class'];
-					$lib = new $class();
-					$one = $lib->init(1);
-					$two = $lib->add($one, $one);
-					$t = $lib->toString($two);
-					if ($t != '2') {
-						return false;
-					}
-			}
-		}
-		return true;
-	}
-		
-	function checkRandom()
-	{
-		if (Auth_OpenID_RAND_SOURCE === null) {
-			// Using (insecure) pseudorandom number source, because
-			// Auth_OpenID_RAND_SOURCE has been defined as null.
-			return false;
-		}
-		
-		$numbytes = 6;
-		$f = @fopen(Auth_OpenID_RAND_SOURCE, 'r');
-		if ($f !== false) {
-			$data = fread($f, $numbytes);
-			$stat = fstat($f);
-			$size = $stat['size'];
-			fclose($f);
-		} else {
-			$data = null;
-			$size = true;
-		}
-		
-		if ($f !== false) {
-			$dataok = (strlen($data) == $numbytes);
-			$ok = $dataok && ! $size;
-		} else {
-	        $ok = false;
-    	}
-    	
-    	return $ok;		
-	}
-	
-	
-	function checkStores()
-	{
-		foreach (array('sqlite', 'mysql', 'pgsql') as $dbext) {
-			if (extension_loaded($dbext) || @dl($dbext . '.' . PHP_SHLIB_SUFFIX)) {
-				$found[] = $dbext;
-			}
-		}
-		
-		if (count($found) == 0) {
-			return false;
-		}
-
-		return true;
-	}
-	
-	function checkfetcher()
-	{
-		$ok = true;
-		$fetcher = Services_Yadis_Yadis::getHTTPFetcher();
-		$fetch_url = 'http://www.openidenabled.com/resources/php-fetch-test';
-		$expected_url = $fetch_url . '.txt';
-		$result = $fetcher->get($fetch_url);
-		
-		if (isset($result)) {
-			// list ($code, $url, $data) = $result;
-			if ($result->status != '200') {
-				$ok = false;
-			}
-			$url = $result->final_url;
-			if ($url != $expected_url) {
-				$ok = false;
-			}
-		} else {
-			$ok = false;
-		}
-		
-		return $ok;
-	}
-	
-	
-	function checkXml()
-	{
-		global $__Services_Yadis_xml_extensions;
-		
-		// Try to get an XML extension.
-		$ext = Services_Yadis_getXMLParser();
-		
-		if ($ext !== null) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	function checkDependencies()
-	{
-		$result = true;
-	
-		$result &= $this->checkMath();
-		$result &= $this->checkRandom();
-		$result &= $this->checkStores();
-		$result &= $this->checkFetcher();
-		$result &= $this->checkXml();
-		
-		return $result;
-	}
-	
 	function OpenIdAuthenticator()
 	{
-		$checklist = $this->checkDependencies();
-		if ($checklist == false) {
-			return null;
-		}
-		
 		if (!file_exists($this->store_path) && ! mkdir($this->store_path)) {
 			return null;
 		}
@@ -217,12 +76,12 @@ class OpenIdAuthenticator extends SQLAuthenticator
 			$scheme .= 's';
 		}
 		
-		$process_url = sprintf("$scheme://%s:%s%s?login=openid&phase=2&username=$openid_url",
+		$returnto_url = sprintf("$scheme://%s:%s%s?login=openid&phase=2&username=$openid_url",
 			$_SERVER['SERVER_NAME'],
 			$_SERVER['SERVER_PORT'],
 			$_SERVER['PHP_SELF']);
 		
-		$trust_root = sprintf("$scheme://%s:%s%s",
+		$trusted_root = sprintf("$scheme://%s:%s%s",
 			$_SERVER['SERVER_NAME'],
 			$_SERVER['SERVER_PORT'],
 			dirname($_SERVER['PHP_SELF']));
@@ -235,20 +94,59 @@ class OpenIdAuthenticator extends SQLAuthenticator
 			return false;
 		}
 
-		$auth_request->addExtensionArg('sreg', 'optional', 'email');
+		$sreg_request = Auth_OpenID_SRegRequest::build(
+			// Required
+			array('nickname'),
+			// Optional
+			array('fullname', 'email'));
+
+		if ($sreg_request) {
+			$auth_request->addExtension($sreg_request);
+		}
 		
-		// Redirect the user to the OpenID server for authentication.  Store
-		// the token for this authentication so we can verify the response.
-		$redirect_url = $auth_request->redirectURL($trust_root, $process_url);
+		// Redirect the user to the OpenID server for authentication.
+		// Store the token for this authentication so we can verify the
+		// response.
 		
-		header('Location: ' . $redirect_url);
+		// For OpenID 1, send a redirect.  For OpenID 2, use a Javascript
+		// form to send a POST request to the server.
+		if ($auth_request->shouldSendRedirect()) {
+			$redirect_url = $auth_request->redirectURL($trusted_root, $returnto_url);
+
+			// If the redirect URL can't be built, display an error message.
+			if (Auth_OpenID::isFailure($redirect_url)) {
+				return false;
+			} else {
+				// Send redirect.
+				header("Location: ".$redirect_url);
+			}
+		} else {
+			// Generate form markup and render it.
+			$form_id = 'openid_message';
+			$form_html = $auth_request->formMarkup($trusted_root, $returnto_url,
+				false, array('id' => $form_id));
+
+			// Display an error if the form markup couldn't be generated;
+			// otherwise, render the HTML.
+			if (Auth_OpenID::isFailure($form_html)) {
+				return false;
+			} else {
+				$page_contents = array(
+					'<html><head><title>',
+					'OpenID transaction in progress',
+					'</title></head>',
+					'<body onload="document.getElementById(' . $form_id . ').submit()">',
+					$form_html,
+					'</body></html>');
+				print implode("\n", $page_contents);
+			}
+		}
 	}
 
 	function authenticate_phase2($username)
 	{
-		session_start();
+		$response = $this->consumer->complete();
 		
-		$response = $this->consumer->complete($_GET);
 		if ($response->status == Auth_OpenID_CANCEL) {
 	    	// This means the authentication was cancelled.
 	    	$msg = 'Verification cancelled.';
@@ -259,11 +157,20 @@ class OpenIdAuthenticator extends SQLAuthenticator
 		} else if ($response->status == Auth_OpenID_SUCCESS) {
 	    	// This means the authentication succeeded.
 	    	$openid = $response->identity_url;
-	    	$esc_identity = htmlspecialchars($openid, ENT_QUOTES);
-	    	if ($response->endpoint->canonicalID) {
-	        	$success .= '  (XRI CanonicalID: '.$response->endpoint->canonicalID.') ';
-	    	}
-	    	$sreg = $response->extensionResponse('sreg');
+	    	
+			/*	
+        	$sreg_resp = Auth_OpenID_SRegResponse::fromSuccessResponse($response);
+			$sreg = $sreg_resp->contents();
+			if (@$sreg['email']) {
+            	$success .= "  You also returned '".$sreg['email']."' as your email.";
+	        }
+			if (@$sreg['nickname']) {
+        	    $success .= "  Your nickname is '".$sreg['nickname']."'.";
+        	    }
+			if (@$sreg['fullname']) {
+            	$success .= "  Your fullname is '".$sreg['fullname']."'.";
+        	}
+        	*/
 
 			$this->username = $username;	    	
 			$this->user_id = $this->userExists($username); 
