@@ -641,7 +641,7 @@ class CAppUI {
 * @param string The user password
 * @return boolean True if successful, false if not
 */
-	function login($username, $password, $phase, $redirect)
+	function login($username, $password, $redirect)
 	{
 		global $dPconfig, $baseDir;
 
@@ -655,10 +655,10 @@ class CAppUI {
 		$auth =& getAuth($auth_method);
 		$username = trim(db_escape($username));
 		$password = trim(db_escape($password));
-		if (! $auth->authenticate($username, $password, $phase, $redirect)) {
+		if (! $auth->authenticate($username, $password, $redirect)) {
 			if ($auth->fallback) {
 				$auth =& getAuth("default");
-				if (! $auth->authenticate($username, $password, $phase, $redirect)) {
+				if (! $auth->authenticate($username, $password, $redirect)) {
 					return false;
 				}
 			} 

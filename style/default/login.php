@@ -38,7 +38,6 @@
 	<input type="hidden" name="login" value="<?php echo time();?>" />
 	<input type="hidden" name="lostpass" value="0" />
 	<input type="hidden" name="redirect" value="<?php echo $redirect;?>" />
-	<input type="hidden" name="phase" value="1" />
 
 	<table align="center" border="0" width="250" cellpadding="6" cellspacing="0" class="std">
 	<tr>

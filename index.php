@@ -125,14 +125,11 @@ if (isset($_REQUEST['login'])) {
 		$username = dPgetParam($_REQUEST, 'username', '');
 	}
 	$password = dPgetParam($_POST, 'password', '');
-	$phase = dPgetParam($_REQUEST, 'phase', '');
 	$redirect = dPgetParam($_REQUEST, 'redirect', '');
 	$AppUI->setUserLocale();
 	@include_once("$baseDir/locales/$AppUI->user_locale/locales.php");
 	@include_once("$baseDir/locales/core.php");
-	$ok = $AppUI->login($username, $password, $phase, $redirect);
-	// If the authentication method requires two phases, it won't execute
-	// any of the code below (it will probably redirect to another site).
+	$ok = $AppUI->login($username, $password, $redirect);
 	if ($ok === false) {
 		$AppUI->setMsg('Login Failed');
 	} else if ($ok === true) {
@@ -140,8 +137,6 @@ if (isset($_REQUEST['login'])) {
 		$AppUI->registerLogin();
 		addHistory('login', $AppUI->user_id, 'login', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
 		$AppUI->redirect("$redirect");
-	} else if (is_int($ok)) {
-		$phase = $ok;
 	}
 }
 
