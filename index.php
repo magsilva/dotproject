@@ -69,7 +69,7 @@ if (!isset( $_SESSION['AppUI'] ) || isset($_GET['logout'])) {
     if (isset($_GET['logout']) && isset($_SESSION['AppUI']->user_id))
     {
         $AppUI =& $_SESSION['AppUI'];
-	$user_id = $AppUI->user_id;
+        $user_id = $AppUI->user_id;
         addHistory('login', $AppUI->user_id, 'logout', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
     }
 
@@ -153,26 +153,50 @@ $u = '';
 
 // check if we are logged in
 if ($AppUI->doLogin()) {
-	// load basic locale settings
+	// Try SSO
+
+	// That's a hack. The CAppUI->login() requires that to select the authentication method.
+	$_REQUEST['login'] = 'openid';
+	$username = null;
+	if (isset($_GET['openid.username'])) {
+		$username = $_GET['openid.username'];
+	} else if (isset($_GET['openid_username'])) {
+		$username = $_GET['openid_username'];
+	}
+	$password = null;
+	$redirect = $_SERVER['REQUEST_URI'];
 	$AppUI->setUserLocale();
-	@include_once( "./locales/$AppUI->user_locale/locales.php" );
-	@include_once( "./locales/core.php" );
-	setlocale( LC_TIME, $AppUI->user_lang );
-	$redirect = $_SERVER['QUERY_STRING']?strip_tags($_SERVER['QUERY_STRING']):'';
-	if (strpos( $redirect, 'logout' ) !== false) {
-		$redirect = '';
-	}
+	@include_once("$baseDir/locales/$AppUI->user_locale/locales.php");
+	@include_once("$baseDir/locales/core.php");
+	$ok = $AppUI->login($username, $password, $redirect);
+	if ($ok === true) {
+		//Register login in user_acces_log
+		$AppUI->registerLogin();
+		addHistory('login', $AppUI->user_id, 'login', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
+	} else {
+		// SSO unsuccessfull...
+		
+		// load basic locale settings
+		$AppUI->setUserLocale();
+		@include_once( "./locales/$AppUI->user_locale/locales.php" );
+		@include_once( "./locales/core.php" );
+		setlocale( LC_TIME, $AppUI->user_lang );
+		$redirect = $_SERVER['QUERY_STRING']?strip_tags($_SERVER['QUERY_STRING']):'';
+		if (strpos( $redirect, 'logout' ) !== false) {
+			$redirect = '';
+		}
 
-	if (isset( $locale_char_set )) {
-		header("Content-type: text/html;charset=$locale_char_set");
-	}
+		if (isset( $locale_char_set )) {
+			header("Content-type: text/html;charset=$locale_char_set");
+		}
 
-	require "$baseDir/style/$uistyle/login.php";
-	// destroy the current session and output login page
-	// TODO:
-	// session_unset();
-	// session_destroy();
-	exit;
+		require "$baseDir/style/$uistyle/login.php";
+		// destroy the current session and output login page
+		// TODO:
+		// session_unset();
+		// session_destroy();
+		exit;
+	}
 }
 $AppUI->setUserLocale();
 

@@ -651,10 +651,11 @@ class CAppUI {
 		if (@$_POST['login'] != 'login' && @$_POST['login'] != $this->_('login') && $_REQUEST['login'] != $auth_method) {
 			die("You have chosen to log in using an unsupported or disabled login method");
 		}
-		
+
 		$auth =& getAuth($auth_method);
 		$username = trim(db_escape($username));
 		$password = trim(db_escape($password));
+		
 		if (! $auth->authenticate($username, $password, $redirect)) {
 			if ($auth->fallback) {
 				$auth =& getAuth("default");
