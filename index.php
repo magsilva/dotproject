@@ -44,6 +44,8 @@ if( is_file( "$baseDir/includes/config.php" ) ) {
 if (! isset($GLOBALS['OS_WIN']))
 	$GLOBALS['OS_WIN'] = (stristr(PHP_OS, "WIN") !== false);
 
+require_once(dirname(__FILE__) . '/includes/sso.php');
+
 // tweak for pathname consistence on windows machines
 require_once "$baseDir/includes/db_adodb.php";
 require_once "$baseDir/includes/db_connect.php";
@@ -152,17 +154,31 @@ $a = '';
 $u = '';
 
 // check if we are logged in
-if ($AppUI->doLogin()) {
+if ($AppUI->doLogin() && ! isset($_REQUEST['logout'])) {
 	// Try SSO
 
 	// That's a hack. The CAppUI->login() requires that to select the authentication method.
 	$_REQUEST['login'] = 'openid';
 	$username = null;
+	
+	// Priority: GET, SESSION, COOKIE
+	
+	if (isset($_COOKIE[OPENID_COOKIE_NAME])) {
+		$username = $_COOKIE[OPENID_COOKIE_NAME];
+	}
+		
+	if (isset($_SESSION['openid.username'])) {
+		$username = $_SESSION['openid.username'];
+	} else if (isset($_SESSION['openid_username'])) {
+		$username = $_SESSION['openid_username'];
+	}
+		
 	if (isset($_GET['openid.username'])) {
 		$username = $_GET['openid.username'];
 	} else if (isset($_GET['openid_username'])) {
 		$username = $_GET['openid_username'];
 	}
+	
 	$password = null;
 	$redirect = $_SERVER['REQUEST_URI'];
 	$AppUI->setUserLocale();
@@ -173,30 +189,32 @@ if ($AppUI->doLogin()) {
 		//Register login in user_acces_log
 		$AppUI->registerLogin();
 		addHistory('login', $AppUI->user_id, 'login', $AppUI->user_first_name . ' ' . $AppUI->user_last_name);
-	} else {
-		// SSO unsuccessfull...
-		
-		// load basic locale settings
-		$AppUI->setUserLocale();
-		@include_once( "./locales/$AppUI->user_locale/locales.php" );
-		@include_once( "./locales/core.php" );
-		setlocale( LC_TIME, $AppUI->user_lang );
-		$redirect = $_SERVER['QUERY_STRING']?strip_tags($_SERVER['QUERY_STRING']):'';
-		if (strpos( $redirect, 'logout' ) !== false) {
-			$redirect = '';
-		}
-
-		if (isset( $locale_char_set )) {
-			header("Content-type: text/html;charset=$locale_char_set");
-		}
-
-		require "$baseDir/style/$uistyle/login.php";
-		// destroy the current session and output login page
-		// TODO:
-		// session_unset();
-		// session_destroy();
-		exit;
 	}
+}
+
+if ($AppUI->doLogin()) {
+	// SSO unsuccessfull...
+	
+	// load basic locale settings
+	$AppUI->setUserLocale();
+	@include_once( "./locales/$AppUI->user_locale/locales.php" );
+	@include_once( "./locales/core.php" );
+	setlocale( LC_TIME, $AppUI->user_lang );
+	$redirect = $_SERVER['QUERY_STRING']?strip_tags($_SERVER['QUERY_STRING']):'';
+	if (strpos( $redirect, 'logout' ) !== false) {
+		$redirect = '';
+	}
+
+	if (isset( $locale_char_set )) {
+		header("Content-type: text/html;charset=$locale_char_set");
+	}
+
+	require "$baseDir/style/$uistyle/login.php";
+	// destroy the current session and output login page
+	// TODO:
+	// session_unset();
+	// session_destroy();
+	exit;
 }
 $AppUI->setUserLocale();
 

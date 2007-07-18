@@ -12,21 +12,6 @@
 	<link rel="stylesheet" type="text/css" href="./style/<?php echo $uistyle;?>/main.css" media="all" />
 	<style type="text/css" media="all">@import "./style/<?php echo $uistyle;?>/main.css";</style>
 	<link rel="shortcut icon" href="./style/<?php echo $uistyle;?>/images/favicon.ico" type="image/ico" />
-	
-	<!--
-	The role of the OpenID server is to provide a page for you and make claims about user
-	ownership of that page.  By pointing a personal page to the page you own on your
-	OpenID server, the consumer can discover your server information, ask you to prove
-	that own the URL on the server, which then also proves that you own the personal URL. 
-	
-	The LINK tags are used for OpenID 1.x style server discovery, and the META tag is used
-	for OpenID 2.0 discovery.
-	-->
-	<!--
-	<link rel="openid.server" href="http://www.myopenid.com/server" />
-	<link rel="openid.delegate" href="http://magsilva.myopenid.com/" />
-	<meta http-equiv="X-XRDS-Location" content="http://magsilva.myopenid.com/xrds" />
-	-->
 </head>
 
 <body onload="document.loginform.username.focus();">
@@ -45,7 +30,10 @@
 	</tr>
 	<tr>
 		<td align="right" nowrap><?php echo $AppUI->_('Username');?>:</td>
-		<td align="left" nowrap><input type="text" size="40" maxlength="100" name="username" class="text" /></td>
+		<label for="openid_url_comment_form">
+		<td align="left" nowrap><input type="text" size="40" maxlength="100" name="username" class="text" id="openid_url_comment_form"/>
+		</label>
+		</td>
 	</tr>
 	<tr>
 		<td align="right" nowrap><?php echo $AppUI->_('Password');?>:</td>

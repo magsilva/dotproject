@@ -469,3 +469,12 @@ table.tbl td.event td {
 }
 
 .hidden {display:none;}
+
+#openid_url_comment_form {
+   background: url(http://openid.net/login-bg.gif) no-repeat;
+   background-color: #fff;
+   background-position: 0 50%;
+   color: #000;
+   padding-left: 18px;
+   margin-top: 1em;
+}
