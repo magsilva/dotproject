@@ -48,13 +48,23 @@ function sso_detect_action($content)
 
 function sso_detect_action_openid($content)
 {
+	// XRI global context symbols: =, @, +, $, !
+	switch (trim($content[0])) {
+		case '=':
+		case '@':
+		case '+';
+		case '$':
+		case '!':
+			return SSO_ACTION_LOGIN;
+	}
+	
 	 $url = parse_url($content);
-	 
-	 if ($url !== FALSE && ! empty($url['scheme']) && ! empty($url['host'])) {
+	  if ($url !== FALSE && ! empty($url['scheme']) && ! empty($url['host'])) {
         if (in_array($url['scheme'], array('http', 'https', 'xri'))) {
         	return SSO_ACTION_LOGIN;
         }
 	 }
+	 
 	 return SSO_ACTION_LOGOUT;
 }
 
