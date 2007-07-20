@@ -19,14 +19,6 @@ Copyright (C) 2007 Marco Aurélio Graciotto Silva <magsilva@gmail.com>
 
 require_once(dirname(__FILE__) . '/includes/sso.php');
  
-if (isset($_GET['openid_name'])) {
-	setcookie(OPENID_COOKIE_NAME, $_GET['openid_name']);
-	$link = 'images/log-notice.gif'; 
-} else {
-	$link = 'images/log-error.gif'; 
-}
-
-header('Content-Type: image/gif');
-readfile($link);
+sso_process();
 
 ?>
