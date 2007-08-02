@@ -59,7 +59,7 @@ function sso_detect_action_openid($content)
 	}
 	
 	 $url = parse_url($content);
-	  if ($url !== FALSE && ! empty($url['scheme']) && ! empty($url['host'])) {
+	 if ($url !== FALSE && ! empty($url['scheme']) && ! empty($url['host'])) {
         if (in_array($url['scheme'], array('http', 'https', 'xri'))) {
         	return SSO_ACTION_LOGIN;
         }
