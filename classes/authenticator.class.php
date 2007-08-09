@@ -44,8 +44,12 @@ class OpenIdAuthenticator extends SQLAuthenticator
 	function authenticate($username, $password, $redirect_url)
 	{
 		global $dPconfig;
+		
+		if (empty($username)) {
+			return false;
+		}
 	
-		if ($this->openid_client->isAuthResponseConditionOk()) {
+		if ($this->openid_client->isAuthResponseConditionOk()) {	
 			return $this->authenticate_phase2($username);
 		} else {
 			if (isset($dPconfig['openid_mask']) && ! empty($dPconfig['openid_mask'])) {
@@ -53,7 +57,7 @@ class OpenIdAuthenticator extends SQLAuthenticator
 		 		if ($url == FALSE || ! in_array($url['scheme'], array('http', 'https', 'xri'))) {
         			$username = sprintf($dPconfig['openid_mask'], rawurlencode($username));
 	 			}
-			}
+			}	
 			return $this->authenticate_phase1($username, $redirect_url);
 		}
 	}
