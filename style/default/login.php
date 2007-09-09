@@ -12,6 +12,7 @@
 	<link rel="stylesheet" type="text/css" href="./style/<?php echo $uistyle;?>/main.css" media="all" />
 	<style type="text/css" media="all">@import "./style/<?php echo $uistyle;?>/main.css";</style>
 	<link rel="shortcut icon" href="./style/<?php echo $uistyle;?>/images/favicon.ico" type="image/ico" />
+	<meta http-equiv="X-XRDS-Location" content="<?php echo $baseUrl; ?>/dotproject.xml" />
 </head>
 
 <body onload="document.loginform.username.focus();">

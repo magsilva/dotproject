@@ -162,6 +162,7 @@ if ($AppUI->doLogin() && ! isset($_REQUEST['logout'])) {
 	$username = null;
 	
 	// Priority: GET, SESSION, COOKIE
+	/*
 	
 	if (isset($_COOKIE[OPENID_COOKIE_NAME])) {
 		$username = $_COOKIE[OPENID_COOKIE_NAME];
@@ -178,7 +179,7 @@ if ($AppUI->doLogin() && ! isset($_REQUEST['logout'])) {
 	} else if (isset($_GET['openid_username'])) {
 		$username = $_GET['openid_username'];
 	}
-	
+	*/
 	$password = null;
 	$redirect = $_SERVER['REQUEST_URI'];
 	$AppUI->setUserLocale();
