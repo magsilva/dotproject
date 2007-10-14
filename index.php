@@ -44,8 +44,6 @@ if( is_file( "$baseDir/includes/config.php" ) ) {
 if (! isset($GLOBALS['OS_WIN']))
 	$GLOBALS['OS_WIN'] = (stristr(PHP_OS, "WIN") !== false);
 
-require_once(dirname(__FILE__) . '/includes/sso.php');
-
 // tweak for pathname consistence on windows machines
 require_once "$baseDir/includes/db_adodb.php";
 require_once "$baseDir/includes/db_connect.php";
@@ -53,6 +51,9 @@ require_once "$baseDir/includes/main_functions.php";
 require_once "$baseDir/classes/ui.class.php";
 require_once "$baseDir/classes/permissions.class.php";
 require_once "$baseDir/includes/session.php";
+
+require_once(dirname(__FILE__) . '/includes/sso.php');
+
 
 // don't output anything. Usefull for fileviewer.php, gantt.php, etc.
 $suppressHeaders = dPgetParam( $_GET, 'suppressHeaders', false );

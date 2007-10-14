@@ -21,7 +21,7 @@ xmlns:openid="http://openid.net/xmlns/1.0">
     </Service>
 	<Service>
 		<Type>http://numa.sc.usp.br/xmlns/1.0</Type>
-		<URI>http://localhost/~msilva/dotproject/sso.php</URI>
+		<URI>http://localhost/~magsilva/dotproject/sso.php</URI>
 	</Service>
   </XRD>
 </xrds:XRDS>
