@@ -1,4 +1,8 @@
-<?php /* $Id: view.php,v 1.89.4.2 2006/03/21 09:58:21 ajdonnison Exp $ */
+<?php /* $Id: view.php,v 1.89.4.9 2007/09/23 01:45:12 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 $task_id = intval( dPgetParam( $_GET, "task_id", 0 ) );
 $task_log_id = intval( dPgetParam( $_GET, "task_log_id", 0 ) );
 $reminded = intval( dPgetParam( $_GET, 'reminded', 0) );
@@ -121,7 +125,7 @@ var calendarField = '';
 function popCalendar( field ){
 	calendarField = field;
 	idate = eval( 'document.editFrm.task_' + field + '.value' );
-	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=250, height=220, scollbars=false' );
+	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=250, height=220, scrollbars=no' );
 }
 
 /**
@@ -207,13 +211,8 @@ function delIt() {
 			<td align="right" nowrap="nowrap"><?php echo $AppUI->_('Priority');?>:</td>
 			<td class="hilite">
 		<?php
-			if ($obj->task_priority == 0) {
-				echo $AppUI->_('normal');
-			} else if ($obj->task_priority < 0){
-				echo $AppUI->_('low');
-			} else {
-				echo $AppUI->_('high');
-			}
+			$task_priotities = dPgetSysVal("TaskPriority");
+            echo $AppUI->_($task_priotities[$obj->task_priority]); 
 		?>
 			</td>
 		</tr>
@@ -254,7 +253,7 @@ function delIt() {
 		</tr>
 		<tr>
 			<td align="right" nowrap="nowrap"><?php echo $AppUI->_('Task Type');?> :</td>
-			<td class="hilite" width="300"><?php echo $task_types[$obj->task_type];?></td>
+			<td class="hilite" width="300"><?php echo $AppUI->_($task_types[$obj->task_type]);?></td>
 		</tr>
 
 		</table>
@@ -467,16 +466,21 @@ if ( $obj->task_dynamic != 1 ) {
 	// tabbed information boxes
 	if ($perms->checkModuleItem('task_log', 'view', $task_id)) {
 		$tabBox_show = 1;
-		$tabBox->add( "{$dPconfig['root_dir']}/modules/tasks/vw_logs", 'Task Logs' );
+		$tabBox->add( DP_BASE_DIR.'/modules/tasks/vw_logs', 'Task Logs' );
 		// fixed bug that dP automatically jumped to access denied if user does not
 		// have read-write permissions on task_id and this tab is opened by default (session_vars)
 		// only if user has r-w perms on this task, new or edit log is beign showed
-        if ($task_log_id == 0) {
-            if ($perms->checkModuleItem('task_log', 'add', $task_id))
-                $tabBox->add( "{$dPconfig['root_dir']}/modules/tasks/vw_log_update", 'New Log' );
-        } 
-        else if ($perms->checkModuleItem('task_log', 'edit', $task_id)) {
-            $tabBox->add( "{$dPconfig['root_dir']}/modules/tasks/vw_log_update", 'Edit Log' );
+		if ($perms->checkModuleItem('tasks', 'edit', $task_id)) {
+			if ($task_log_id == 0) {
+				if ($perms->checkModuleItem('task_log', 'add', $task_id)) {
+					$tabBox->add(DP_BASE_DIR.'/modules/tasks/vw_log_update', 'New Log');
+				}
+			} elseif ($perms->checkModuleItem('task_log', 'edit', $task_id)) {
+				$tabBox->add(DP_BASE_DIR.'/modules/tasks/vw_log_update', 'Edit Log');
+			} elseif ($perms->checkModuleItem('task_log', 'add', $task_id)) {
+				$tabBox_show = 1;
+				$tabBox->add(DP_BASE_DIR.'/modules/tasks/vw_log_update', 'New Log');
+			}
 		}
 	}
 }
@@ -491,7 +495,7 @@ if ( count($obj->getChildren()) > 0 ) {
 	// $_GET[task_status]; this patch is to be able to see
 	// child tasks withing an inactive task
 	$_GET["task_status"] = $obj->task_status;
-	$tabBox->add( "{$dPconfig['root_dir']}/modules/tasks/tasks", 'Child Tasks' );
+	$tabBox->add( DP_BASE_DIR.'/modules/tasks/tasks', 'Child Tasks' );
 }
 
 if ($tabBox->loadExtras($m, $a))

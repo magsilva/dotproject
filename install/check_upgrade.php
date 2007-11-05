@@ -37,11 +37,11 @@ The full text of the GPL is in the COPYING file.
 // 4. Combination of 2 and 3
 // 5. It is an upgrade - there must be a config.php and a database.
 
-global $baseDir;
+$baseDir = dirname(dirname(__FILE__));
+define('DP_BASE_DIR', $baseDir);
 
 require_once 'install.inc.php';
-$baseDir = dirname(dirname(__FILE__));
-require_once "$baseDir/lib/adodb/adodb.inc.php";
+require_once DP_BASE_DIR.'/lib/adodb/adodb.inc.php';
 
 function dPcheckExistingDB($conf) {
 	global $AppUI, $ADODB_FETCH_MODE;
@@ -56,6 +56,37 @@ function dPcheckExistingDB($conf) {
 	$exists = @$ado->SelectDB($conf['dbname']);
 	if (! $exists)
 		return false;
+
+	// Find the tables in the database, if there are none, or if the
+	// basic tables of project and task are missing, we are doing an
+	// install.
+	$table_list = $ado->MetaTables('TABLE');
+	if (count($table_list) < 10 ) {
+		// There are now more than 60 tables in a standard dP
+		// install, but this will at least cover the basics.
+		return false;
+	}
+
+	// Check the table list for the standard tables.  Firstly
+	// we check for sysvals and tasks, and see if there is a common
+	// prefix.
+	$found = false;
+	foreach ($table_list as $tbl) {
+		if (substr($tbl, -7) == 'sysvals') {
+			$prefix = str_replace('sysvals', '', $tbl);
+			$found = true;
+			break;
+		}
+	}
+	if (! $found) {
+		return false; //Couldn't even find the projects table!
+	}
+	if (!in_array($prefix . 'tasks', $table_list)) {
+		return false; // Must have both tasks and projects.
+		// we could go further but it is likely that if these
+		// exist then we can safely upgrade.
+	}
+
 
 	// Now we make a check to see if the dotproject.sql has been loaded
 	// prior to the installer being run.  This needs to rely on the

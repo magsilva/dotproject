@@ -1,4 +1,4 @@
-// $Id: addedit.js,v 1.15.4.4 2006/05/27 19:24:29 gregorerhardt Exp $
+// $Id: addedit.js,v 1.15.4.11 2007/09/21 22:04:45 gregorerhardt Exp $
 var calendarField = '';
 var calWin = null;
 
@@ -67,7 +67,7 @@ function popCalendar( field ){
 	calendarField = field;
 	task_cal = document.getElementById('task_' + field.name);
 	idate = task_cal.value;
-	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'top=250,left=250,width=251, height=220, scollbars=false' );
+	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'top=250,left=250,width=251, height=220, scrollbars=no, resizable=yes' );
 }
 
 /**
@@ -100,11 +100,10 @@ function setContacts(contact_id_string){
 }
 
 function submitIt(form){
-
 	if (form.task_name.value.length < 3) {
-		alert( task_name_msg );
-		form.task_name.focus();
-		return false;
+			alert( task_name_msg );
+			form.task_name.focus();
+			return false;
 	}
 
 	// Check the sub forms
@@ -339,10 +338,13 @@ function calcDuration(f) {
 			durn++;
 		}
 
-	if ( s > e )
+	if ( s > e ) {
 		alert( 'End date is before start date!');
-	else
+		return false;
+	} else {
 		f.task_duration.value = Math.round(durn);
+		return true;
+	}
 }
 /**
 * Get the end of the previous working day 
@@ -563,6 +565,16 @@ function checkDates(form) {
 			form.task_end_date.focus();
 			return false;
 		}
+		//check if the start date is > then end date
+		var int_st_date = new String(form.task_start_date.value + form.start_hour.value + form.start_minute.value);
+		var int_en_date = new String(form.task_end_date.value + form.end_hour.value + form.end_minute.value);
+
+		var s = Date.UTC(int_st_date.substring(0,4),(int_st_date.substring(4,6)-1),int_st_date.substring(6,8), int_st_date.substring(8,10), int_st_date.substring(10,12));
+		var e = Date.UTC(int_en_date.substring(0,4),(int_en_date.substring(4,6)-1),int_en_date.substring(6,8), int_en_date.substring(8,10), int_en_date.substring(10,12));
+		if ( s > e ) {
+			alert( 'End date is before start date!');
+			return false;
+		}
 	}
 	return true;
 }
@@ -637,7 +649,7 @@ function saveDepend(form) {
         hd = form.hdependencies;
 	hd.value = "";
 	for (dl; dl > -1; dl--){
-		hd.value = "," + hd.value +","+ form.task_dependencies.options[dl].value;
+		hd.value += form.task_dependencies.options[dl].value + ((dl == 0) ? "" : ",");
 	}
         return new Array('hdependencies');;
 }
@@ -659,7 +671,7 @@ function saveResource(form) {
 	ha = form.hassign;
 	ha.value = "";
 	for (fl; fl > -1; fl--){
-		ha.value = "," + ha.value +","+ form.assigned.options[fl].value;
+		ha.value += form.assigned.options[fl].value + ((fl == 0) ? "" : ",");
 	}
 	return new Array('hassign', 'hperc_assign');
 }

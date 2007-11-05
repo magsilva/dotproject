@@ -1,13 +1,18 @@
-<?php /* COMPANIES $Id: vw_contacts.php,v 1.6 2005/04/08 13:41:51 gregorerhardt Exp $ */
+<?php /* COMPANIES $Id: vw_contacts.php,v 1.6.4.4 2007/07/27 15:51:33 nybod Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 ##
 ##	Companies: View User sub-table
 ##
+
 GLOBAL $AppUI, $company_id, $obj;
 
 require_once $AppUI->getModuleClass('contacts');
 $q  = new DBQuery;
 $q->addTable('contacts');
-$q->addWhere("contact_company = '$obj->company_name' OR contact_company = '$obj->company_id'");
+$q->addWhere("contact_company = '" . addslashes($obj->company_name) . "' OR contact_company = '$obj->company_id'");
 $q->addOrder('contact_last_name'); 
 $s = '';
 if (!($rows = $q->loadList())) {
@@ -27,7 +32,7 @@ if (!($rows = $q->loadList())) {
 		$dept_detail = $contact->getDepartmentDetails();
 
 		$s .= '<tr><td>';
-		$s .= '<a href="./index.php?m=contacts&a=addedit&contact_id='.$row["contact_id"].'">'. $row["contact_last_name"].", ".$row["contact_first_name"] .'</a>';
+		$s .= '<a href="./index.php?m=contacts&a=view&contact_id='.$row["contact_id"].'">'. $row["contact_last_name"].", ".$row["contact_first_name"] .'</a>';
 		$s .= '<td><a href="mailto:'.$row["contact_email"] .'">' .$row["contact_email"] .'</a></td>';
 		$s .= '<td>'.$dept_detail['dept_name'] .'</td>';
 		$s .= '</tr>';

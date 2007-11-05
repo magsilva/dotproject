@@ -1,4 +1,8 @@
-<?php /* PROJECTS $Id: overall.php,v 1.3.10.1 2006/03/22 08:20:00 cyberhorse Exp $ */
+<?php /* PROJECTS $Id: overall.php,v 1.3.10.5 2007/09/19 13:45:53 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 /**
 * Generates a report of the task logs for given dates
 */
@@ -26,7 +30,7 @@ var calendarField = '';
 function popCalendar( field ){
 	calendarField = field;
 	idate = eval( 'document.editFrm.log_' + field + '.value' );
-	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'top=250,left=250,width=250, height=220, scollbars=false' );
+	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'top=250,left=250,width=250, height=220, scrollbars=no' );
 }
 
 /**
@@ -66,12 +70,12 @@ function setCalendar( idate, fdate ) {
 	</td>
 
 	<td nowrap="nowrap">
-		<input type="checkbox" name="log_all" <?php if ($log_all) echo "checked" ?> />
-		<?php echo $AppUI->_( 'Log All' );?>
+		<input type="checkbox" name="log_all" id="log_all" <?php if ($log_all) echo 'checked="checked"' ?> />
+		<label for="log_all"><?php echo $AppUI->_( 'Log All' );?></label>
 	</td>
 	<td nowrap="nowrap">
-		<input type="checkbox" name="log_pdf" <?php if ($log_pdf) echo "checked" ?> />
-		<?php echo $AppUI->_( 'Make PDF' );?>
+		<input type="checkbox" name="log_pdf" id="log_pdf" <?php if ($log_pdf) echo 'checked="checked"' ?> />
+		<label for="log_pdf"><?php echo $AppUI->_( 'Make PDF' );?></label>
 	</td>
 
 	<td align="right" width="50%" nowrap="nowrap">
@@ -231,9 +235,9 @@ echo '</h2>';
 if ($log_pdf) {
 	// make the PDF file
 
-		$font_dir = dPgetConfig( 'root_dir' )."/lib/ezpdf/fonts";
-		$temp_dir = dPgetConfig( 'root_dir' )."/files/temp";
-		$base_url  = dPgetConfig( 'base_url' );
+		$font_dir = DP_BASE_DIR.'/lib/ezpdf/fonts';
+		$temp_dir = DP_BASE_DIR.'/files/temp';
+		
 		require( $AppUI->getLibraryClass( 'ezpdf/class.ezpdf' ) );
 
 		$pdf =& new Cezpdf();
@@ -274,10 +278,10 @@ if ($log_pdf) {
 
 		$pdf->ezTable( $data, NULL, $title, $options );
 	}
-		if ($fp = fopen( "$temp_dir/temp$AppUI->user_id.pdf", 'wb' )) {
+		if ($fp = fopen( $temp_dir.'/temp'.$AppUI->user_id.'.pdf', 'wb' )) {
 			fwrite( $fp, $pdf->ezOutput() );
 			fclose( $fp );
-			echo "<a href=\"$base_url/files/temp/temp$AppUI->user_id.pdf\" target=\"pdf\">";
+			echo '<a href="'.DP_BASE_URL.'/files/temp/temp'.$AppUI->user_id.'.pdf" target="pdf">';
 			echo $AppUI->_( "View PDF File" );
 			echo "</a>";
 		} else {

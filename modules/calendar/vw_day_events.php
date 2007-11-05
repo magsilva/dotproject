@@ -1,4 +1,8 @@
-<?php /* CALENDAR $Id: vw_day_events.php,v 1.11 2005/03/16 01:12:41 gregorerhardt Exp $ */
+<?php /* CALENDAR $Id: vw_day_events.php,v 1.11.8.3 2007/07/26 16:36:17 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 global $this_day, $first_time, $last_time, $company_id, $event_filter, $event_filter_list, $AppUI;
 
 // load the event types
@@ -112,7 +116,7 @@ for ($i=0, $n=($end-$start)*60/$inc; $i < $n; $i++) {
 
 			$html .= "\n<table cellspacing=\"0\" cellpadding=\"0\" border=\"0\"><tr>";
 			$html .= "\n<td>" . dPshowImage( dPfindImage( 'event'.$row['event_type'].'.png', 'calendar' ), 16, 16, '' );
-			$html .= "</td>\n<td>&nbsp;<b>" . $types[$row['event_type']] . "</b></td></tr></table>";
+			$html .= "</td>\n<td>&nbsp;<b>" . $AppUI->_($types[$row['event_type']]) . "</b></td></tr></table>";
 
 
 			$html .= $href ? "\n\t\t<a href=\"$href\" class=\"event\" title=\"$alt\">" : '';

@@ -1,4 +1,7 @@
-<?php /* PUBLIC $Id: selector.php,v 1.18.8.1 2005/09/08 07:46:46 ajdonnison Exp $ */
+<?php /* PUBLIC $Id: selector.php,v 1.18.8.3 2007/03/06 00:34:43 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
 function selPermWhere( $obj, $idfld, $namefield, $prefix = '' ) {
 	global $AppUI;

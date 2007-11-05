@@ -1,10 +1,14 @@
-<?php /* PROJECTS $Id: vw_idx_proposed.php,v 1.22.6.1 2005/09/12 11:45:38 pedroix Exp $ */
+<?php /* PROJECTS $Id: vw_idx_proposed.php,v 1.22.6.9 2007/10/09 03:48:00 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 GLOBAL $AppUI, $projects, $company_id, $pstatus, $project_types, $currentTabId, $currentTabName;
 
-$check = $AppUI->_('All Projects', UI_OUTPUT_RAW);
 $show_all_projects = false;
-if ( stristr($currentTabName, $check) !== false)
+if ( $currentTabId == 500) {
 	$show_all_projects = true;
+}
 
 $perms =& $AppUI->acl();
 $df = $AppUI->getPref('SHDATEFORMAT');
@@ -70,15 +74,14 @@ $none = true;
 //Tabbed view
 $project_status_filter = $currentTabId;
 //Project not defined
-if ($currentTabId == count($project_types)-1)
-	$project_status_filter = 0;
+//if ($currentTabId == count($project_types)-1)
+//	$project_status_filter = 0;
 
 foreach ($projects as $row) {
 	if (! $perms->checkModuleItem('projects', 'view', $row['project_id'])) {
 		continue;
 	}
-	if ($show_all_projects ||
-	    ($row["project_active"] > 0 && $row["project_status"] == $project_status_filter)) {
+	if ($show_all_projects || $row["project_status"] == $project_status_filter) {
 		$none = false;
                 $start_date = intval( @$row["project_start_date"] ) ? new CDate( $row["project_start_date"] ) : null;
 		$end_date = intval( @$row["project_end_date"] ) ? new CDate( $row["project_end_date"] ) : null;
@@ -102,7 +105,7 @@ foreach ($projects as $row) {
 		$s .= $CR . '</td>';
 
 		$s .= $CR . '<td width="100%">';
-		$s .= $CT . '<a href="?m=projects&a=view&project_id=' . $row["project_id"] . '" title="' . htmlspecialchars( $row["project_description"], ENT_QUOTES ) . '">' . htmlspecialchars( $row["project_name"], ENT_QUOTES ) . '</a>';
+		$s .= $CT . '<a href="?m=projects&a=view&project_id=' . $row["project_id"] . '" onmouseover="return overlib( \''.htmlspecialchars( '<div><p>'.str_replace(array("\r\n", "\n", "\r"), '</p><p>', addslashes($row["project_description"])).'</p></div>', ENT_QUOTES ).'\', CAPTION, \''.$AppUI->_('Description').'\', CENTER);" onmouseout="nd();">' . htmlspecialchars( $row["project_name"], ENT_QUOTES ) . '</a>';
 		$s .= $CR . '</td>';
                 $s .= $CR . '<td align="center">'. ($start_date ? $start_date->format( $df ) : '-') .'</td>';
                 $s .= $CR . '<td align="center">'. ($end_date ? $end_date->format( $df ) : '-') .'</td>';

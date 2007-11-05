@@ -1,4 +1,7 @@
-<?php /* ADMIN $Id: admin.class.php,v 1.11.4.1 2005/09/14 18:03:24 pedroix Exp $ */
+<?php /* ADMIN $Id: admin.class.php,v 1.11.4.3 2007/03/06 00:34:39 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
 /**
 * User Class

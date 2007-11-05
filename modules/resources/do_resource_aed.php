@@ -1,4 +1,7 @@
-<?php /* RESOURCES $Id: do_resource_aed.php,v 1.1 2004/10/15 01:38:26 ajdonnison Exp $ */
+<?php /* RESOURCES $Id: do_resource_aed.php,v 1.1.10.2 2007/03/06 00:34:43 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
 $del = dPgetParam($_POST, 'del', 0);
 $obj =& new CResource;

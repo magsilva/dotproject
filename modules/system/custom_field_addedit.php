@@ -1,11 +1,14 @@
 <?php
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
 	/*
 	 *	Custom Field Add/Edit
 	 *
 	 */
 
-	require_once("./classes/CustomFields.class.php");
+	require_once($AppUI->getSystemClass( 'CustomFields' ));
 		
 	$titleBlock = new CTitleBlock('Custom Fields - Add/Edit', "", "admin", "admin.custom_field_addedit");
 	$titleBlock->addCrumb( "?m=system", 'system admin' );
@@ -92,7 +95,8 @@
 		'checkbox'=>$AppUI->_('Checkbox'),
 		'select'=>$AppUI->_('Select List'),
 		'label' => $AppUI->_('Label'),
-		'separator' => $AppUI->_('Separator')
+		'separator' => $AppUI->_('Separator'),
+		'href'=>$AppUI->_('Weblink'),
 	);
 
 	$visible_state = Array();

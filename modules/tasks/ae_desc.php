@@ -1,5 +1,9 @@
 <?php
-// $Id: ae_desc.php,v 1.9.4.1 2006/03/11 06:07:53 cyberhorse Exp $
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
+// $Id: ae_desc.php,v 1.9.4.3 2007/03/06 00:34:44 merlinyoda Exp $
 	global $AppUI, $task_id, $obj, $users, $task_access, $department_selection_list;
 	global $task_parent_options, $dPconfig, $projects, $task_project, $can_edit_time_information, $tab;
 
@@ -88,7 +92,7 @@
 		<textarea name="task_description" class="textarea" cols="60" rows="10" wrap="virtual"><?php echo @$obj->task_description;?></textarea>
 		</td></tr></table><br />
 		<?php
-			require_once("./classes/CustomFields.class.php");
+			require_once($AppUI->getSystemClass( 'CustomFields' ));
 			GLOBAL $m;
 			$custom_fields = New CustomFields( $m, 'addedit', $obj->task_id, "edit" );
 			$custom_fields->printHTML();

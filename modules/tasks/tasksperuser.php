@@ -1,4 +1,8 @@
-<?php /* TASKS $Id: tasksperuser.php,v 1.5 2005/03/23 21:51:42 gregorerhardt Exp $ */
+<?php /* TASKS $Id: tasksperuser.php,v 1.5.6.2 2007/03/06 00:34:45 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 $AppUI->savePlace();
 
 if (isset( $_POST['company_id'] )) {
@@ -28,5 +32,5 @@ $titleBlock->show();
 
 // include the re-usable sub view
 	$min_view = false;
-	include("{$dPconfig['root_dir']}/modules/tasks/tasksperuser_sub.php");
+	include(DP_BASE_DIR.'/modules/tasks/tasksperuser_sub.php');
 ?>

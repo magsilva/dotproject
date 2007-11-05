@@ -1,4 +1,8 @@
-<?php /* PROJECTS $Id: vw_forums.php,v 1.9 2005/03/29 00:01:24 ajdonnison Exp $ */
+<?php /* PROJECTS $Id: vw_forums.php,v 1.9.6.2 2007/03/06 00:34:42 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 GLOBAL $AppUI, $project_id;
 // Forums mini-table in project view action
 $q  = new DBQuery;

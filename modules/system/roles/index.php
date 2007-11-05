@@ -1,4 +1,8 @@
-<?php /* ROLES $Id: index.php,v 1.8 2005/04/01 20:51:51 gregorerhardt Exp $ */
+<?php /* ROLES $Id: index.php,v 1.8.4.3 2007/06/07 14:12:35 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $AppUI->savePlace();
 
 // pull all the key types
@@ -84,9 +88,9 @@ function showRow( $role=null ) {
 		if ($canEdit) {
 			$s .= '<a href="?m=system&u=roles&role_id='.$id.'">';
 			$s .= dPshowImage('./images/icons/stock_edit-16.png');
-			$s .= "</a><a href='?m=system&u=roles&a=viewrole&role_id=$id&tab=1' title=''>";
+			$s .= '</a><a href="?m=system&u=roles&a=viewrole&role_id='.$id.'" title="">';
 			$s .= dPshowImage('images/obj/lock.gif');
-			$s .= "</a>";
+			$s .= '</a>';
 		}
 		if ($canDelete) {
 			$s .= "<a href='javascript:delIt($id)'>";

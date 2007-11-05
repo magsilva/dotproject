@@ -1,4 +1,8 @@
-<?php /* FILES $Id: addedit.php,v 1.3.2.5 2006/03/19 07:50:27 cyberhorse Exp $ */
+<?php /* FILES $Id: addedit.php,v 1.3.2.10 2007/03/09 11:57:36 nybod Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $link_id = intval( dPgetParam( $_GET, 'link_id', 0 ) );
  
 // check permissions for this record
@@ -68,7 +72,7 @@ if ($obj->link_task) {
 }
 
 $extra = array(
-	'where'=>'project_active <> 0'
+	'where'=>'project_status <> 7'
 );
 $project = new CProject();
 $projects = $project->getAllowedRecords( $AppUI->user_id, 'project_id,project_name', 'project_name', null, $extra );
@@ -124,7 +128,7 @@ function setTask( key, val ) {
 		<table cellspacing="1" cellpadding="2" width="60%">
 		<tr>
 			<td align="right" nowrap="nowrap"><?php echo $AppUI->_( 'Link Name' );?>:</td>
-			<td align="left"><input type="text" class="text" name="link_name" value="<?echo $obj->link_name;?>"></td>
+			<td align="left"><input type="text" class="text" name="link_name" value="<?php echo $obj->link_name;?>"></td>
 	<?php if ($link_id) { ?>
 			<td>
 				<a href="<?php echo $obj->link_url;?>" target="_blank"><?php echo $AppUI->_( 'go' );?></a>
@@ -168,7 +172,7 @@ function setTask( key, val ) {
 
 		<tr>
 			<td align="right" nowrap="nowrap"><?php echo $AppUI->_( 'Link URL' );?>:</td>
-			<td align="left"><input type="field" name="link_url" style="width:270px" value="<?= $obj->link_url ?>"></td>
+			<td align="left"><input type="field" name="link_url" style="width:270px" value="<?php echo $obj->link_url ?>"></td>
 		</tr>
 		</table>
 	</td>

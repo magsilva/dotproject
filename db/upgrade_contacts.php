@@ -1,10 +1,10 @@
 <?php
-global $baseDir;
 
-if (! isset($baseDir))
-	die('You must not use this file directly, please direct your browser to install/index.php instead');
+if (!defined('DP_BASE_DIR')) {
+	die('You should not access this file directly. Instead, run the Installer in install/index.php.');
+}
 
-dPmsg("Converting users to contacts");
+dPmsg('Converting users to contacts');
 $users = db_loadList('SELECT * FROM users');
 foreach ($users as $user)
 {
@@ -49,15 +49,20 @@ foreach ($users as $user)
 
                 db_exec($sql);
                 $msg =  db_error();
-								if ($msg)
-									dPmsg($msg);
+        $sql = 'INSERT INTO user_preferences VALUES ('.$user['user_id'].', \'USERFORMAT\', \'user\')';
+                db_exec($sql);
+                $msg =  db_error();
+				if ($msg) {
+				  dPmsg($msg);
+				}
                 $sql = 'UPDATE users 
                         SET user_contact=LAST_INSERT_ID() 
                         WHERE user_id = ' . $user['user_id'];
                 db_exec($sql);
                 $msg =  db_error();
-								if ($msg)
-									dPmsg($msg);
+				if ($msg) {
+				  dPmsg($msg);
+				}
 }
 
 ?>

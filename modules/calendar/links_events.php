@@ -1,4 +1,8 @@
-<?php /* CALENDAR $Id: links_events.php,v 1.11 2004/11/18 15:56:36 gregorerhardt Exp $ */
+<?php /* CALENDAR $Id: links_events.php,v 1.11.10.2 2007/03/06 00:34:40 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 
 /**
 * Sub-function to collect events within a period

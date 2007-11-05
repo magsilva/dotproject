@@ -1,9 +1,12 @@
 <?php
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
-/* $Id: login.php,v 1.6 2004/01/28 05:47:36 ajdonnison Exp $ */
+/* $Id: login.php,v 1.6.12.2 2007/03/06 00:34:46 merlinyoda Exp $ */
 
-require("modules/ticketsmith/config.inc.php");
-require("modules/ticketsmith/common.inc.php");
+require(DP_BASE_DIR.'modules/ticketsmith/config.inc.php');
+require(DP_BASE_DIR.'modules/ticketsmith/common.inc.php');
 
 /* set title */
 $title = "Ticketsmith Login";

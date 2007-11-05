@@ -1,6 +1,9 @@
 <?php
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
-/* $Id: common.inc.php,v 1.20 2004/11/18 14:41:57 gregorerhardt Exp $ */
+/* $Id: common.inc.php,v 1.20.10.4 2007/04/12 23:36:44 caseydk Exp $ */
 
 /* program info */
 $program = "Dotproject";
@@ -340,7 +343,6 @@ function format_field ($value, $type, $ticket = NULL) {
         case "priority_view":
             $priority = $CONFIG["priority_names"][$value];
             $color = $CONFIG["priority_colors"][$value];
-	    //$priority = $AppUI->_($priority);
             if ($value == 3) {
                 $priority = "<strong>$priority</strong>";
             }
@@ -360,7 +362,7 @@ function format_field ($value, $type, $ticket = NULL) {
             break;
         case "assignment":
             $options[0] = "-";
-	    $query = "SELECT user_id as id, CONCAT_WS(' ',contact_first_name,contact_last_name) as name FROM users u LEFT JOIN contacts ON u.user_contact = contact_id";
+	    $query = "SELECT user_id as id, CONCAT_WS(' ',contact_first_name,contact_last_name) as name FROM users u LEFT JOIN contacts ON u.user_contact = contact_id ORDER BY name";
             $result = do_query($query);
             while ($row = result2hash($result)) {
                 $options[$row["id"]] = $row["name"];
@@ -379,7 +381,7 @@ function format_field ($value, $type, $ticket = NULL) {
                     $value = $latest_value;
                 }
             }
-            $output = "<a href=index.php?m=ticketsmith&a=view&ticket=$value>";
+            $output = "<a href=index.php?m=ticketsmith&a=view&ticket=$value>$value&nbsp;";
             $output .= "<img src=images/icons/pencil.gif border=0></a>";
             break;
 	case "attach":
@@ -482,16 +484,34 @@ function format_field ($value, $type, $ticket = NULL) {
                 $output = "<em>".$AppUI->_('none')."</em>";
             }
             break;
+		case 'ticket_company':
+		    $q  = new DBQuery;
+			$q->addTable('companies');
+			$q->addQuery('companies.*');
+			$q->addWhere('companies.company_id = '.$value);
+			$sql = $q->prepare();
+			if (!db_loadObject( $sql, $obj )) {
+				// it all dies!
+			}
+			$output = '<a href="index.php?m=companies&a=view&company_id='.$value.'">'.$obj->company_name.'</a>';
+			break;
+		case 'ticket_project':
+		    $q  = new DBQuery;
+			$q->addTable('projects');
+			$q->addQuery('projects.*');
+			$q->addWhere('projects.project_id = '.$value);
+			$sql = $q->prepare();
+			if (!db_loadObject( $sql, $obj )) {
+				// it all dies!
+			}
+			$output = '<a href="index.php?m=projects&a=view&project_id='.$value.'">'.$obj->project_name.'</a>';
+			break;
         default:
             $output = $value ? htmlspecialchars($value) : "<em>".$AppUI->_('none')."</em>";
     }
     return($output);
 
 }
-
-/* register login stuff */
-//session_register("login_id");
-//session_register("login_name");
 
 /* figure out parent & type */
 if (isset($ticket)) {

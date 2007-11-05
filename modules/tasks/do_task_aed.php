@@ -1,4 +1,7 @@
-<?php /* TASKS $Id: do_task_aed.php,v 1.31.2.4 2006/05/27 19:24:29 gregorerhardt Exp $ */
+<?php /* TASKS $Id: do_task_aed.php,v 1.31.2.16 2007/10/14 02:18:19 ajdonnison Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
 
 function setItem($item_name, $defval = null) {
 	if (isset($_POST[$item_name]))
@@ -19,19 +22,18 @@ if ($sub_form) {
 	// in add-edit, so set it to what it should be
 	$AppUI->setState('TaskAeTabIdx', $_POST['newTab']);
 	if (isset($_POST['subform_processor'])) {
-		$root = $dPconfig['root_dir'];
 		if (isset($_POST['subform_module']))
 			$mod = $AppUI->checkFileName($_POST['subform_module']);
 		else
 			$mod = 'tasks';
 		$proc = $AppUI->checkFileName($_POST['subform_processor']);
-		include "$root/modules/$mod/$proc.php";
+		include DP_BASE_DIR."/modules/$mod/$proc.php";
 	} 
 } else {
 
 	// Include any files for handling module-specific requirements
 	foreach (findTabModules('tasks', 'addedit') as $mod) {
-		$fname = dPgetConfig('root_dir') . "/modules/$mod/tasks_dosql.addedit.php";
+		$fname = DP_BASE_DIR . "/modules/$mod/tasks_dosql.addedit.php";
 		dprint(__FILE__, __LINE__, 3, "checking for $fname");
 		if (file_exists($fname))
 			require_once $fname;
@@ -44,7 +46,7 @@ if ($sub_form) {
 		foreach ($pre_save as $pre_save_function)
 			$pre_save_function();
 	} else {
-		dprint(__FILE__, __LINE__, 1, "No pre_save functions.");
+		dprint(__FILE__, __LINE__, 2, "No pre_save functions.");
 	}
 
 	// Find the task if we are set
@@ -65,10 +67,12 @@ if ($sub_form) {
 		$AppUI->setMsg( $obj->getError(), UI_MSG_ERROR );
 		$AppUI->redirect();
 	}
-
+		
 	// Check to see if the task_project has changed
-	if (isset($_POST['new_task_project']) && $_POST['new_task_project'])
+	if (isset($_POST['new_task_project']) && $_POST['new_task_project'] && ($obj->task_project != $_POST['new_task_project'])) {
 		$obj->task_project = $_POST['new_task_project'];
+		$obj->task_parent  = $obj->task_id;
+  }
 
 	// Map task_dynamic checkboxes to task_dynamic values for task dependencies.
 	if ( $obj->task_dynamic != 1 ) {
@@ -110,12 +114,15 @@ if ($sub_form) {
 	}
 	$end_date = null;
 	if ($obj->task_end_date) {
+		if (strpos($obj->task_end_date, '2400') !== false) {
+		  $obj->task_end_date = str_replace('2400', '2359', $obj->task_end_date);
+		}
 		$end_date = new CDate( $obj->task_end_date );
 		$obj->task_end_date = $end_date->format( FMT_DATETIME_MYSQL );
 	}
 
 
-	require_once("./classes/CustomFields.class.php");
+	require_once($AppUI->getSystemClass( 'CustomFields' ));
 
 	// prepare (and translate) the module name ready for the suffix
 	if ($del) {
@@ -126,7 +133,8 @@ if ($sub_form) {
 			$AppUI->setMsg( 'Task deleted');
 			$AppUI->redirect( '', -1 );
 		}
-	} else {
+	} 
+    else {
 		if (($msg = $obj->store())) {
 			$AppUI->setMsg( $msg, UI_MSG_ERROR );
 			$AppUI->redirect(); // Store failed don't continue?
@@ -147,46 +155,71 @@ if ($sub_form) {
 			$obj->updateAssigned( $hassign , $hperc_assign_ar);
 		}
 		
-		if (isset($hdependencies)) {
-			// backup old start and end dates
+		if (isset($hassign)) {
+			$obj->updateAssigned( $hassign , $hperc_assign_ar);
+		}
+		
+		if (isset($hdependencies)) { // && !empty($hdependencies)) {
+			// there are dependencies set!
+			
+			// backup initial start and end dates
 			$tsd = new CDate ($obj->task_start_date);
 			$ted = new CDate ($obj->task_end_date);
 
+			// updating the table recording the 
+			// dependency relations with this task
 			$obj->updateDependencies( $hdependencies );
 			
 			// we will reset the task's start date based upon dependencies
 			// and shift the end date appropriately
-			if ($adjustStartDate) {
-			
-				// update start date based on dep
-				$obj->update_dep_dates( $obj->task_id );
+			if ($adjustStartDate && !is_null($hdependencies)) {
 
-				// load new task data
-				$tempTask = new CTask();
-				$tempTask->load( $obj->task_id );
+							// load already stored task data for this task
+							$tempTask = new CTask();
+							$tempTask->load( $obj->task_id );
 
-				// shifted new start date
-				$nsd = new CDate ($tempTask->task_start_date);
-				
-				// calc shifting span old start ~ new start
-				$d = $tsd->calcDurationDiffToDate($nsd);
-
-				// appropriately shifted end date
-				$ned = $ted->addDuration($d);
-
-				$obj->task_end_date = $ned->format( FMT_DATETIME_MYSQL );
-
-		 		$q = new DBQuery;
-		                $q->addTable('tasks', 't');
-		                $q->addUpdate('task_end_date', $obj->task_end_date);
-		                $q->addWhere('task_id = '.$obj->task_id);
-		                $q->addWhere('task_dynamic != 1');
-		                $q->exec();
-		                $q->clear();
-			}
+							// shift new start date to the last dependency end date
+							$nsd = new CDate ($tempTask->get_deps_max_end_date( $tempTask ) );
+							
+							// prefer Wed 8:00 over Tue 16:00 as start date
+							$nsd = $nsd->next_working_day();
+							 
+							// prepare the creation of the end date
+							$ned = new CDate();
+							$ned->copy($nsd);
+							
+							if (empty($obj->task_start_date)) {
+								// appropriately calculated end date via start+duration
+								$ned->addDuration($obj->task_duration, $obj->task_duration_type);		
+								
+							} else { 			
+								// calc task time span start - end
+								$d = $tsd->calcDuration($ted);
+	
+								// Re-add (keep) task time span for end date.
+								// This is independent from $obj->task_duration.
+								// The value returned by Date::Duration() is always in hours ('1') 
+								$ned->addDuration($d, '1');
+	
+							}
+							
+							// prefer tue 16:00 over wed 8:00 as an end date
+							$ned = $ned->prev_working_day();
+							
+							$obj->task_start_date = $nsd->format( FMT_DATETIME_MYSQL );
+							$obj->task_end_date = $ned->format( FMT_DATETIME_MYSQL );						
+							
+							$q = new DBQuery;
+					    $q->addTable('tasks', 't');							
+							$q->addUpdate('task_start_date', $obj->task_start_date);	
+              $q->addUpdate('task_end_date', $obj->task_end_date);
+              $q->addWhere('task_id = '.$obj->task_id);
+              $q->addWhere('task_dynamic != 1');
+              $q->exec();
+              $q->clear();
+						}
 
 		}
-		
 		// If there is a set of post_save functions, then we process them
 
 		if (isset($post_save)) {

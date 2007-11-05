@@ -1,4 +1,8 @@
-<?php /* PROJECTS $Id: do_project_aed.php,v 1.11.10.3 2006/04/06 12:51:59 cyberhorse Exp $ */
+<?php /* PROJECTS $Id: do_project_aed.php,v 1.11.10.6 2007/03/06 00:34:42 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $obj = new CProject();
 $msg = '';
 
@@ -7,7 +11,7 @@ if (!$obj->bind( $_POST )) {
 	$AppUI->redirect();
 }
 
-require_once("./classes/CustomFields.class.php");
+require_once($AppUI->getSystemClass( 'CustomFields' ));
 // convert dates to SQL format first
 if ($obj->project_start_date) {
 	$date = new CDate( $obj->project_start_date );
@@ -45,7 +49,8 @@ if ($del) {
 		$AppUI->setMsg( "Project deleted", UI_MSG_ALERT);
 		$AppUI->redirect( "m=projects" );
 	}
-} else {
+} 
+else {
 	if (($msg = $obj->store())) {
 		$AppUI->setMsg( $msg, UI_MSG_ERROR );
 	} else {

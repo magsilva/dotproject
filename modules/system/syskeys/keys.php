@@ -1,4 +1,8 @@
-<?php /* SYSKEYS $Id: keys.php,v 1.9 2004/07/18 00:17:53 gregorerhardt Exp $*/
+<?php /* SYSKEYS $Id: keys.php,v 1.9.12.2 2007/03/06 00:34:44 merlinyoda Exp $*/
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $sql = "SELECT * FROM syskeys ORDER BY syskey_name";
 $keys = db_loadList( $sql );
 

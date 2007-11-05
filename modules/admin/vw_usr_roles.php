@@ -1,9 +1,13 @@
-<?php /* ADMIN $Id: vw_usr_roles.php,v 1.10 2005/03/14 02:28:06 gregorerhardt Exp $ */
-GLOBAL $AppUI, $user_id, $canEdit, $canDelete, $tab, $baseDir;
+<?php /* ADMIN $Id: vw_usr_roles.php,v 1.10.8.2 2007/03/06 00:34:40 merlinyoda Exp $ */
+GLOBAL $AppUI, $user_id, $canEdit, $canDelete, $tab;
+
+if (!defined('DP_BASE_DIR')) {
+	die('You should not access this file directly.');
+}
 
 //$roles
 // Create the roles class container
-require_once "$baseDir/modules/system/roles/roles.class.php";
+require_once DP_BASE_DIR."/modules/system/roles/roles.class.php";
 
 $perms =& $AppUI->acl();
 $user_roles = $perms->getUserRoles($user_id);

@@ -1,12 +1,12 @@
-<?php /* TASKS $Id: gantt2.php,v 1.6.8.1 2006/03/20 11:20:14 cyberhorse Exp $ */
-include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php");
-include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
+<?php /* TASKS $Id: gantt2.php,v 1.6.8.9 2007/07/13 15:51:38 caseydk Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
 
+include ($AppUI->getLibraryClass( 'jpgraph/src/jpgraph'));
+include ($AppUI->getLibraryClass( 'jpgraph/src/jpgraph_gantt'));
 
-
-// orginal: global $company_id, $dept_ids, $department, $locale_char_set, $proFilter, $projectStatus, $showInactive, $showLabels;
 global $company_id, $dept_ids, $department, $locale_char_set, $proFilter, $projectStatus, $showInactive, $showLabels, $showAllGantt; // $showAllGantt == Gantt with tasks and users
-
 
 // get the prefered date format
 $df = $AppUI->getPref('SHDATEFORMAT');
@@ -26,7 +26,7 @@ if ($company_id != 0) {
 }
 //$filter1 = ($proFilter == '-1') ? '' : " AND project_status = $proFilter ";
 if ($showInactive != '1')
-	$filter1[] = "project_active <> 0 ";
+	$filter1[] = "project_status <> 7 ";
 $pjobj =& new CProject;
 $allowed_projects = $pjobj->getAllowedSQL($AppUI->user_id);
 $where = array_merge($filter1, $allowed_projects);
@@ -82,16 +82,18 @@ $graph2->SetFrame(false);
 $graph2->SetBox(true, array(0,0,0), 2);
 $graph2->scale->week->SetStyle(WEEKSTYLE_FIRSTDAY);
 
-$jpLocale = dPgetConfig( 'jpLocale' );
-if ($jpLocale) {
-	$graph2->scale->SetDateLocale( $jpLocale );
+$pLocale = setlocale(LC_TIME, 0); // get current locale for LC_TIME
+$res = @setlocale(LC_TIME, $AppUI->user_lang[2]);
+if ($res) { // Setting locale doesn't fail
+	$graph->scale->SetDateLocale( $AppUI->user_lang[2] );
 }
+setlocale(LC_TIME, $pLocale);
 
 if ($start_date && $end_date) {
 	$graph2->SetDateRange( $start_date, $end_date );
 }
 
-//$graph2->scale->actinfo->SetFont(FF_ARIAL);
+//$graph2->scale->actinfo->SetFont(FF_CUSTOM);
 $graph2->scale->actinfo->vgrid->SetColor('gray');
 $graph2->scale->actinfo->SetColor('darkgray');
 $graph2->scale->actinfo->SetColTitles(array( $AppUI->_('User Name', UI_OUTPUT_RAW), $AppUI->_('Start Date', UI_OUTPUT_RAW), $AppUI->_('Finish', UI_OUTPUT_RAW), $AppUI->_(' ')),array(160,10, 70,70));
@@ -102,8 +104,9 @@ $graph2->scale->tableTitle->Set($tableTitle);
 
 // Use TTF font if it exists
 // try commenting out the following two lines if gantt charts do not display
-if (is_file( TTF_DIR."arialbd.ttf" ))
-	$graph2->scale->tableTitle->SetFont(FF_ARIAL,FS_BOLD,12);
+if (is_file( TTF_DIR."FreeSansBold.ttf" )) {
+	$graph2->scale->tableTitle->SetFont(FF_CUSTOM,FS_BOLD,12);
+}
 $graph2->scale->SetTableTitleBackground("#eeeeee");
 $graph2->scale->tableTitle->Show(true);
 
@@ -176,7 +179,9 @@ foreach($tasks as $t) {
 		$barTmp = new GanttBar($row++, array($t["user_name"], "", ""," "), "0", "0;" , 0.6);						
 		$barTmp->title->SetColor("#".$t['project_color_identifier']);
 		$barTmp->SetFillColor("#".$t['project_color_identifier']);
-		$barTmp->title ->SetFont(FF_FONT1, FF_BOLD);		
+		if (is_file( TTF_DIR."FreeSansBold.ttf" )) {
+			$barTmp->title ->SetFont(FF_CUSTOM, FF_BOLD);
+		}		
 		$graph2->Add($barTmp);
 	}
 		
@@ -220,7 +225,7 @@ foreach($tasks as $t) {
 
        if ($showLabels){
                 $caption .= $t['project_name']." (".$t['perc_assignment']."%)";
-//                $caption .= $p['project_active'] <> 0 ? $AppUI->_('active') : $AppUI->_('inactive');
+//                $caption .= $p['project_status'] != 7 ? $AppUI->_('active') : $AppUI->_('inactive');
         }
 
 	
@@ -231,8 +236,9 @@ foreach($tasks as $t) {
 	$enddate = new CDate($end);
 	$startdate = new CDate($start);
         $bar = new GanttBar($row++, array($name, $startdate->format($df), $enddate->format($df), /*substr($actual_end, 0, 10))*/" "), $start, $actual_end, $cap, $t['task_dynamic'] == 1 ? 0.1 : 0.6);
-   //     $bar->progress->Set($progress/100);
-        $bar->title->SetFont(FF_FONT1,FS_NORMAL,10);
+				if (is_file( TTF_DIR."FreeSans.ttf" )) {
+        	$bar->title->SetFont(FF_CUSTOM,FS_NORMAL,10);
+				}
         $bar->SetFillColor("#".$t['project_color_identifier']);
         $bar->SetPattern(BAND_SOLID,"#".$t['project_color_identifier']);
 

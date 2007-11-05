@@ -1,9 +1,12 @@
 <?php
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
-/* $Id: admin.php,v 1.7 2004/01/31 04:43:44 ajdonnison Exp $ */
+/* $Id: admin.php,v 1.7.12.2 2007/03/06 00:34:45 merlinyoda Exp $ */
 
-require("modules/ticketsmith/config.inc.php");
-require("modules/ticketsmith/common.inc.php");
+require(DP_BASE_DIR.'/modules/ticketsmith/config.inc.php');
+require(DP_BASE_DIR.'modules/ticketsmith/common.inc.php');
 
 
 /* determine page function */

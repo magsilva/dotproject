@@ -1,4 +1,8 @@
-<?php /* PROJECTS $Id: addedit.php,v 1.93.6.1 2006/04/06 08:35:09 cyberhorse Exp $ */
+<?php /* PROJECTS $Id: addedit.php,v 1.93.6.13 2007/09/21 23:12:42 gregorerhardt Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 $project_id = intval( dPgetParam( $_GET, "project_id", 0 ) );
 $company_id = intval( dPgetParam( $_GET, "company_id", 0 ) );
 $contact_id = intval( dPgetParam( $_GET, "contact_id", 0 ) );
@@ -86,17 +90,18 @@ if ($project_id) {
 	$q->addTable('project_departments');
 	$q->addQuery('department_id');
 	$q->addWhere('project_id = ' . $project_id);
-	$res =& $q->exec();
-	for ( $res; ! $res->EOF; $res->MoveNext())
-		$selected_departments[] = $res->fields['department_id'];
-	$q->clear();
+	$selected_departments = $q->loadColumn();
 }
 $departments_count = 0;
 $department_selection_list = getDepartmentSelectionList($company_id, $selected_departments);
-if($department_selection_list!=""){
-$department_selection_list = $AppUI->_("Departments")."<br /><select name='dept_ids[]' size='$departments_count' multiple style=''>$department_selection_list</select>";
+if($department_selection_list!="" || $project_id){
+  $department_selection_list = ($AppUI->_("Departments")."<br />\n"
+								."<select name=\"dept_ids[]\" class=\"text\">\n"
+								."<option value=\"0\"></option>\n"
+								."{$department_selection_list}\n"
+								."</select>");
 } else {
-$department_selection_list = "<input type='button' class='button' value='".$AppUI->_("Select department...")."' onclick='javascript:popDepartment();' /><input type=\"hidden\" name=\"project_departments\"";
+  $department_selection_list = "<input type=\"button\" class=\"button\" value=\"".$AppUI->_("Select department...")."\" onclick=\"javascript:popDepartment();\" /><input type=\"hidden\" name=\"project_departments\"";
 }
 
 // Get contacts list
@@ -115,11 +120,11 @@ if ($project_id == 0 && $contact_id > 0){
 	$selected_contacts[] = "$contact_id";
 }
 ?>
-<link rel="stylesheet" type="text/css" media="all" href="<?php echo $dPconfig['base_url'];?>/lib/calendar/calendar-dp.css" title="blue" />
+<link rel="stylesheet" type="text/css" media="all" href="<?php echo DP_BASE_URL;?>/lib/calendar/calendar-dp.css" title="blue" />
 <!-- import the calendar script -->
-<script type="text/javascript" src="<?php echo $dPconfig['base_url'];?>/lib/calendar/calendar.js"></script>
+<script type="text/javascript" src="<?php echo DP_BASE_URL;?>/lib/calendar/calendar.js"></script>
 <!-- import the language module -->
-<script type="text/javascript" src="<?php echo $dPconfig['base_url'];?>/lib/calendar/lang/calendar-<?php echo $AppUI->user_locale; ?>.js"></script>
+<script type="text/javascript" src="<?php echo DP_BASE_URL;?>/lib/calendar/lang/calendar-<?php echo $AppUI->user_locale; ?>.js"></script>
 
 <script language="javascript">
 function setColor(color) {
@@ -148,7 +153,7 @@ var calWin = null;
 function popCalendar( field ){
 calendarField = field;
 idate = eval( 'document.editFrm.project_' + field + '.value' );
-window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=280, height=250, scollbars=false' );
+window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=280, height=250, scrollbars=no' );
 }
 
 /**
@@ -171,34 +176,31 @@ function setCalendar( idate, fdate ) {
 }
 
 function submitIt() {
-var f = document.editFrm;
-var msg = '';
+	var f = document.editFrm;
+	var msg = '';
 
-if (f.project_name.value.length < 3) {
-	msg += "\n<?php echo $AppUI->_('projectsValidName', UI_OUTPUT_JS);?>";
-	f.project_name.focus();
-}
-if (f.project_color_identifier.value.length < 3) {
-	msg += "\n<?php echo $AppUI->_('projectsColor', UI_OUTPUT_JS);?>";
-	f.project_color_identifier.focus();
-}
-if (f.project_company.options[f.project_company.selectedIndex].value < 1) {
-	msg += "\n<?php echo $AppUI->_('projectsBadCompany', UI_OUTPUT_JS);?>";
-	f.project_name.focus();
-}
-/*
-if (f.project_end_date.value > 0 && f.project_end_date.value < f.project_start_date.value) {
-	msg += "\n<?php echo $AppUI->_('projectsBadEndDate1');?>";
-}
-if (f.project_actual_end_date.value > 0 && f.project_actual_end_date.value < f.project_start_date.value) {
-	msg += "\n<?php echo $AppUI->_('projectsBadEndDate2');?>";
-}
-*/
-if (msg.length < 1) {
-	f.submit();
-} else {
-	alert(msg);
-}
+	/*
+	if (f.project_end_date.value > 0 && f.project_end_date.value < f.project_start_date.value) {
+		msg += "\n<?php echo $AppUI->_('projectsBadEndDate1');?>";
+	}
+	if (f.project_actual_end_date.value > 0 && f.project_actual_end_date.value < f.project_start_date.value) {
+		msg += "\n<?php echo $AppUI->_('projectsBadEndDate2');?>";
+	}
+	*/
+
+	<?php 
+	/*
+	** Automatic required fields generated from System Values
+	*/
+	$requiredFields = dPgetSysVal( 'ProjectRequiredFields' );
+	echo dPrequiredFields($requiredFields);
+	?>
+
+	if (msg.length < 1) {
+		f.submit();
+	} else {
+		alert(msg);
+	}
 }
 
 var selected_contacts_id = "<?php echo implode(',', $selected_contacts); ?>";
@@ -245,14 +247,21 @@ function setDepartment(department_id_string){
 	<input type="hidden" name="project_id" value="<?php echo $project_id;?>" />
 	<input type="hidden" name="project_creator" value="<?php echo $AppUI->user_id;?>" />
 	<input name='project_contacts' type='hidden' value="<?php echo implode(',', $selected_contacts); ?>" />
-
+<tr>
+	<td>
+		<input class="button" type="button" name="cancel2" value="<?php echo $AppUI->_('cancel');?>" onClick="javascript:if(confirm('Are you sure you want to cancel.')){location.href = './index.php?m=projects';}" />
+	</td>
+	<td align="right">
+		<input class="button" type="button" name="btnFuseAction2" value="<?php echo $AppUI->_('submit');?>" onClick="submitIt();" />
+	</td>
+</tr>
 <tr>
 	<td width="50%" valign="top">
 		<table cellspacing="0" cellpadding="2" border="0">
 		<tr>
 			<td align="right" nowrap="nowrap"><?php echo $AppUI->_('Project Name');?></td>
 			<td width="100%" colspan="2">
-				<input type="text" name="project_name" value="<?php echo dPformSafe( $row->project_name );?>" size="25" maxlength="50" onBlur="setShort();" class="text" />
+				<input type="text" name="project_name" value="<?php echo dPformSafe( $row->project_name );?>" size="25" maxlength="50" onBlur="setShort();" class="text" /> *
 			</td>
 		</tr>
 		<tr>
@@ -345,7 +354,7 @@ function setDepartment(department_id_string){
 		<tr>
 			<td align="right" colspan="3">
 			<?php
-				require_once("./classes/CustomFields.class.php");
+				require_once($AppUI->getSystemClass( 'CustomFields' ));
 				$custom_fields = New CustomFields( $m, $a, $row->project_id, "edit" );
 				$custom_fields->printHTML();
 			?>
@@ -373,10 +382,10 @@ function setDepartment(department_id_string){
 				<input type="text" name="project_color_identifier" value="<?php echo (@$row->project_color_identifier) ? @$row->project_color_identifier : 'FFFFFF';?>" size="10" maxlength="6" onBlur="setColor();" class="text" /> *
 			</td>
 			<td nowrap="nowrap" align="right">
-				<a href="#" onClick="newwin=window.open('./index.php?m=public&a=color_selector&dialog=1&callback=setColor', 'calwin', 'width=320, height=300, scollbars=false');"><?php echo $AppUI->_('change color');?></a>
+				<a href="#" onClick="newwin=window.open('./index.php?m=public&a=color_selector&dialog=1&callback=setColor', 'calwin', 'width=320, height=300, scrollbars=no');"><?php echo $AppUI->_('change color');?></a>
 			</td>
 			<td nowrap="nowrap">
-				<span id="test" title="test" style="background:#<?php echo (@$row->project_color_identifier) ? @$row->project_color_identifier : 'FFFFFF';?>;"><a href="#" onClick="newwin=window.open('./index.php?m=public&a=color_selector&dialog=1&callback=setColor', 'calwin', 'width=320, height=300, scollbars=false');"><img src="./images/shim.gif" border="1" width="40" height="20" /></a></span>
+				<span id="test" title="test" style="background:#<?php echo (@$row->project_color_identifier) ? @$row->project_color_identifier : 'FFFFFF';?>;"><a href="#" onClick="newwin=window.open('./index.php?m=public&a=color_selector&dialog=1&callback=setColor', 'calwin', 'width=320, height=300, scrollbars=no');"><img src="./images/shim.gif" border="1" width="40" height="20" /></a></span>
 			</td>
 		</tr>
 		<tr>
@@ -391,7 +400,6 @@ function setDepartment(department_id_string){
 				<tr>
 					<td><?php echo $AppUI->_('Status');?> *</td>
 					<td nowrap="nowrap"><?php echo $AppUI->_('Progress');?></td>
-					<td><?php echo $AppUI->_('Active');?>?</td>
 				</tr>
 				<tr>
 					<td>
@@ -400,38 +408,16 @@ function setDepartment(department_id_string){
 					<td>
 						<strong><?php echo sprintf( "%.1f%%", @$row->project_percent_complete);?></strong>
 					</td>
-					<td>
-						<input type="checkbox" value="1" name="project_active" <?php echo $row->project_active||$project_id==0 ? 'checked="checked"' : '';?> />
-					</td>
 				</tr>
 				</table>
 			</td>
 		</tr>
-		<?php  
-			// Retrieve projects that the user can access
-			$objProject = new CProject();
-			$allowedProjects = $objProject->getAllowedRecords( $AppUI->user_id, 'project_id,project_name', 'project_name' );
-			
-			$q  = new DBQuery;
-			$q->addTable('projects', 'p');
-			$q->addTable('tasks', 't');
-			$q->addQuery('p.project_id, p.project_name');
-			$q->addWhere('t.task_project = p.project_id');
-			if ( count($allowedProjects) > 0 ) {
-				$q->addWhere('(p.project_id IN (' .
-				implode (',', array_keys($allowedProjects)) . '))');
-			}
-			$q->addOrder('p.project_name');
-			
-			$importList = $q->loadHashList ();
-			$importList = arrayMerge( array( '0'=> $AppUI->_('none') ), $importList);
-		?>
 		<tr>
 			<td align="left" nowrap="nowrap">
 				<?php   echo $AppUI->_('Import tasks from');?>:<br/>
 			</td>
 			<td colspan="3">
-				<?php echo arraySelect( $importList, 'import_tasks_from', 'size="1" class="text"', null, false ); ?>
+<?php echo projectSelectWithOptGroup( $AppUI->user_id, 'import_tasks_from', 'size="1" class="text"', false, $project_id ); ?>
 			</td>
 		</tr>
 		<tr>
@@ -466,12 +452,14 @@ function getDepartmentSelectionList($company_id, $checked_array = array(), $dept
 	$q->addTable('departments');
 	$q->addQuery('dept_id, dept_name');
 	$q->addWhere("dept_parent = '$dept_parent' and dept_company = '$company_id'");
+	$q->addOrder('dept_name');
+
 	$depts_list = $q->loadHashList("dept_id");
 
 	foreach($depts_list as $dept_id => $dept_info){
-		$selected = in_array($dept_id, $checked_array) ? "selected" : "";
+		$selected = in_array($dept_id, $checked_array) ? " selected=\"selected\"" : "";
 
-		$parsed .= "<option value='$dept_id' $selected>".str_repeat("&nbsp;", $spaces).$dept_info["dept_name"]."</option>";
+		$parsed .= "<option value=\"{$dept_id}\"{$selected}>".str_repeat("&nbsp;", $spaces).$dept_info["dept_name"]."</option>";
 		$parsed .= getDepartmentSelectionList($company_id, $checked_array, $dept_id, $spaces+5);
 	}
 	

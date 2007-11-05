@@ -1,8 +1,12 @@
-<?php /* SYSTEM $Id: addeditpref.php,v 1.43.4.1 2006/02/21 19:29:03 gregorerhardt Exp $ */
+<?php /* SYSTEM $Id: addeditpref.php,v 1.43.4.5 2007/09/19 13:45:53 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 ##
 ## add or edit a user preferences
 ##
-$user_id = isset($HTTP_GET_VARS['user_id']) ? $HTTP_GET_VARS['user_id'] : 0;
+$user_id = dPgetParam($_GET, 'user_id', '0');
 // Check permissions
 if (!$canEdit && $user_id != $AppUI->user_id) {
   $AppUI->redirect("m=public&a=access_denied" );
@@ -193,24 +197,27 @@ function submitIt(){
 	<td>
 		<input type='hidden' name='pref_name[TASKLOGEMAIL]' id='task_log_email_defaults' value='<?php echo @$prefs['TASKLOGEMAIL']; ?>'>
 <?php
-	if (! isset($prefs['TASKLOGEMAIL']))
+	if (! isset($prefs['TASKLOGEMAIL'])) {
 		$prefs['TASKLOGEMAIL'] = 0;
-
+	}
 	$tl_assign = $prefs['TASKLOGEMAIL'] & 1;
 	$tl_task = $prefs['TASKLOGEMAIL'] & 2;
 	$tl_proj = $prefs['TASKLOGEMAIL'] & 4;
-	echo $AppUI->_('Email Assignees') . "&nbsp;<input type='checkbox' name='tl_assign' id='tl_assign' ";
-	if ($tl_assign)
-		echo " checked=checked";
-	echo "><br>";
-	echo $AppUI->_('Email Task Contacts') . "&nbsp;<input type='checkbox' name='tl_task' id='tl_task' ";
-	if ($tl_task)
-		echo " checked=checked";
-	echo "><br>";
-	echo $AppUI->_('Email Project Contacts') . "&nbsp;<input type='checkbox' name='tl_proj' id='tl_proj' ";
-	if ($tl_proj)
-		echo " checked=checked";
-	echo ">";
+	echo '<label for="tl_assign">' . $AppUI->_('Email Assignees') . '</label>&nbsp;<input type="checkbox" name="tl_assign" id="tl_assign"';
+	if ($tl_assign) {
+		echo ' checked="checked"';
+	}
+	echo ' /><br />';
+	echo '<label for="tl_task">' . $AppUI->_('Email Task Contacts') . '</label>&nbsp;<input type="checkbox" name="tl_task" id="tl_task"';
+	if ($tl_task) {
+		echo 'checked="checked"';
+	}
+	echo ' /><br />';
+	echo '<label for="tl_proj">' . $AppUI->_('Email Project Contacts') . '</label>&nbsp;<input type="checkbox" name="tl_proj" id="tl_proj"';
+	if ($tl_proj) {
+		echo ' checked="checked"';
+	}
+	echo ' />';
 ?>
 	</td>
 </tr>

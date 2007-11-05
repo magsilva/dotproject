@@ -1,5 +1,9 @@
-<?php /* TASKS $Id: todo.php,v 1.50.2.6 2006/06/04 14:23:16 gregorerhardt Exp $ */
-global $showEditCheckbox, $this_day, $other_users, $baseDir, $dPconfig, $user_id;
+<?php /* TASKS $Id: todo.php,v 1.50.2.12 2007/03/06 00:34:45 merlinyoda Exp $ */
+global $showEditCheckbox, $this_day, $other_users, $dPconfig, $user_id;
+
+if (!defined('DP_BASE_DIR')) {
+	die('You should not access this file directly.');
+}
 
 $showEditCheckbox = true;
 // Project status from sysval, defined as a constant
@@ -22,9 +26,9 @@ if($perms->checkModule("admin","view")){ // let's see if the user has sysadmin a
 	if(($show_uid = dPgetParam($_REQUEST, "show_user_todo", 0)) != 0){ // lets see if the user wants to see anothers user mytodo
 		$user_id = $show_uid;
 		$no_modify = true;
-		$AppUI->setState("user_id", $user_id);
-	} else {
-//		$user_id = $AppUI->getState("user_id");
+		$AppUI->setState('tasks_todo_user_id', $user_id);
+	} elseif ($AppUI->getState('tasks_todo_user_id')) {
+		$user_id = $AppUI->getState('tasks_todo_user_id');
 	}
 }
 
@@ -51,6 +55,12 @@ $showDynTasks = $AppUI->getState('TaskDayShowDyn', 0);
 $showPinned = $AppUI->getState('TaskDayShowPin', 0);
 $showEmptyDate = $AppUI->getState('TaskDayShowEmptyDate', 0);
 
+$task_sort_item1 = dPgetParam( $_GET, 'task_sort_item1', '' );
+$task_sort_type1 = dPgetParam( $_GET, 'task_sort_type1', '' );
+$task_sort_item2 = dPgetParam( $_GET, 'task_sort_item2', '' );
+$task_sort_type2 = dPgetParam( $_GET, 'task_sort_type2', '' );
+$task_sort_order1 = intval( dPgetParam( $_GET, 'task_sort_order1', 0 ) );
+$task_sort_order2 = intval( dPgetParam( $_GET, 'task_sort_order2', 0 ) );
 
 // if task priority set and items selected, do some work
 $task_priority = dPgetParam( $_POST, 'task_priority', 99 );
@@ -98,7 +108,7 @@ $q->addWhere('( ta.task_percent_complete < 100 or ta.task_percent_complete is nu
 $q->addWhere("ta.task_status = '0'");
 $q->addWhere("pr.project_id = ta.task_project");
 if (!$showArcProjs)
-	$q->addWhere('project_active = 1');
+	$q->addWhere('project_status <> 7');
 if (!$showLowTasks)
 	$q->addWhere('task_priority >= 0');
 if (!$showHoldProjs)
@@ -166,7 +176,7 @@ if ($m == 'tasks' && $a == 'todo') {
 	<td width="80%" valign="top">
   <?php
   // Tabbed information boxes
-  $tabBox = new CTabBox( "?m=tasks&a=todo", "{$dPconfig['root_dir']}/modules/", $tab );
+  $tabBox = new CTabBox( '?m=tasks&a=todo', DP_BASE_DIR . '/modules/', $tab );
   $tabBox->add( 'tasks/todo_tasks_sub', 'My Tasks' );
   $tabBox->add( 'tasks/todo_gantt_sub', 'My Gantt' );
 	// Wouldn't it be better to user $tabBox->loadExtras('tasks', 'todo'); and then
@@ -181,6 +191,6 @@ if ($m == 'tasks' && $a == 'todo') {
 </table>
 <?php
 } else {
-	include $dPconfig['root_dir'] . '/modules/tasks/todo_tasks_sub.php';
+	include DP_BASE_DIR . '/modules/tasks/todo_tasks_sub.php';
 }
 ?>

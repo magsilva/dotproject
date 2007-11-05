@@ -1,4 +1,8 @@
-<?php /* PROJECTS $Id: vw_idx_active.php,v 1.28.6.1 2005/09/14 16:20:58 pedroix Exp $ */
+<?php /* PROJECTS $Id: vw_idx_active.php,v 1.28.6.7 2007/10/09 03:48:00 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 global $projects;
 global $AppUI, $company_id, $priority;
 
@@ -51,7 +55,7 @@ foreach ($projects as $row) {
 	// We dont check the percent_completed == 100 because some projects
 	// were being categorized as completed because not all the tasks
 	// have been created (for new projects)
-	if ($row["project_active"] > 0 && $row["project_status"] == 3) {
+	if ($row["project_status"] == 3) {
 		$none = false;
                 $start_date = intval( @$row["project_start_date"] ) ? new CDate( $row["project_start_date"] ) : null;
 		$end_date = intval( @$row["project_end_date"] ) ? new CDate( $row["project_end_date"] ) : null;
@@ -73,8 +77,7 @@ foreach ($projects as $row) {
 		}
 		$s .= $CR . '</td>';
 
-		$s .= $CR . '<td width="100%">';
-		$s .= $CT . '<a href="?m=projects&a=view&project_id=' . $row["project_id"] . '" title="' . htmlspecialchars( $row["project_description"], ENT_QUOTES ) . '">' . htmlspecialchars( $row["project_name"], ENT_QUOTES ) . '</a>';
+		$s .= $CR . '<td width="100%">';$s .= $CT . '<a href="?m=projects&a=view&project_id=' . $row["project_id"] . '" onmouseover="return overlib( \''.htmlspecialchars( '<div><p>'.str_replace(array("\r\n", "\n", "\r"), '</p><p>', addslashes($row["project_description"])).'</p></div>', ENT_QUOTES ).'\', CAPTION, \''.$AppUI->_('Description').'\', CENTER);" onmouseout="nd();">' . htmlspecialchars( $row["project_name"], ENT_QUOTES ) . '</a>';
 		$s .= $CR . '</td>';
                 $s .= $CR . '<td align="center">'. ($start_date ? $start_date->format( $df ) : '-') .'</td>';
                 $s .= $CR . '<td align="right" nowrap="nowrap" style="background-color:'.$priority[$row['project_priority']]['color'].'">';

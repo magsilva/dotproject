@@ -1,4 +1,8 @@
-<?php /* CALENDAR $Id: week_view.php,v 1.27 2005/03/18 07:10:42 ajdonnison Exp $ */
+<?php /* CALENDAR $Id: week_view.php,v 1.27.8.5 2007/07/26 14:16:28 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $AppUI->savePlace();
 global $locale_char_set;
 
@@ -37,20 +41,30 @@ $events = CEvent::getEventsForPeriod( $first_time, $last_time );
 $links = array();
 
 // assemble the links for the tasks
-require_once( dPgetConfig( 'root_dir' )."/modules/calendar/links_tasks.php" );
+require_once( DP_BASE_DIR.'/modules/calendar/links_tasks.php' );
 getTaskLinks( $first_time, $last_time, $links, 50, $company_id );
 
 // assemble the links for the events
-require_once( dPgetConfig( 'root_dir' )."/modules/calendar/links_events.php" );
+require_once( DP_BASE_DIR.'/modules/calendar/links_events.php' );
 getEventLinks( $first_time, $last_time, $links, 50 );
+
+// get the list of visible companies
+$company = new CCompany();
+$companies = $company->getAllowedRecords( $AppUI->user_id, 'company_id,company_name', 'company_name' );
+$companies = arrayMerge( array( '0'=>$AppUI->_('All') ), $companies );
 
 // setup the title block
 $titleBlock = new CTitleBlock( 'Week View', 'myevo-appointments.png', $m, "$m.$a" );
 $titleBlock->addCrumb( "?m=calendar&date=".$this_week->format( FMT_TIMESTAMP_DATE ), "month view" );
+$titleBlock->addCell( $AppUI->_('Company').':' );
+$titleBlock->addCell(
+	arraySelect( $companies, 'company_id', 'onChange="document.pickCompany.submit()" class="text"', $company_id ), '',
+	'<form action="' . $_SERVER['REQUEST_URI'] . '" method="post" name="pickCompany">', '</form>'
+);
 $titleBlock->addCell( $AppUI->_('Event Filter') . ':');
 $titleBlock->addCell(
 	arraySelect($event_filter_list, 'event_filter', 'onChange="document.pickFilter.submit()" class="text"',
-	$event_filter ), '', "<Form action='{$_SERVER['REQUEST_URI']}' method='post' name='pickFilter'>", '</form>'
+	$event_filter, true ), '', "<Form action='{$_SERVER['REQUEST_URI']}' method='post' name='pickFilter'>", '</form>'
 );
 $titleBlock->show();
 ?>
@@ -92,7 +106,7 @@ for ($i=0; $i < 7; $i++) {
 	$dayStamp = $show_day->format( FMT_TIMESTAMP_DATE );
 
 	$day  = $show_day->getDay();
-	$href = "?m=calendar&a=day_view&date=$dayStamp";
+	$href = "?m=calendar&a=day_view&date=$dayStamp&tab=0";
 
 	$s = '';
 	if ($column == 0) {

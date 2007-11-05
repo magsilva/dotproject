@@ -1,3 +1,9 @@
+<?php
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
+?>
 <script languaje="JavaScript">
 var calendarField = '';
 var calWin = null;
@@ -6,7 +12,7 @@ var calWin = null;
 function popCalendar( field ){
 	calendarField = field;
 	idate = eval( 'document.frmDate.log_' + field + '.value' );
-	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'top=250,left=250,width=251, height=220, scollbars=false' );
+	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'top=250,left=250,width=251, height=220, scrollbars=no' );
 }
 
 function setCalendar( idate, fdate ) {

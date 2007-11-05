@@ -1,4 +1,8 @@
-<?php /* SYSTEM $Id: do_systemconfig_aed.php,v 1.1 2005/02/23 01:19:06 gregorerhardt Exp $ */
+<?php /* SYSTEM $Id: do_systemconfig_aed.php,v 1.1.10.2 2007/03/06 00:34:44 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $obj = new CConfig();
 
 // set all checkboxes to false
@@ -19,8 +23,8 @@ foreach ($_POST['dPcfg'] as $name => $value) {
 	if (($msg = $obj->store())) {
 		$AppUI->setMsg( $msg, UI_MSG_ERROR );
 	} else {
-		$AppUI->setMsg( "updated", UI_MSG_OK, true );
+		$AppUI->setMsg( 'updated', UI_MSG_OK, true );
 	}
 }
 $AppUI->redirect();
-?>
+?>

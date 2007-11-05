@@ -1,5 +1,8 @@
-<?php /* STYLE/DEFAULT $Id: overrides.php,v 1.14 2005/03/11 04:18:03 ajdonnison Exp $ */
+<?php /* STYLE/DEFAULT $Id: overrides.php,v 1.14.10.2 2007/02/18 03:06:27 ajdonnison Exp $ */
 
+if (!defined('DP_BASE_DIR')) {
+	die('You should not access this file directly');
+}
 class CTitleBlock extends CTitleBlock_core {
 }
 
@@ -50,7 +53,7 @@ class CTabBox extends CTabBox_core {
 			
 			if ( count($this->tabs)-1 < $this->active ) {
 				//Last selected tab is not available in this view. eg. Child tasks
-				$this->active = 0;
+//				$this->active = 0;
 			}
 			foreach( $this->tabs as $k => $v ) {
 				$class = ($k == $this->active) ? 'tabon' : 'taboff';

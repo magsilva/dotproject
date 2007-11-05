@@ -1,4 +1,8 @@
-<?php /* PROJECTS $Id: admin_tab.viewuser.projects.php,v 1.2.2.5 2006/03/13 22:22:30 gregorerhardt Exp $ */
+<?php /* PROJECTS $Id: admin_tab.viewuser.projects.php,v 1.2.2.12 2007/10/09 04:02:02 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 global $a, $addPwT, $AppUI, $buffer, $company_id, $department, $min_view, $m, $priority, $projects, $tab, $user_id, $orderdir, $orderby;
 
 $perms =& $AppUI->acl();
@@ -9,10 +13,11 @@ $pstatus =  dPgetSysVal( 'ProjectStatus' );
 if (isset(  $_POST['proFilter'] )) {
 	$AppUI->setState( 'UsrProjectIdxFilter',  $_POST['proFilter'] );
 }
-$proFilter = $AppUI->getState( 'UsrProjectIdxFilter' ) !== NULL ? $AppUI->getState( 'UsrProjectIdxFilter' ) : '-1';
+$proFilter = $AppUI->getState( 'UsrProjectIdxFilter' ) !== NULL ? $AppUI->getState( 'UsrProjectIdxFilter' ) : '-3';
 
 $projFilter = arrayMerge( array('-1' => 'All Projects'), $pstatus);
 $projFilter = arrayMerge( array( '-2' => 'All w/o in progress'), $projFilter);
+$projFilter = arrayMerge( array( '-3' => 'All w/o archived'), $projFilter);
 natsort($projFilter);
 
 // load the companies class to retrieved denied companies
@@ -34,7 +39,7 @@ $orderdir = $AppUI->getState( 'UsrProjIdxOrderDir' ) ? $AppUI->getState( 'UsrPro
 
 $extraGet = '&user_id='.$user_id;
 
-require("{$dPconfig['root_dir']}/functions/projects_func.php");
+require(DP_BASE_DIR.'/functions/projects_func.php');
 require_once( $AppUI->getModuleClass( 'projects' ) );
 
 // collect the full projects list data via function in projects.class.php
@@ -45,7 +50,7 @@ projects_list_data($user_id);
 <tr>
 	<td align="right" width="65" nowrap="nowrap">&nbsp;<?php echo $AppUI->_('sort by');?>:&nbsp;</td>
 	<td align="center" width="100%" nowrap="nowrap" colspan="7">&nbsp;</td>
-	<td align="right" nowrap="nowrap"><form action="?m=admin&a=viewuser&user_id=<?php echo $user_id; ?>&tab=<?php echo $tab; ?>" method="post" name="checkPwT"><input type="checkbox" name="add_pwt" onclick="document.checkPwT.submit()" <?php echo $addPwT ? 'checked="checked"' : '';?>><?php echo $AppUI->_('Show Projects with assigned Tasks');?>?<input type="hidden" name="show_form" value="1" /></form></td>
+	<td align="right" nowrap="nowrap"><form action="?m=admin&a=viewuser&user_id=<?php echo $user_id; ?>&tab=<?php echo $tab; ?>" method="post" name="checkPwT"><input type="checkbox" name="add_pwt" id="add_pwt" onclick="document.checkPwT.submit()" <?php echo $addPwT ? 'checked="checked"' : '';?> /><label for="add_pwt"><?php echo $AppUI->_('Show Projects with assigned Tasks');?>?</label><input type="hidden" name="show_form" value="1" /></form></td>
 	<td align="right" nowrap="nowrap"><form action="?m=admin&a=viewuser&user_id=<?php echo $user_id; ?>&tab=<?php echo $tab; ?>" method="post" name="pickCompany"><?php echo $buffer;?></form></td>
 	<td align="right" nowrap="nowrap"><form action="?m=admin&a=viewuser&user_id=<?php echo $user_id; ?>&tab=<?php echo $tab; ?>" method="post" name="pickProject"><?php echo arraySelect( $projFilter, 'proFilter', 'size=1 class=text onChange="document.pickProject.submit()"', $proFilter, true );?></form></td>
 </tr>
@@ -98,7 +103,7 @@ foreach ($projects as $row) {
 	// We dont check the percent_completed == 100 because some projects
 	// were being categorized as completed because not all the tasks
 	// have been created (for new projects)
-	if ($proFilter == -1 || $row["project_status"] == $proFilter || ($proFilter == -2 && $row["project_status"] != 3) ) {
+	if ($proFilter == -1 || $row["project_status"] == $proFilter || ($proFilter == -2 && $row["project_status"] != 3) || ($proFilter == -3 && $row["project_status"] != 7) ) {
 		$none = false;
                 $start_date = intval( @$row["project_start_date"] ) ? new CDate( $row["project_start_date"] ) : null;
 		$end_date = intval( @$row["project_end_date"] ) ? new CDate( $row["project_end_date"] ) : null;
@@ -121,7 +126,7 @@ foreach ($projects as $row) {
 		$s .= $CR . '</td>';
 
 		$s .= $CR . '<td width="100%">';
-		$s .= $CT . '<a href="?m=projects&a=view&project_id=' . $row["project_id"] . '" title="' . htmlspecialchars( $row["project_description"], ENT_QUOTES ) . '">' . htmlspecialchars( $row["project_name"], ENT_QUOTES ) . '</a>';
+		$s .= $CT . '<a href="?m=projects&a=view&project_id=' . $row["project_id"] . '" onmouseover="return overlib( \''.htmlspecialchars( '<div><p>'.str_replace(array("\r\n", "\n", "\r"), '</p><p>', addslashes($row["project_description"])).'</p></div>', ENT_QUOTES ).'\', CAPTION, \''.$AppUI->_('Description').'\', CENTER);" onmouseout="nd();">' . htmlspecialchars( $row["project_name"], ENT_QUOTES ) . '</a>';
 		$s .= $CR . '</td>';
                 $s .= $CR . '<td align="center">'. ($start_date ? $start_date->format( $df ) : '-') .'</td>';
 		$s .= $CR . '<td align="center">'. ($row["project_duration"] > 0 ? $row["project_duration"].$AppUI->_('h') : '-').'</td>';

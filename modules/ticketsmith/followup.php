@@ -1,4 +1,7 @@
-<?php /* TICKETSMITH $Id: followup.php,v 1.17 2004/11/18 14:41:57 gregorerhardt Exp $ */
+<?php /* TICKETSMITH $Id: followup.php,v 1.17.10.2 2007/03/06 00:34:45 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
 if (!$canRead) {
 	$AppUI->redirect( "m=public&a=access_denied" );
@@ -13,8 +16,8 @@ $titleBlock->addCrumb( "?m=ticketsmith", "tickets list" );
 $titleBlock->addCrumb( "?m=ticketsmith&a=view&ticket=$ticket", "view this ticket" );
 $titleBlock->show();
 
-require("modules/ticketsmith/config.inc.php");
-require("modules/ticketsmith/common.inc.php");
+require(DP_BASE_DIR.'/modules/ticketsmith/config.inc.php');
+require(DP_BASE_DIR.'/modules/ticketsmith/common.inc.php');
 
 require_once( $AppUI->getSystemClass( 'libmail' ) );
 

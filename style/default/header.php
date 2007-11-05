@@ -1,4 +1,7 @@
-<?php /* STYLE/DEFAULT $Id: header.php,v 1.38.4.2 2006/04/18 15:11:10 pedroix Exp $ */
+<?php /* STYLE/DEFAULT $Id: header.php,v 1.38.4.5 2007/07/26 14:16:28 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')) {
+	die('You should not access this file directly');
+}
 $dialog = dPgetParam( $_GET, 'dialog', 0 );
 if ($dialog)
 	$page_title = '';
@@ -53,7 +56,7 @@ else
 		<form name="frm_new" method=GET action="./index.php">
 <?php
 	echo '        <td nowrap="nowrap" align="right">';
-	$newItem = array( ""=>'- New Item -' );
+	$newItem = array( 0=>'- New Item -' );
 	if ($perms->checkModule( 'companies', 'add' )) $newItem["companies"] = "Company";
 	if ($perms->checkModule( 'contacts', 'add' )) $newItem["contacts"] = "Contact";
 	if ($perms->checkModule( 'calendar', 'add' )) $newItem["calendar"] = "Event";
@@ -93,7 +96,7 @@ else
 	if ($perms->checkModule('calendar', 'access')) {
 		$now = new CDate();
 ?>                              <b><a href="./index.php?m=tasks&a=todo"><?php echo $AppUI->_('Todo');?></a></b> |
-				<a href="./index.php?m=calendar&a=day_view&date=<?php echo $now->format( FMT_TIMESTAMP_DATE );?>"><?php echo $AppUI->_('Today');?></a> |
+				<a href="./index.php?m=calendar&a=day_view&date=<?php echo $now->format( FMT_TIMESTAMP_DATE );?>&tab=0"><?php echo $AppUI->_('Today');?></a> |
 <?php } ?>
 				<a href="./index.php?logout=-1"><?php echo $AppUI->_('Logout');?></a>
 			</td>

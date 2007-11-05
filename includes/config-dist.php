@@ -1,5 +1,8 @@
-<?php /* $Id: config-dist.php,v 1.54.8.1 2006/01/01 15:58:05 pedroix Exp $ */
+<?php /* $Id: config-dist.php,v 1.54.8.2 2007/02/26 18:04:49 merlinyoda Exp $ */
 
+if (!defined('DP_BASE_DIR')) {
+	die('You should not access this file directly.');
+}
 /*
 Copyright (c) 2003-2005 The dotProject Development Team <core-developers@dotproject.net>
 

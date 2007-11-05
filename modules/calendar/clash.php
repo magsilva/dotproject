@@ -1,5 +1,9 @@
 <?php
 
+if (!defined('DP_BASE_DIR')) {
+	die('You should not access this file directly.');
+}
+
 if ( isset($_REQUEST['clash_action'])) {
   $do_include = false;
   switch ($_REQUEST['clash_action']) {
@@ -42,7 +46,7 @@ if ( isset($_REQUEST['clash_action'])) {
     echo "<tr><td>$user</td></tr>\n";
   }
   echo "</table>\n";
-  $calurl = $dPconfig['base_url'] . "/index.php?m=calendar&a=clash&event_id=" . $obj->event_id;
+  $calurl = DP_BASE_URL.'/index.php?m=calendar&a=clash&event_id=' . $obj->event_id;
   echo "<a href='#' onclick=\"set_clash_action('suggest');\">" . $AppUI->_('Suggest Alternative') . "</a> : ";
   echo "<a href='#' onclick=\"set_clash_action('cancel');\">" . $AppUI->_('Cancel') . "</a> : ";
   echo "<a href='#' onclick=\"set_clash_action('mail');\">" . $AppUI->_('Mail Request') . "</a> : ";
@@ -72,7 +76,7 @@ function clash_cancel()
  */
 function clash_suggest()
 {
-  global $AppUI, $dPconfig;
+  global $AppUI, $m, $a;
   $obj =& new CEvent;
   $obj->bind($_SESSION['add_event_post']);
 
@@ -83,9 +87,9 @@ function clash_suggest()
   $end_secs = $end_date->getTime();
   $duration = (int) (( $end_secs - $start_secs ) / 60);
 
-  $titleBlock =& new CTitleBlock( "Suggest Alternative Event Time", "myevo-appointments.png", $m, "$m.$a");
+  $titleBlock =& new CTitleBlock( 'Suggest Alternative Event Time', 'myevo-appointments.png', $m, $m.'.'.$a);
   $titleBlock->show();
-  $calurl = $dPconfig['base_url'] . "/index.php?m=calendar&a=clash&event_id=" . $obj->event_id;
+  $calurl = DP_BASE_URL . '/index.php?m=calendar&a=clash&event_id=' . $obj->event_id;
   $times = array();
   $t = new CDate();
   $t->setTime( 0,0,0 );
@@ -103,7 +107,7 @@ var calendarField = '';
 function popCalendar( field ){
 	calendarField = field;
 	idate = eval( 'document.editFrm.event_' + field + '.value' );
-	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'top=250,left=250,width=250, height=220, scollbars=false' );
+	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'top=250,left=250,width=250, height=220, scrollbars=no' );
 }
 
 /**
@@ -180,7 +184,7 @@ function set_clash_action(action) {
  */
 function clash_process()
 {
-  global $AppUI, $do_include, $baseDir;
+  global $AppUI, $do_include;
 
   $obj =& new CEvent;
   $obj->bind($_SESSION['add_event_post']);
@@ -217,7 +221,7 @@ function clash_process()
     $AppUI->setMsg('No clashes in suggested timespan', UI_MSG_OK);
     $_SESSION['event_is_clash'] = true;
     $_GET['event_id'] = $obj->event_id;
-    $do_include = "$baseDir/modules/calendar/addedit.php";
+    $do_include = DP_BASE_DIR."/modules/calendar/addedit.php";
     return;
   }
 
@@ -296,7 +300,7 @@ function clash_process()
 	$AppUI->setMsg('First available time slot', UI_MSG_OK);
 	$_SESSION['event_is_clash'] = true;
 	$_GET['event_id'] = $obj->event_id;
-	$do_include = "$baseDir/modules/calendar/addedit.php";
+	$do_include = DP_BASE_DIR."/modules/calendar/addedit.php";
 	return;
       }
     }

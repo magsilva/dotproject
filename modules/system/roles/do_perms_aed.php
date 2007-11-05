@@ -1,4 +1,8 @@
-<?php /* ADMIN $Id: do_perms_aed.php,v 1.1 2004/10/15 01:39:25 ajdonnison Exp $ */
+<?php /* ADMIN $Id: do_perms_aed.php,v 1.1.10.2 2007/03/06 00:34:44 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $del = isset($_POST['del']) ? $_POST['del'] : 0;
 
 $obj =& $AppUI->acl();

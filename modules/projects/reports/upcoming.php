@@ -1,4 +1,8 @@
 <?php
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 // Output the PDF
 // make the PDF file
 if ($project_id != 0)
@@ -9,9 +13,8 @@ if ($project_id != 0)
 else
 	$pname = $AppUI->_('All Projects');
 
-$font_dir = $dPconfig['root_dir']."/lib/ezpdf/fonts";
-$temp_dir = $dPconfig['root_dir']."/files/temp";
-$base_url  = $dPconfig['base_url'];
+$font_dir = DP_BASE_DIR.'/lib/ezpdf/fonts';
+
 require( $AppUI->getLibraryClass( 'ezpdf/class.ezpdf' ) );
 
 $pdf =& new Cezpdf($paper='A4',$orientation='landscape');
@@ -85,7 +88,7 @@ $task_list = array_keys($tasks);
 $assigned_users = array();
 // Build the array
 foreach ($task_list as $tid)
-	$asssigned_users[$tid] = array();
+	$assigned_users[$tid] = array();
 
 if (count($tasks)) {
 	$q->clear();

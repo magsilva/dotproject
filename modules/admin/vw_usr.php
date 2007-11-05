@@ -1,4 +1,9 @@
-<?php /* ADMIN  $Id: vw_usr.php,v 1.19.10.1 2006/03/14 13:07:40 gregorerhardt Exp $ */ ?>
+<?php /* ADMIN  $Id: vw_usr.php,v 1.19.10.3 2007/03/06 00:34:39 merlinyoda Exp $ */ 
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
+?>
 <table cellpadding="2" cellspacing="1" border="0" width="100%" class="tbl">
 <tr>
 	<td width="60" align="right">

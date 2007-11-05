@@ -1,4 +1,8 @@
-<?php /* DEPARTMENTS $Id: departments.class.php,v 1.6 2005/03/29 00:01:16 ajdonnison Exp $ */
+<?php /* DEPARTMENTS $Id: departments.class.php,v 1.6.6.3 2007/03/06 00:34:40 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 ##
 ## CDepartment Class
 ##
@@ -105,4 +109,46 @@ class CDepartment extends CDpObject {
 		return $result;
 	}
 }
+
+//writes out a single <option> element for display of departments
+function showchilddept( &$a, $level=1 ) {
+	Global $buffer, $department;
+	$s = '<option value="'.$a["dept_id"].'"'.(isset($department)&&$department==$a["dept_id"]?'selected="selected"':'').'>';
+
+	for ($y=0; $y < $level; $y++) {
+		if ($y+1 == $level) {
+			$s .= '';
+		} else {
+			$s .= '&nbsp;&nbsp;';
+		}
+	}
+
+	$s .= '&nbsp;&nbsp;'.$a["dept_name"]."</option>\n";
+	$buffer .= $s;
+
+//	echo $s;
+}
+
+//recursive function to display children departments.
+function findchilddept( &$tarr, $parent, $level=1 ){
+	$level = $level+1;
+	$n = count( $tarr );
+	for ($x=0; $x < $n; $x++) {
+		if($tarr[$x]["dept_parent"] == $parent && $tarr[$x]["dept_parent"] != $tarr[$x]["dept_id"]){
+			showchilddept( $tarr[$x], $level );
+			findchilddept( $tarr, $tarr[$x]["dept_id"], $level);
+		}
+	}
+}
+
+function addDeptId($dataset, $parent){
+	Global $dept_ids;
+	foreach ($dataset as $data){
+		if($data['dept_parent']==$parent){
+			$dept_ids[] = $data['dept_id'];
+			addDeptId($dataset, $data['dept_id']);
+		}
+	}
+}
+
 ?>

@@ -1,4 +1,8 @@
-<?php /* TASKS $Id: vw_logs.php,v 1.23.8.2 2006/06/15 14:44:13 merlinyoda Exp $ */
+<?php /* TASKS $Id: vw_logs.php,v 1.23.8.8 2007/09/23 01:45:12 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 global $AppUI, $task_id, $df, $canEdit, $m;
 
 $perms =& $AppUI->acl();
@@ -93,7 +97,10 @@ foreach ($logs as $row) {
 	$s .= '<td width="30%" style="'.$style.'">'.@$row["task_log_name"].'</td>';
     $s .= !empty($row["task_log_related_url"]) ? '<td><a href="'.@$row["task_log_related_url"].'" title="'.@$row["task_log_related_url"].'">'.$AppUI->_('URL').'</a></td>' : '<td></td>';
 	$s .= '<td width="100">'.$row["user_username"].'</td>';
-	$s .= '<td width="100" align="right">'.sprintf( "%.2f", $row["task_log_hours"] ) . '</td>';
+	$s .= '<td width="100" align="right">'.sprintf( "%.2f", $row["task_log_hours"] ) . '<br />(';
+	$minutes = (int) (( $row["task_log_hours"] - ((int)  $row["task_log_hours"] ))*60);
+	$minutes = ((strlen($minutes) == 1) ? ('0'.$minutes) : $minutes);
+	$s .= (int)  $row["task_log_hours"] .':'. $minutes . ')</td>';
 	$s .= '<td width="100">'.$row["task_log_costcode"].'</td>';
 	$s .= '<td>'.'<a name="tasklog'.@$row['task_log_id'].'"></a>';
 
@@ -127,7 +134,9 @@ $s .= '<tr bgcolor="white" valign="top">';
 $s .= '<td colspan="6" align="right">' . $AppUI->_('Total Hours') . ' =</td>';
 $s .= '<td align="right">' . sprintf( "%.2f", $hrs ) . '</td>';
 $s .= '<td align="right" colspan="3"><form action="?m=tasks&a=view&tab=1&task_id=' . $task_id . '" method="post">';
-$s .= '<input type="submit" class="button" value="'.$AppUI->_('new log').'"></form></td>';
+if ($perms->checkModuleItem('tasks', 'edit', $task_id)) {
+	$s .= '<input type="submit" class="button" value="'.$AppUI->_('new log').'"></form></td>';
+}
 $s .= '</tr>';
 echo $s;
 ?>

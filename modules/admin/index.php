@@ -1,4 +1,8 @@
-<?php /* $Id: index.php,v 1.31 2005/04/08 06:52:59 ajdonnison Exp $ */
+<?php /* $Id: index.php,v 1.31.4.4 2007/03/06 00:34:39 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 $perms =& $AppUI->acl();
 if (! $perms->checkModule($m, 'view'))
 	$AppUI->redirect('m=public&a=access_denied');
@@ -26,6 +30,7 @@ if (isset( $_GET['orderby'] )) {
     $AppUI->setState( 'UserIdxOrderby', $_GET['orderby'] );
 }
 $orderby = $AppUI->getState( 'UserIdxOrderby' ) ? $AppUI->getState( 'UserIdxOrderby' ) : 'user_username';
+$orderby = ($tab == 3 || ($orderby != 'date_time_in' && $orderby != 'user_ip') ) ? $orderby : 'user_username';
 
 // Pull First Letters
 $let = ":";
@@ -106,10 +111,13 @@ function delMe( x, y ) {
 $extra = '<td align="right" width="100%"><input type="button" class=button value="'.$AppUI->_('add user').'" onClick="javascript:window.location=\'./index.php?m=admin&a=addedituser\';" /></td>';
 
 // tabbed information boxes
-$tabBox = new CTabBox( "?m=admin", "{$dPconfig['root_dir']}/modules/admin/", $tab );
+$tabBox = new CTabBox( "?m=admin", DP_BASE_DIR.'/modules/admin/', $tab );
 $tabBox->add( 'vw_active_usr', 'Active Users' );
 $tabBox->add( 'vw_inactive_usr', 'Inactive Users' );
 $tabBox->add( 'vw_usr_log', 'User Log' );
+if ($canEdit && $canDelete) {
+	$tabBox->add('vw_usr_sessions', 'Active Sessions');
+}
 $tabBox->show( $extra );
 
 ?>

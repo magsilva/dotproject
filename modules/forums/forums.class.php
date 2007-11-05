@@ -1,4 +1,8 @@
-<?php /* FORUMS $Id: forums.class.php,v 1.20.6.1 2006/02/10 19:47:52 gregorerhardt Exp $ */
+<?php /* FORUMS $Id: forums.class.php,v 1.20.6.4 2007/10/13 21:58:18 caseydk Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 
 require_once( $AppUI->getSystemClass( 'libmail' ) );
 
@@ -173,7 +177,13 @@ class CForumMessage {
 		$q->addWhere('visit_message = '.$this->message_id);
 		$q->exec(); // No error if this fails, it is not important.
 		$q->clear();
-		
+
+		$q->addTable('forum_messages');
+		$q->addQuery('message_forum');
+		$q->addWhere('message_id = ' . $this->message_id);
+		$forumId = db_loadResult($q->prepare());
+		$q->clear();
+
 		$q->setDelete('forum_messages');
 		$q->addWhere('message_id = '.$this->message_id);
 		if (!$q->exec()) {
@@ -182,6 +192,19 @@ class CForumMessage {
 			$result = NULL;
 		}
 		$q->clear();
+
+		$q->addTable('forum_messages');
+		$q->addQuery('COUNT(*)');
+		$q->addWhere('message_forum = ' . $forumId);
+		$messageCount = db_loadResult($q->prepare());
+		$q->clear();		
+
+		$q->addTable('forums');
+		$q->addUpdate('forum_message_count', $messageCount);
+		$q->addWhere('forum_id = ' . $forumId);
+		$q->exec();
+		$q->clear();
+		
 		return $result;
 	}
 
@@ -251,7 +274,7 @@ class CForumMessage {
 		$body .= "\n\n" . $AppUI->_('Forum', UI_OUTPUT_RAW) . ": $forum_name";
 		$body .= "\n" . $AppUI->_('Subject', UI_OUTPUT_RAW) . ": {$this->message_title}";
 		$body .= "\n" . $AppUI->_('Message From', UI_OUTPUT_RAW) . ": $message_from";
-		$body .= "\n\n{$dPconfig['base_url']}/index.php?m=forums&a=viewer&forum_id=$this->message_forum";
+		$body .= "\n\n".DP_BASE_URL.'/index.php?m=forums&a=viewer&forum_id='.$this->message_forum;
 		$body .= "\n\n$this->message_body";
  
 		$mail->Body( $body, isset( $GLOBALS['locale_char_set']) ? $GLOBALS['locale_char_set'] : ""  );

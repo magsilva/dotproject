@@ -1,4 +1,8 @@
-<?php /* ADMIN $Id: viewuser.php,v 1.39.4.4 2006/05/31 11:38:34 gregorerhardt Exp $ */
+<?php /* ADMIN $Id: viewuser.php,v 1.39.4.7 2007/03/06 00:34:39 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 GLOBAL $addPwT,$company_id, $dept_ids, $department, $min_view, $m, $a;
 $user_id = isset( $_GET['user_id'] ) ? $_GET['user_id'] : 0;
 
@@ -11,10 +15,11 @@ $AppUI->savePlace();
 
 if (isset( $_POST['show_form'] )) {
 	$add_pwt = dPgetParam($_POST, 'add_pwt', 0 );
-	$AppUI->setState( 'addProjWithTasks', $add_pwt);	
+	$AppUI->setState( 'addProjWithTasks', $add_pwt);
 } else {
 	$AppUI->setState( 'addProjWithTasks', false);
 }
+
 $addPwT = $AppUI->getState( 'addProjWithTasks' ) ? $AppUI->getState( 'addProjWithTasks' ) : 0;
 
 $company_id = $AppUI->getState( 'UsrProjIdxCompany' ) !== NULL ? $AppUI->getState( 'UsrProjIdxCompany' ) : $AppUI->user_company;
@@ -83,7 +88,7 @@ if (!db_loadHash( $sql, $user )) {
 if ($canEdit || $user_id == $AppUI->user_id) {
 ?>
 function popChgPwd() {
-	window.open( './index.php?m=public&a=chpwd&dialog=1&user_id=<?php echo $user['user_id']; ?>', 'chpwd', 'top=250,left=250,width=350, height=220, scollbars=false' );
+	window.open( './index.php?m=public&a=chpwd&dialog=1&user_id=<?php echo $user['user_id']; ?>', 'chpwd', 'top=250,left=250,width=350, height=220, scrollbars=no' );
 }
 <?php } ?>
 </script>
@@ -179,9 +184,9 @@ function popChgPwd() {
 	$min_view = true;
 	$tabBox = new CTabBox( "?m=admin&a=viewuser&user_id=$user_id", '', $tab );
 	$tabBox->loadExtras('admin', 'viewuser'); 
-	$tabBox->add( $dPconfig['root_dir'].'/modules/admin/vw_usr_log', 'User Log');
-	$tabBox->add( $dPconfig['root_dir'].'/modules/admin/vw_usr_perms', 'Permissions' );
-	$tabBox->add( $dPconfig['root_dir'].'/modules/admin/vw_usr_roles', 'Roles' );
+	$tabBox->add( DP_BASE_DIR.'/modules/admin/vw_usr_log', 'User Log');
+	$tabBox->add( DP_BASE_DIR.'/modules/admin/vw_usr_perms', 'Permissions' );
+	$tabBox->add( DP_BASE_DIR.'/modules/admin/vw_usr_roles', 'Roles' );
 	$tabBox->show();
 }
 ?>

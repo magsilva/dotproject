@@ -1,5 +1,5 @@
 <?php
-// $Id: permissions.class.php,v 1.14.4.1 2006/03/03 12:13:09 gregorerhardt Exp $
+// $Id: permissions.class.php,v 1.14.4.8 2007/09/27 15:49:51 gregorerhardt Exp $
 
 /**
  * Copyright 2005, the dotProject Team.
@@ -16,14 +16,18 @@
  * the main dP environment.
  */
 
+if (! defined('DP_BASE_DIR')) {
+	die('This file should not be called directly.');
+}
+
 // Set the ADODB directory
 if (! defined('ADODB_DIR')) {
-  define('ADODB_DIR', "$baseDir/lib/adodb");
+  define('ADODB_DIR', DP_BASE_DIR."/lib/adodb");
 }
  
 // Include the PHPGACL library
-require_once "$baseDir/lib/phpgacl/gacl.class.php";
-require_once "$baseDir/lib/phpgacl/gacl_api.class.php";
+require_once DP_BASE_DIR."/lib/phpgacl/gacl.class.php";
+require_once DP_BASE_DIR."/lib/phpgacl/gacl_api.class.php";
 // Include the db_connections 
 
 // Now extend the class
@@ -38,18 +42,20 @@ require_once "$baseDir/lib/phpgacl/gacl_api.class.php";
 class dPacl extends gacl_api {
 
   function dPacl($opts = null) {
-    global $dPconfig;
+    global $db;
+    
     if (! is_array($opts))
       $opts = array();
-    $opts['db_type'] = $dPconfig['dbtype'];
-    $opts['db_host'] = $dPconfig['dbhost'];
-    $opts['db_user'] = $dPconfig['dbuser'];
-    $opts['db_password'] = $dPconfig['dbpass'];
-    $opts['db_name'] = $dPconfig['dbname'];
+    $opts['db_type'] = dPgetConfig('dbtype');
+    $opts['db_host'] = dPgetConfig('dbhost');
+    $opts['db_user'] = dPgetConfig('dbuser');
+    $opts['db_password'] = dPgetConfig('dbpass');
+    $opts['db_name'] = dPgetConfig('dbname');
+    $opts['db'] = $db;
     // We can add an ADODB instance instead of the database
     // connection details.  This might be worth looking at in
     // the future.
-    if ($dPconfig['debug'] > 10)
+    if (dPgetConfig('debug', 0) > 10)
       $this->_debug = true;
     parent::gacl_api($opts);
   }
@@ -60,21 +66,24 @@ class dPacl extends gacl_api {
   }
 
   function checkModule($module, $op, $userid = null) {
-    if (! $userid)
+    if (! $userid) {
       $userid = $GLOBALS['AppUI']->user_id;
-      
+    }
+    $module = ($module == 'sysvals') ? 'system' : $module;
     $result = $this->acl_check("application", $op, "user", $userid, "app", $module);
     dprint(__FILE__, __LINE__, 2, "checkModule( $module, $op, $userid) returned $result");
     return $result;
   }
 
   function checkModuleItem($module, $op, $item = null, $userid = null) {
-    if (! $userid)
+    if (!$userid) {
       $userid = $GLOBALS['AppUI']->user_id;
-    if (! $item)
+    }
+    if (!$item) {
       return $this->checkModule($module, $op, $userid);
+    }
 
-    $result = $this->acl_query("application", $op, "user", $userid, $module, $item, NULL);
+    $result = $this->acl_query('application', $op, 'user', $userid, $module, $item, NULL);
     // If there is no acl_id then we default back to the parent lookup
     if (! $result || ! $result['acl_id']) {
       dprint(__FILE__, __LINE__, 2, "checkModuleItem($module, $op, $userid) did not return a record");
@@ -127,9 +136,11 @@ class dPacl extends gacl_api {
     $id = $this->get_object_id("user", $login, "aro");
     if ($id) {
       $id = $this->del_object($id, "aro", true);
+      $id = $this->get_object_id("user", $login, "aro");
+	    if ($id) {
+	      dprint(__FILE__, __LINE__, 0, "Failed to remove user permission object");
+	    }      
     }
-    if (! $id)
-      dprint(__FILE__, __LINE__, 0, "Failed to remove user permission object");
     return $id;
   }
 
@@ -184,6 +195,65 @@ class dPacl extends gacl_api {
       dprint(__FILE__, __LINE__, 0, "Failed to remove module permission section");
     return $id;
   }
+
+	/*
+	** Deleting all module-associyted entries from the phpgacl tables
+	** such as gacl_aco_maps, gacl_acl and gacl_aro_map
+	**
+	** @author 	gregorerhardt	
+	** @date		20070927
+	** @cause		#2140
+	**
+	** @access 	public
+	** @param		string	module (directory) name
+	** @return
+	*/
+
+	function deleteModuleItems($mod) {
+		// Declaring the return string
+		$ret = NULL;
+
+		// Fetching module-associated ACL ID's
+		$q = new DBQuery;
+		$q->addTable('gacl_axo_map');
+		$q->addQuery('acl_id');
+		$q->addWhere('value = "'.$mod.'"');
+		$acls = $q->loadHashList('acl_id');
+		$q->clear();
+	
+		foreach ($acls as $acl => $k) {
+			// Deleting gacl_aco_map entries
+			$q = new DBQuery;
+			$q->setDelete('gacl_aco_map');
+			$q->addWhere('acl_id = '.$acl);
+			if (!$q->exec()) {
+				$ret .= is_null($ret) ? "\n\t".db_error() : db_error();
+			} 
+			$q->clear();
+
+
+			// Deleting gacl_aro_map entries
+			$q = new DBQuery;
+			$q->setDelete('gacl_aro_map');
+			$q->addWhere('acl_id = '.$acl);
+			if (!$q->exec()) {
+				$ret .= "\n\t".db_error();
+			} 
+			$q->clear();
+
+			// Deleting gacl_aco_map entries
+			$q = new DBQuery;
+			$q->setDelete('gacl_acl');
+			$q->addWhere('id = '.$acl);
+			if (!$q->exec()) {
+				$ret .= "\n\t".db_error();
+			} 
+			$q->clear();
+		}
+
+		// Returning null (no error) or database error message (error)
+		return $ret;
+	}
   
   function deleteGroupItem($item, $group = "all", $section = "app", $type = "axo") {
     if ($gid = $this->get_group_id($group, null, $type)) {
@@ -326,7 +396,6 @@ class dPacl extends gacl_api {
 	$q->addQuery('g1.id, g1.name, g1.value, g1.parent_id');
 	$q->addOrder('g1.value');
 	
-	//FIXME-mikeb: Why is group_id in quotes?
 	switch (strtoupper($recurse)) {
 		case 'RECURSE':
 			$q->addJoin($table, 'g2', 'g2.lft<g1.lft AND g2.rgt>g1.rgt');
@@ -804,10 +873,6 @@ class dPacl extends gacl_api {
       null,
       null,
       "user");
-    if (! is_array($_POST['permission_type'])) {
-      $this->debug_text("you must select at least one permission");
-      return false;
-    }
   }
 
   // Some function overrides.

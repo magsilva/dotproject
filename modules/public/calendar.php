@@ -1,6 +1,10 @@
-<?php /* PUBLIC $Id: calendar.php,v 1.6 2005/04/03 19:33:48 gregorerhardt Exp $ */
-require_once( "$baseDir/classes/ui.class.php" );
-require_once( "$baseDir/modules/calendar/calendar.class.php" );
+<?php /* PUBLIC $Id: calendar.php,v 1.6.4.3 2007/03/06 00:34:43 merlinyoda Exp $ */
+if (! defined('DP_BASE_DIR')) {
+	die('You should not call this file directly.');
+}
+
+require_once( $AppUI->getSystemClass('ui'));
+require_once( $AppUI->getModuleClass('calendar'));
 
 $callback = isset( $_GET['callback'] ) ? $_GET['callback'] : 0;
 $date = dpGetParam( $_GET, 'date', null );
@@ -11,7 +15,7 @@ $date = $date !== '' ? $date : null;
 
 $this_month = new CDate( $date );
 
-$uistyle = $AppUI->getPref( 'UISTYLE' ) ? $AppUI->getPref( 'UISTYLE' ) : $dPconfig['host_style'];
+$uistyle = $AppUI->getPref( 'UISTYLE' ) ? $AppUI->getPref( 'UISTYLE' ) : dPgetConfig('host_style');
 ?>
 <a href="javascript: void(0);" onClick="clickDay('', '');">clear date</a>
 <?php

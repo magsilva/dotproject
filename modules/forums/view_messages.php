@@ -1,4 +1,8 @@
-<?php  /* FORUMS $Id: view_messages.php,v 1.37.4.3 2006/03/19 19:37:59 pedroix Exp $ */
+<?php  /* FORUMS $Id: view_messages.php,v 1.37.4.5 2007/03/06 00:34:41 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $AppUI->savePlace();
 $sort = dPgetParam($_REQUEST, 'sort', 'asc');
 $viewtype = dPgetParam($_REQUEST, 'viewtype', 'normal');

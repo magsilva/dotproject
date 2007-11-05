@@ -1,12 +1,15 @@
-<?php /* $Id: search.php,v 1.11 2004/03/10 02:03:57 gregorerhardt Exp $ */
+<?php /* $Id: search.php,v 1.11.12.2 2007/03/06 00:34:46 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
 if (!$canRead) {
 	$AppUI->redirect( "m=public&a=access_denied" );
 }
 
 
-require("modules/ticketsmith/config.inc.php");
-require("modules/ticketsmith/common.inc.php");
+require(DP_BASE_DIR.'/modules/ticketsmith/config.inc.php');
+require(DP_BASE_DIR.'/modules/ticketsmith/common.inc.php');
 if(empty($search_pattern)) $search_pattern = "";
 if(empty($search_field)) $search_field = "";
 if(empty($search_depth)) $search_depth = "";

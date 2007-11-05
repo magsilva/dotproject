@@ -1,4 +1,4 @@
-<?php /* $Id: session.php,v 1.13 2005/04/11 02:27:57 ajdonnison Exp $ */
+<?php /* $Id: session.php,v 1.13.2.5 2007/03/10 21:27:45 nybod Exp $ */
 ##
 ## Session Handling Functions
 ##
@@ -14,12 +14,16 @@
 * instead of trying to set their own sessions.
 */
 
-require_once $baseDir . '/includes/main_functions.php';
-require_once $baseDir . '/includes/db_adodb.php';
-require_once $baseDir . '/includes/db_connect.php';
-require_once $baseDir . '/classes/query.class.php';
-require_once $baseDir . '/classes/ui.class.php';
-require_once $baseDir . '/classes/event_queue.class.php';
+if (!defined('DP_BASE_DIR')) {
+	die('You should not access this file directly.');
+}
+
+require_once DP_BASE_DIR . '/includes/main_functions.php';
+require_once DP_BASE_DIR . '/includes/db_adodb.php';
+require_once DP_BASE_DIR . '/includes/db_connect.php';
+require_once DP_BASE_DIR . '/classes/query.class.php';
+require_once DP_BASE_DIR . '/classes/ui.class.php';
+require_once DP_BASE_DIR . '/classes/event_queue.class.php';
 
 function dPsessionOpen($save_path, $session_name)
 {
@@ -65,6 +69,8 @@ function dPsessionRead($id)
 
 function dPsessionWrite($id, $data)
 {
+    global $AppUI;
+    
 	$q = new DBQuery;
 	$q->addQuery('count(*) as row_count');
 	$q->addTable('sessions');
@@ -75,6 +81,8 @@ function dPsessionWrite($id, $data)
 		dprint(__FILE__, __LINE__, 11, "Updating session $id");
 		$q->query = null;
 		$q->addUpdate('session_data', $data);
+        if (isset($AppUI))
+            $q->addUpdate('session_user', $AppUI->last_insert_id);
 	} else {
 		dprint(__FILE__, __LINE__, 11, "Creating new session $id");
 		$q->query = null;
@@ -88,23 +96,36 @@ function dPsessionWrite($id, $data)
 	return true;
 }
 
-function dPsessionDestroy($id)
-{
+function dPsessionDestroy($id, $user_access_log_id=0) {
+ 	global $AppUI;
+    
+    if(!($user_access_log_id) && isset($AppUI->last_insert_id)){
+        $user_access_log_id = $AppUI->last_insert_id;
+    }
+    
 	dprint(__FILE__, __LINE__, 11, "Killing session $id");
 	$q = new DBQuery;
 	$q->setDelete('sessions');
 	$q->addWhere("session_id = '$id'");
 	$q->exec();
 	$q->clear();
+    
+	if ($user_access_log_id) {
+ 		$q->addTable('user_access_log');
+ 		$q->addUpdate('date_time_out', date('Y-m-d H:i:s'));
+		$q->addWhere('user_access_log_id = ' . $user_access_log_id);
+ 		$q->exec();
+ 		$q->clear();
+ 	}
+    
 	return true;
 }
 
 function dPsessionGC($maxlifetime)
 {
-	global $dPconfig;
 	global $AppUI;
 
-	dprint(__FILE__, __LINE__, 11, "Session Garbage collection running");
+	dprint(__FILE__, __LINE__, 11, 'Session Garbage collection running');
 	$now = time();
 	$max = dPsessionConvertTime('max_lifetime');
 	$idle = dPsessionConvertTime('idle_time');
@@ -114,8 +135,7 @@ function dPsessionGC($maxlifetime)
 	$q->addWhere("UNIX_TIMESTAMP() - UNIX_TIMESTAMP(session_updated) > $idle OR UNIX_TIMESTAMP() - UNIX_TIMESTAMP(session_created) > $max");
 	$q->exec();
 	$q->clear();
-	if (isset($dPconfig['session_gc_scan_queue'])
-	  && $dPconfig['session_gc_scan_queue']) {
+	if (dPgetConfig('session_gc_scan_queue')) {
 		// We need to scan the event queue.  If $AppUI isn't created yet
 		// And it isn't likely that it will be, we create it and run the
 		// queue scanner.
@@ -130,15 +150,14 @@ function dPsessionGC($maxlifetime)
 
 function dPsessionConvertTime($key)
 {
-	global $dPconfig;
 	$key = 'session_' . $key;
 
 	// If the value isn't set, then default to 1 day.
-	if (! isset($dPconfig[$key]) || ! $dPconfig[$key] )
+	if (dPgetConfig($key) == null || dPgetConfig($key) == null)
 		return 86400;
 
-	$numpart = (int) $dPconfig[$key];
-	$modifier = substr($dPconfig[$key], -1);
+	$numpart = (int) dPgetConfig($key);
+	$modifier = substr(dPgetConfig($key), -1);
 	if (! is_numeric($modifier)) {
 		switch ($modifier) {
 			case 'h':
@@ -160,17 +179,17 @@ function dPsessionConvertTime($key)
 
 function dpSessionStart($start_vars = 'AppUI')
 {
-	global $dPconfig;
-
 	session_name('dotproject');
 	if (ini_get('session.auto_start') > 0) {
 		session_write_close();
 	}
-	if (isset($dPconfig['session_handling'])
-		&& strtolower($dPconfig['session_handling']) == 'app') 
+	if (dPgetConfig('session_handling') == 'app') 
 	{
 		ini_set('session.save_handler', 'user');
-	
+	// PHP 5.2 workaround
+    if (version_compare(phpversion(), '5.0.0', '>=')) {
+        register_shutdown_function('session_write_close');
+    } 
 		session_set_save_handler(
 			'dPsessionOpen', 
 			'dPsessionClose', 
@@ -183,7 +202,7 @@ function dpSessionStart($start_vars = 'AppUI')
 		$max_time = 0; // Browser session only.
 	}
 	// Try and get the correct path to the base URL.
-	preg_match('_^(https?://)([^/]+)(:0-9]+)?(/.*)?$_i', $dPconfig['base_url'], $url_parts);
+	preg_match('_^(https?://)([^/]+)(:0-9]+)?(/.*)?$_i', dPgetConfig('base_url'), $url_parts);
 	$cookie_dir = $url_parts[4];
 	if (substr($cookie_dir, 0, 1) != '/')
 		$cookie_dir = '/' . $cookie_dir;

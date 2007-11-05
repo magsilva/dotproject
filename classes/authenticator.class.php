@@ -1,5 +1,8 @@
 <?php
-// $Id: authenticator.class.php,v 1.13 2005/04/15 11:32:03 mosen Exp $
+// $Id: authenticator.class.php,v 1.13.2.4 2007/09/19 10:50:47 ajdonnison Exp $
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
 
 require_once('openid.php');
 
@@ -368,8 +371,9 @@ class LDAPAuthenticator extends SQLAuthenticator
 				return false; // No users match the filter
 			}
 
-			$first_user = $result_user[0];
-			$ldap_user_dn = $first_user["dn"];
+			//$ldap_bind_dn = "cn=".$this->ldap_search_user.",".$this->base_dn;
+			$ldap_bind_dn = empty($this->ldap_search_user) ? NULL : $this->ldap_search_user;	
+			$ldap_bind_pw = empty($this->ldap_search_pass) ? NULL : $this->ldap_search_pass;
 
 			// Bind with the dn of the user that matched our filter (only one 
 			// user should match sAMAccountName or uid etc..)
@@ -380,10 +384,31 @@ class LDAPAuthenticator extends SQLAuthenticator
 				die("Couldnt Bind Using ".$ldap_user_dn."@".$this->ldap_host.":".$this->ldap_port." Because:".$error_msg);
 				*/
 				return false;
-			} else {
-				if ($this->userExists($username)) {
-					return true;
-				}	else {
+			}
+			else
+			{
+				$filter_r = html_entity_decode(str_replace("%USERNAME%", $username, $this->filter), ENT_COMPAT, 'UTF-8');
+				$result = @ldap_search($rs, $this->base_dn, $filter_r);
+				if (!$result) return false; // ldap search returned nothing or error
+				
+				$result_user = ldap_get_entries($rs, $result);
+				if ($result_user["count"] == 0) return false; // No users match the filter
+
+				$first_user = $result_user[0];
+				$ldap_user_dn = $first_user["dn"];
+
+				// Bind with the dn of the user that matched our filter (only one user should match sAMAccountName or uid etc..)
+
+				if (!$bind_user = @ldap_bind($rs, $ldap_user_dn, $password))
+				{
+					/*
+					$error_msg = ldap_error($rs);
+					die("Couldnt Bind Using ".$ldap_user_dn."@".$this->ldap_host.":".$this->ldap_port." Because:".$error_msg);
+					*/
+					return false;
+				}
+
+				if (! $this->userExists($username)) {
 					$this->createsqluser($username, $password, $first_user); 
 				}
 				return true;

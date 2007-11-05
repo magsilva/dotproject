@@ -1,4 +1,8 @@
-<?php /* ADMIN $Id: vw_usr_perms.php,v 1.29 2005/03/28 04:41:11 ajdonnison Exp $ */
+<?php /* ADMIN $Id: vw_usr_perms.php,v 1.29.6.4 2007/09/19 13:45:54 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 GLOBAL $AppUI, $user_id, $canEdit, $canDelete, $tab;
 
 $perms =& $AppUI->acl();
@@ -121,7 +125,8 @@ function setPermItem( key, val ) {
 
 <table width="100%" border="0" cellpadding="2" cellspacing="1" class="tbl">
 <tr>
-	<th width="100%"><?php echo $AppUI->_('Item');?></th>
+	<th width="50%"><?php echo $AppUI->_('Module');?></th>
+	<th width="50%"><?php echo $AppUI->_('Item');?></th>
 	<th nowrap><?php echo $AppUI->_('Type');?></th>
 	<th nowrap><?php echo $AppUI->_('Status');?></th>
 	<th>&nbsp;</th>
@@ -143,17 +148,23 @@ foreach ($user_acls as $acl){
 			foreach ($permission['axo_groups'] as $group_id) {
 				$group_data = $perms->get_group_data($group_id, 'axo');
 				$modlist[] = $AppUI->_($group_data[3]);
+				$itemlist[] = $AppUI->_('ALL');
 			}
 		}
 		if (is_array($permission['axo'])) {
 			foreach ($permission['axo'] as $key => $section) {
+				// Find the module based on the key
+				$mod_info = $perms->get_object_full($key, 'app', 1, 'axo');
+				$modlist[] = $AppUI->_($mod_info['name']);
 				foreach ($section as $id) {
 					$mod_data = $perms->get_object_full($id, $key, 1, 'axo');
-					$modlist[] = $AppUI->_($mod_data['name']);
+					$itemlist[] = $AppUI->_($mod_data['name']);
 				}
 			}
 		}
 		$buf .= implode("<br />", $modlist);
+		$buf .= "</td><td>";
+		$buf .= implode("<br />", $itemlist);
 		$buf .= "</td>";
 		// Item information TODO:  need to figure this one out.
 	// 	$buf .= "<td></td>";
@@ -228,9 +239,9 @@ foreach ($user_acls as $acl){
 	foreach ($perm_list as $perm_id => $perm_name) {
 ?>
 <tr>
-	<td nowrap align='right'><?php echo $AppUI->_($perm_name);?>:</td>
+	<td nowrap="nowrap" align="right"><label for="permission_type_<?php echo $perm_id; ?>"><?php echo $AppUI->_($perm_name);?>:</label></td>
 	<td>
-	  <input type='checkbox' name='permission_type[]' value='<?php echo $perm_id;?>'>
+	  <input type="checkbox" name="permission_type[]" id="permission_type_<?php echo $perm_id; ?>" value="<?php echo $perm_id;?>" />
 	</td>
 </tr>
 <?php

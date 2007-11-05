@@ -1,4 +1,8 @@
 <?php
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 $do_report 		    = dPgetParam( $_POST, "do_report", 0 );
 $log_start_date 	= dPgetParam( $_POST, "log_start_date", 0 );
 $log_end_date 	    = dPgetParam( $_POST, "log_end_date", 0 );
@@ -21,7 +25,7 @@ var calendarField = '';
 function popCalendar( field ){
 	calendarField = field;
 	idate = eval( 'document.editFrm.log_' + field + '.value' );
-	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=250, height=220, scollbars=false' );
+	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=250, height=220, scrollbars=no' );
 }
 
 /**
@@ -56,14 +60,14 @@ function setCalendar( idate, fdate ) {
 	<td nowrap="nowrap">
 		<input type="hidden" name="log_end_date" value="<?php echo $end_date ? $end_date->format( FMT_TIMESTAMP_DATE ) : '';?>" />
 		<input type="text" name="end_date" value="<?php echo $end_date ? $end_date->format( $df ) : '';?>" class="text" disabled="disabled" />
-		<a href="#" onClick="popCalendar('end_date')">
+		<a href="#" onclick="popCalendar('end_date')">
 			<img src="./images/calendar.gif" width="24" height="12" alt="<?php echo $AppUI->_('Calendar');?>" border="0" />
 		</a>
 	</td>
 
-	<td nowrap='nowrap'>
-		<input type="checkbox" name="log_all" <?php if ($log_all) echo "checked" ?> />
-		<?php echo $AppUI->_( 'Log All' );?>
+	<td nowrap="nowrap">
+		<input type="checkbox" name="log_all" id="log_all" <?php if ($log_all) echo "checked" ?> />
+		<label for="log_all"><?php echo $AppUI->_( 'Log All' );?></label>
 	</td>
 
 	<td align="right" width="50%" nowrap="nowrap">

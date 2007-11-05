@@ -1,4 +1,8 @@
-<?php /* FORUMS $Id: post_message.php,v 1.30.2.1 2005/05/23 13:40:54 cyberhorse Exp $ */
+<?php /* FORUMS $Id: post_message.php,v 1.30.2.3 2007/03/06 00:34:41 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 // Add / Edit forum
 $message_id = isset( $_GET['message_id'] ) ? $_GET['message_id'] : 0;
 $message_parent = isset( $_GET['message_parent'] ) ? $_GET['message_parent'] : -1;

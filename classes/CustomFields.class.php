@@ -1,5 +1,8 @@
 <?php
-	// $Id: CustomFields.class.php,v 1.12.2.3 2006/01/27 22:17:17 pedroix Exp $
+// $Id: CustomFields.class.php,v 1.12.2.8 2007/02/22 18:36:07 merlinyoda Exp $
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
 	/*
 	 *	CustomField Classes
 	 */
@@ -310,6 +313,33 @@
 		}
 	}
 
+/* CustomFieldWeblink
+** Produces an INPUT Element of the TEXT type in edit mode 
+** and a <a href> </a> weblink in display mode
+*/
+
+	class CustomFieldWeblink extends CustomField
+	{
+		function CustomFieldWeblink ( $field_id, $field_name, $field_order, $field_description, $field_extratags )
+		{
+			$this->CustomField( $field_id, $field_name, $field_order, $field_description, $field_extratags );
+			$this->field_htmltype = 'href';
+		}
+
+		function getHTML($mode)
+		{
+			switch($mode)
+			{
+				case "edit":
+					$html = $this->field_description.": </td><td><input type=\"text\" name=\"".$this->field_name."\" value=\"".$this->charValue()."\" ".$this->field_extratags." />";
+					break;
+				case "view":
+					$html = $this->field_description.': </td><td class="hilite" width="100%"><a href="'.$this->charValue().'">'.$this->charValue().'</a>';
+					break;
+			}
+			return $html;
+		}
+	}
 
 	// CustomFields class - loads all custom fields related to a module, produces a html table of all custom fields
 	// Also loads values automatically if the obj_id parameter is supplied. The obj_id parameter is the ID of the module object 
@@ -334,7 +364,7 @@
 			$q  = new DBQuery;
 			$q->addTable('custom_fields_struct');
 			$q->addWhere("field_module = '".$this->m."' AND	field_page = '".$this->a."'");
-			$q->addOrder('field_order ASC');
+			//$q->addOrder('field_order DESC');
 			$rows = $q->loadList();						
 			if ($rows == NULL)
 			{
@@ -348,6 +378,9 @@
 					{
 						case "checkbox":
 							$this->fields[$row["field_name"]] = New CustomFieldCheckbox( $row["field_id"], $row["field_name"], $row["field_order"], stripslashes($row["field_description"]), stripslashes($row["field_extratags"]) );
+							break;
+						case "href":
+							$this->fields[$row["field_name"]] = New CustomFieldWeblink( $row["field_id"], $row["field_name"], $row["field_order"], stripslashes($row["field_description"]), stripslashes($row["field_extratags"]) );
 							break;
 						case "textarea":
 							$this->fields[$row["field_name"]] = New CustomFieldTextArea( $row["field_id"], $row["field_name"], $row["field_order"], stripslashes($row["field_description"]), stripslashes($row["field_extratags"]) );
@@ -530,6 +563,19 @@
 			echo $html;
 		}
 		
+		function search($moduleTable, $moduleTableId, $moduleTableName, $keyword )
+		{
+			$q  = new DBQuery;
+      $q->addTable('custom_fields_values', 'cfv');
+      $q->addQuery('m.'.$moduleTableId);
+      $q->addQuery('m.'.$moduleTableName);
+      $q->addQuery('cfv.value_charvalue');
+			$q->addJoin('custom_fields_struct', 'cfs', 'cfs.field_id = cfv.value_field_id');
+			$q->addJoin($moduleTable, 'm', 'm.'.$moduleTableId.' = cfv. value_object_id');
+      $q->addWhere('cfs.field_module = "'.$this->m.'"');
+      $q->addWhere('cfv.value_charvalue LIKE "%'.$keyword.'%"');
+			return $q->loadList();
+		}
 	}
 
 	class CustomOptionList
@@ -656,6 +702,6 @@
 			}	
 			$html .= "</select>\n";
 			return $html;
-		}		
+		}	
 	}
 ?>

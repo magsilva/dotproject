@@ -1,4 +1,8 @@
-<?php /* CALENDAR $Id: vw_day_tasks.php,v 1.6 2004/10/21 22:47:07 jcgonz Exp $ */
+<?php /* CALENDAR $Id: vw_day_tasks.php,v 1.6.10.2 2007/03/06 00:34:40 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 global $this_day, $first_time, $last_time, $company_id, $m, $a;
 
 $links = array();
@@ -28,5 +32,5 @@ echo $s;
 echo '</table>';
 
 $min_view = 1;
-include dPgetConfig( 'root_dir' ).'/modules/tasks/todo.php';
+include DP_BASE_DIR.'/modules/tasks/todo.php';
 ?>

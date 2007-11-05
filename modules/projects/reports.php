@@ -1,5 +1,7 @@
-<?php /* PROJECTS $Id: reports.php,v 1.12.2.1 2006/03/19 13:36:31 pedroix Exp $ */
-//error_reporting( E_ALL );
+<?php /* PROJECTS $Id: reports.php,v 1.12.2.6 2007/05/26 21:51:59 caseydk Exp $ */
+if (!defined('DP_BASE_DIR')) {
+	die('You should not access this file directly.');
+}
 
 $project_id = intval( dPgetParam( $_REQUEST, "project_id", 0 ) );
 $report_type = dPgetParam( $_REQUEST, "report_type", '' );
@@ -12,24 +14,19 @@ if (!$canRead) {
 	$AppUI->redirect( "m=public&a=access_denied" );
 }
 
-$obj = new CProject();
-$q = new DBQuery;
-$q->addTable('projects');
-$q->addQuery('project_id, project_active, project_status, project_name, project_description, project_short_name');                     
-$q->addGroup('project_id');
-$q->addOrder('project_short_name');
-$obj->setAllowedSQL($AppUI->user_id, $q);
-
 $project_list=array("0"=> $AppUI->_("All", UI_OUTPUT_RAW) );
-$ptrc = $q->exec();
+
+$obj = new CProject();
+$ptrc = $obj->getAllowedProjectsInRows($AppUI->user_id);
+
 $nums=db_num_rows($ptrc);
+
 echo db_error();
 for ($x=0; $x < $nums; $x++) {
-        $row = db_fetch_assoc( $ptrc );
-        if ($row["project_id"] == $project_id) $display_project_name='('.$row["project_short_name"].') '.$row["project_name"];
-        $project_list[$row["project_id"]] = '('.$row["project_short_name"].') '.$row["project_name"];
+	$row = db_fetch_assoc( $ptrc );
+	if ($row["project_id"] == $project_id) $display_project_name='('.$row["project_short_name"].') '.$row["project_name"];
+	$project_list[$row["project_id"]] = '('.$row["project_short_name"].') '.$row["project_name"];
 }
-$q->clear();
 
 if (! $suppressHeaders) {
 ?>
@@ -46,7 +43,7 @@ function changeIt() {
 // get the prefered date format
 $df = $AppUI->getPref('SHDATEFORMAT');
 
-$reports = $AppUI->readFiles( dPgetConfig( 'root_dir' )."/modules/projects/reports", "\.php$" );
+$reports = $AppUI->readFiles( DP_BASE_DIR.'/modules/projects/reports', "\.php$" );
 
 // setup the title block
 if (! $suppressHeaders) {
@@ -78,14 +75,14 @@ echo $AppUI->_('Selected Project') . ": <b>".$display_project_name."</b>";
 if ($report_type) {
 	$report_type = $AppUI->checkFileName( $report_type );
 	$report_type = str_replace( ' ', '_', $report_type );
-	require "$baseDir/modules/projects/reports/$report_type.php";
+	require DP_BASE_DIR.'/modules/projects/reports/'.$report_type.'.php';
 } else {
 	echo "<table>";
 	echo "<tr><td><h2>" . $AppUI->_( 'Reports Available' ) . "</h2></td></tr>";
 	foreach ($reports as $v) {
 		$type = str_replace( ".php", "", $v );
-		$desc_file = str_replace( ".php", ".{$AppUI->user_locale}.txt", $v );
-		$desc = @file( "$baseDir/modules/projects/reports/$desc_file");
+		$desc_file = str_replace( ".php", '.'.$AppUI->user_locale.'.txt', $v );
+		$desc = @file( DP_BASE_DIR.'/modules/projects/reports/'.$desc_file);
 
 		echo "\n<tr>";
 		echo "\n	<td><a href=\"index.php?m=projects&a=reports&project_id=$project_id&report_type=$type";

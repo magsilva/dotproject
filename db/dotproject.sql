@@ -27,7 +27,7 @@ CREATE TABLE `companies` (
   `company_zip` varchar(11) default '',
   `company_primary_url` varchar(255) default '',
   `company_owner` int(11) NOT NULL default '0',
-  `company_description` text NOT NULL default '',
+  `company_description` text NOT NULL,
   `company_type` int(3) NOT NULL DEFAULT '0',
   `company_email` varchar(255),
   `company_custom` LONGTEXT,
@@ -146,6 +146,7 @@ CREATE TABLE `event_queue` (
 CREATE TABLE `files` (
   `file_id` int(11) NOT NULL auto_increment,
   `file_real_filename` varchar(255) NOT NULL default '',
+  `file_folder` int(11) NOT NULL default '0',
   `file_project` int(11) NOT NULL default '0',
   `file_task` int(11) NOT NULL default '0',
   `file_name` varchar(255) NOT NULL default '',
@@ -265,7 +266,6 @@ CREATE TABLE `projects` (
   `project_target_budget` decimal(10,2) default '0.00',
   `project_actual_budget` decimal(10,2) default '0.00',
   `project_creator` int(11) default '0',
-  `project_active` tinyint(4) default '1',
   `project_private` tinyint(3) unsigned default '0',
   `project_departments` CHAR( 100 ) ,
   `project_contacts` CHAR( 100 ) ,
@@ -355,6 +355,8 @@ CREATE TABLE `task_departments` (
 
 CREATE TABLE `tickets` (
   `ticket` int(10) unsigned NOT NULL auto_increment,
+  `ticket_company` int(10) NOT NULL default '0',
+  `ticket_project` int(10) NOT NULL default '0',
   `author` varchar(100) NOT NULL default '',
   `recipient` varchar(100) NOT NULL default '',
   `subject` varchar(100) NOT NULL default '',
@@ -447,7 +449,7 @@ CREATE TABLE `user_preferences` (
 
 INSERT INTO `users` VALUES (1,1,'admin',MD5('passwd'),0,1,0,0,0,'');
 INSERT INTO `contacts` (contact_id, contact_first_name, contact_last_name, contact_email) 
-VALUES (1,'Admin','Person','admin@localhost');
+  VALUES (1,'Admin','Person','admin@localhost');
 
 INSERT INTO `permissions` VALUES (1,1,"all",-1, -1);
 
@@ -457,6 +459,7 @@ INSERT INTO `user_preferences` VALUES("0", "SHDATEFORMAT", "%d/%m/%Y");
 INSERT INTO `user_preferences` VALUES("0", "TIMEFORMAT", "%I:%M %p");
 INSERT INTO `user_preferences` VALUES("0", "UISTYLE", "default");
 INSERT INTO `user_preferences` VALUES("0", "TASKASSIGNMAX", "100");
+INSERT INTO `user_preferences` VALUES("0", "USERFORMAT", "user");
 
 #
 # AJE (24/Jan/2003)
@@ -539,26 +542,29 @@ CREATE TABLE `sysvals` (
 # Table structure for table 'sysvals'
 #
 
-INSERT INTO `syskeys` VALUES("1", "SelectList", "Enter values for list", "0", "\n", "|");
+INSERT INTO `syskeys` VALUES (1, "SelectList", "Enter values for list", "0", "\n", "|");
 INSERT INTO `syskeys` VALUES (2, 'CustomField', 'Serialized array in the following format:\r\n<KEY>|<SERIALIZED ARRAY>\r\n\r\nSerialized Array:\r\n[type] => text | checkbox | select | textarea | label\r\n[name] => <Field\'s name>\r\n[options] => <html capture options>\r\n[selects] => <options for select and checkbox>', 0, '\n', '|');
-INSERT INTO `syskeys` VALUES("3", "ColorSelection", "Hex color values for type=>color association.", "0", "\n", "|");
+INSERT INTO `syskeys` VALUES (3, "ColorSelection", "Hex color values for type=>color association.", "0", "\n", "|");
 
-INSERT INTO `sysvals` (`sysval_key_id`,`sysval_title`,`sysval_value`) VALUES("1", "ProjectStatus", "0|Not Defined\r\n1|Proposed\r\n2|In Planning\r\n3|In Progress\r\n4|On Hold\r\n5|Complete\r\n6|Template");
-INSERT INTO `sysvals` (`sysval_key_id`,`sysval_title`,`sysval_value`) VALUES("1", "CompanyType", "0|Not Applicable\n1|Client\n2|Vendor\n3|Supplier\n4|Consultant\n5|Government\n6|Internal");
-INSERT INTO `sysvals` (`sysval_key_id`,`sysval_title`,`sysval_value`) VALUES("1", "TaskDurationType", "1|hours\n24|days");
-INSERT INTO `sysvals` (`sysval_key_id`,`sysval_title`,`sysval_value`) VALUES("1", "EventType", "0|General\n1|Appointment\n2|Meeting\n3|All Day Event\n4|Anniversary\n5|Reminder");
-INSERT INTO `sysvals` VALUES (null, 1, 'TaskStatus', '0|Active\n-1|Inactive');
-INSERT INTO `sysvals` VALUES (null, 1, 'TaskType', '0|Unknown\n1|Administrative\n2|Operative');
-INSERT INTO `sysvals` VALUES (null, 1, 'ProjectType', '0|Unknown\n1|Administrative\n2|Operative');
-INSERT INTO `sysvals` (`sysval_key_id`,`sysval_title`,`sysval_value`) VALUES("3", "ProjectColors", "Web|FFE0AE\nEngineering|AEFFB2\nHelpDesk|FFFCAE\nSystem Administration|FFAEAE");
-INSERT INTO `sysvals` VALUES (null, 1, 'FileType', '0|Unknown\n1|Document\n2|Application');
-INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, '1', 'TaskPriority', '-1|low\n0|normal\n1|high');
-INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, '1', 'ProjectPriority', '-1|low\n0|normal\n1|high');
-INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, '1', 'ProjectPriorityColor', '-1|#E5F7FF\n0|\n1|#FFDCB3');
-INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, '1', 'TaskLogReference', '0|Not Defined\n1|Email\n2|Helpdesk\n3|Phone Call\n4|Fax');
-INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, '1', 'TaskLogReferenceImage', '0| 1|./images/obj/email.gif 2|./modules/helpdesk/images/helpdesk.png 3|./images/obj/phone.gif 4|./images/icons/stock_print-16.png');
-
-
+INSERT INTO `sysvals` (`sysval_key_id`,`sysval_title`,`sysval_value`) VALUES (1, "ProjectStatus", "0|Not Defined\r\n1|Proposed\r\n2|In Planning\r\n3|In Progress\r\n4|On Hold\r\n5|Complete\r\n6|Template\r\n7|Archived");
+INSERT INTO `sysvals` (`sysval_key_id`,`sysval_title`,`sysval_value`) VALUES (1, "CompanyType", "0|Not Applicable\n1|Client\n2|Vendor\n3|Supplier\n4|Consultant\n5|Government\n6|Internal");
+INSERT INTO `sysvals` (`sysval_key_id`,`sysval_title`,`sysval_value`) VALUES (1, "TaskDurationType", "1|hours\n24|days");
+INSERT INTO `sysvals` (`sysval_key_id`,`sysval_title`,`sysval_value`) VALUES (1, "EventType", "0|General\n1|Appointment\n2|Meeting\n3|All Day Event\n4|Anniversary\n5|Reminder");
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 1, 'TaskStatus', '0|Active\n-1|Inactive');
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 1, 'TaskType', '0|Unknown\n1|Administrative\n2|Operative');
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 1, 'ProjectType', '0|Unknown\n1|Administrative\n2|Operative');
+INSERT INTO `sysvals` (`sysval_key_id`,`sysval_title`,`sysval_value`) VALUES(3, "ProjectColors", "Web|FFE0AE\nEngineering|AEFFB2\nHelpDesk|FFFCAE\nSystem Administration|FFAEAE");
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 1, 'FileType', '0|Unknown\n1|Document\n2|Application');
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 1, 'TaskPriority', '-1|low\n0|normal\n1|high');
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 1, 'ProjectPriority', '-1|low\n0|normal\n1|high');
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 1, 'ProjectPriorityColor', '-1|#E5F7FF\n0|\n1|#FFDCB3');
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 1, 'TaskLogReference', '0|Not Defined\n1|Email\n2|Helpdesk\n3|Phone Call\n4|Fax');
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 1, 'TaskLogReferenceImage', '0| 1|./images/obj/email.gif 2|./modules/helpdesk/images/helpdesk.png 3|./images/obj/phone.gif 4|./images/icons/stock_print-16.png');
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 1, 'UserType', '0|Default User\r\n1|Administrator\r\n2|CEO\r\n3|Director\r\n4|Branch Manager\r\n5|Manager\r\n6|Supervisor\r\n7|Employee');
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 1, 'ProjectRequiredFields', 'f.project_name.value.length|<3\r\nf.project_color_identifier.value.length|<3\r\nf.project_company.options[f.project_company.selectedIndex].value|<1' );
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 2, 'TicketNotify', '0|admin@localhost\n1|admin@localhost\n2|admin@localhost\r\n3|admin@localhost\r\n4|admin@localhost');
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 1, 'TicketPriority', '0|Low\n1|Normal\n2|High\n3|Highest\n4|911');
+INSERT INTO `sysvals` ( `sysval_id` , `sysval_key_id` , `sysval_title` , `sysval_value` ) VALUES (null, 1, 'TicketStatus', '0|Open\n1|Closed\n2|Deleted');
 #
 # Table structure for table 'roles'
 #
@@ -650,65 +656,63 @@ CREATE TABLE `config` (
 # Dumping data for table `config`
 #
 
-INSERT INTO `config` VALUES ('', 'host_locale', 'en', '', 'text');
-INSERT INTO `config` VALUES ('', 'check_overallocation', 'false', '', 'checkbox');
-INSERT INTO `config` VALUES ('', 'currency_symbol', '$', '', 'text');
-INSERT INTO `config` VALUES ('', 'host_style', 'default', '', 'text');
-INSERT INTO `config` VALUES ('', 'company_name', 'My Company', '', 'text');
-INSERT INTO `config` VALUES ('', 'page_title', 'dotProject', '', 'text');
-INSERT INTO `config` VALUES ('', 'site_domain', 'dotproject.net', '', 'text');
-INSERT INTO `config` VALUES ('', 'email_prefix', '[dotProject]', '', 'text');
-INSERT INTO `config` VALUES ('', 'admin_username', 'admin', '', 'text');
-INSERT INTO `config` VALUES ('', 'username_min_len', '4', '', 'text');
-INSERT INTO `config` VALUES ('', 'password_min_len', '4', '', 'text');
-INSERT INTO `config` VALUES ('', 'enable_gantt_charts', 'true', '', 'checkbox');
-INSERT INTO `config` VALUES ('', 'jpLocale', '', '', 'text');
-INSERT INTO `config` VALUES ('', 'log_changes', 'false', '', 'checkbox');
-INSERT INTO `config` VALUES ('', 'check_task_dates', 'true', '', 'checkbox');
-INSERT INTO `config` VALUES ('', 'locale_warn', 'false', '', 'checkbox');
-INSERT INTO `config` VALUES ('', 'locale_alert', '^', '', 'text');
-INSERT INTO `config` VALUES ('', 'daily_working_hours', '8.0', '', 'text');
-INSERT INTO `config` VALUES ('', 'display_debug', 'false', '', 'checkbox');
-INSERT INTO `config` VALUES ('', 'link_tickets_kludge', 'false', '', 'checkbox');
-INSERT INTO `config` VALUES ('', 'show_all_task_assignees', 'false', '', 'checkbox');
-INSERT INTO `config` VALUES ('', 'direct_edit_assignment', 'false', '', 'checkbox');
-INSERT INTO `config` VALUES ('', 'restrict_color_selection', 'false', '', 'checkbox');
-INSERT INTO `config` VALUES ('', 'cal_day_view_show_minical', 'true', '', 'checkbox');
-INSERT INTO `config` VALUES ('', 'cal_day_start', '8', '', 'text');
-INSERT INTO `config` VALUES ('', 'cal_day_end', '17', '', 'text');
-INSERT INTO `config` VALUES ('', 'cal_day_increment', '15', '', 'text');
-INSERT INTO `config` VALUES ('', 'cal_working_days', '1,2,3,4,5', '', 'text');
-INSERT INTO `config` VALUES ('', 'restrict_task_time_editing', 'false', '', 'checkbox');
-INSERT INTO `config` VALUES ('', 'default_view_m', 'calendar', '', 'text');
-INSERT INTO `config` VALUES ('', 'default_view_a', 'day_view', '', 'text');
-INSERT INTO `config` VALUES ('', 'default_view_tab', '1', '', 'text');
-INSERT INTO `config` VALUES ('', 'index_max_file_size', '-1', '', 'text');
-INSERT INTO `config` VALUES ('', 'session_handling', 'app', 'session', 'select');
-INSERT INTO `config` VALUES ('', 'session_idle_time', '2d', 'session', 'text');
-INSERT INTO `config` VALUES ('', 'session_max_lifetime', '1m', 'session', 'text');
-INSERT INTO `config` VALUES ('', 'debug', '1', '', 'text');
-INSERT INTO `config` VALUES ('', 'parser_default', '/usr/bin/strings', '', 'text');
-INSERT INTO `config` VALUES ('', 'parser_application/msword', '/usr/bin/strings', '', 'text');
-INSERT INTO `config` VALUES ('', 'parser_text/html', '/usr/bin/strings', '', 'text');
-INSERT INTO `config` VALUES ('', 'parser_application/pdf', '/usr/bin/pdftotext', '', 'text');
+INSERT INTO `config` VALUES (0, 'host_locale', 'en', '', 'text');
+INSERT INTO `config` VALUES (0, 'check_overallocation', 'false', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'currency_symbol', '$', '', 'text');
+INSERT INTO `config` VALUES (0, 'host_style', 'default', '', 'text');
+INSERT INTO `config` VALUES (0, 'company_name', 'My Company', '', 'text');
+INSERT INTO `config` VALUES (0, 'page_title', 'dotProject', '', 'text');
+INSERT INTO `config` VALUES (0, 'site_domain', 'dotproject.net', '', 'text');
+INSERT INTO `config` VALUES (0, 'email_prefix', '[dotProject]', '', 'text');
+INSERT INTO `config` VALUES (0, 'admin_username', 'admin', '', 'text');
+INSERT INTO `config` VALUES (0, 'username_min_len', '4', '', 'text');
+INSERT INTO `config` VALUES (0, 'password_min_len', '4', '', 'text');
+INSERT INTO `config` VALUES (0, 'enable_gantt_charts', 'true', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'log_changes', 'false', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'check_task_dates', 'true', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'locale_warn', 'false', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'locale_alert', '^', '', 'text');
+INSERT INTO `config` VALUES (0, 'daily_working_hours', '8.0', '', 'text');
+INSERT INTO `config` VALUES (0, 'display_debug', 'false', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'link_tickets_kludge', 'false', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'show_all_task_assignees', 'false', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'direct_edit_assignment', 'false', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'restrict_color_selection', 'false', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'cal_day_view_show_minical', 'true', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'cal_day_start', '8', '', 'text');
+INSERT INTO `config` VALUES (0, 'cal_day_end', '17', '', 'text');
+INSERT INTO `config` VALUES (0, 'cal_day_increment', '15', '', 'text');
+INSERT INTO `config` VALUES (0, 'cal_working_days', '1,2,3,4,5', '', 'text');
+INSERT INTO `config` VALUES (0, 'restrict_task_time_editing', 'false', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'default_view_m', 'calendar', '', 'text');
+INSERT INTO `config` VALUES (0, 'default_view_a', 'day_view', '', 'text');
+INSERT INTO `config` VALUES (0, 'default_view_tab', '1', '', 'text');
+INSERT INTO `config` VALUES (0, 'index_max_file_size', '-1', '', 'text');
+INSERT INTO `config` VALUES (0, 'session_handling', 'app', 'session', 'select');
+INSERT INTO `config` VALUES (0, 'session_idle_time', '2d', 'session', 'text');
+INSERT INTO `config` VALUES (0, 'session_max_lifetime', '1m', 'session', 'text');
+INSERT INTO `config` VALUES (0, 'debug', '1', '', 'text');
+INSERT INTO `config` VALUES (0, 'parser_default', '/usr/bin/strings', '', 'text');
+INSERT INTO `config` VALUES (0, 'parser_application/msword', '/usr/bin/strings', '', 'text');
+INSERT INTO `config` VALUES (0, 'parser_text/html', '/usr/bin/strings', '', 'text');
+INSERT INTO `config` VALUES (0, 'parser_application/pdf', '/usr/bin/pdftotext', '', 'text');
 
-INSERT INTO `config` VALUES ('', 'files_ci_preserve_attr', 'true', '', 'checkbox');
-INSERT INTO `config` VALUES ('', 'files_show_versions_edit', 'false', '', 'checkbox');
-INSERT INTO `config` ( `config_id` , `config_name` , `config_value` , `config_group` , `config_type` )
-VALUES ('', 'reset_memory_limit', '8M', '', 'text');
+INSERT INTO `config` VALUES (0, 'files_ci_preserve_attr', 'true', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'files_show_versions_edit', 'false', '', 'checkbox');
+INSERT INTO `config` VALUES (0, 'reset_memory_limit', '8M', '', 'text');
 
 # 20050302
 # ldap system config variables
-INSERT INTO config VALUES ('', 'auth_method', 'sql', 'auth', 'select'); 
-INSERT INTO config VALUES ('', 'ldap_host', 'localhost', 'ldap', 'text'); 
-INSERT INTO config VALUES ('', 'ldap_port', '389', 'ldap', 'text'); 
-INSERT INTO config VALUES ('', 'ldap_version', '3', 'ldap', 'text'); 
-INSERT INTO config VALUES ('', 'ldap_base_dn', 'dc=saki,dc=com,dc=au', 'ldap', 'text'); 
-INSERT INTO config VALUES ('', 'ldap_user_filter', '(uid=%USERNAME%)', 'ldap', 'text'); 
+INSERT INTO `config` VALUES (0, 'auth_method', 'sql', 'auth', 'select'); 
+INSERT INTO `config` VALUES (0, 'ldap_host', 'localhost', 'ldap', 'text'); 
+INSERT INTO `config` VALUES (0, 'ldap_port', '389', 'ldap', 'text'); 
+INSERT INTO `config` VALUES (0, 'ldap_version', '3', 'ldap', 'text'); 
+INSERT INTO `config` VALUES (0, 'ldap_base_dn', 'dc=saki,dc=com,dc=au', 'ldap', 'text'); 
+INSERT INTO `config` VALUES (0, 'ldap_user_filter', '(uid=%USERNAME%)', 'ldap', 'text'); 
 
 # 20050302
 # PostNuke authentication variables
-INSERT INTO config VALUES ('', 'postnuke_allow_login', 'true', 'auth', 'checkbox');
+INSERT INTO `config` VALUES (0, 'postnuke_allow_login', 'true', 'auth', 'checkbox');
 
 # 20050302
 # New list support for config variables
@@ -747,17 +751,17 @@ INSERT INTO config_list (`config_id`, `config_list_name`)
 
 # 20050303
 # New mail handling options
-INSERT INTO config VALUES (NULL, 'mail_transport', 'php', 'mail', 'select');
-INSERT INTO config VALUES (NULL, 'mail_host', 'localhost', 'mail', 'text');
-INSERT INTO config VALUES (NULL, 'mail_port', '25', 'mail', 'text');
-INSERT INTO config VALUES (NULL, 'mail_auth', 'false', 'mail', 'checkbox');
-INSERT INTO config VALUES (NULL, 'mail_user', '', 'mail', 'text');
-INSERT INTO config VALUES (NULL, 'mail_pass', '', 'mail', 'password');
-INSERT INTO config VALUES (NULL, 'mail_defer', 'false', 'mail', 'checkbox');
-INSERT INTO config VALUES (NULL, 'mail_timeout', '30', 'mail', 'text');
-INSERT INTO `config` VALUES ('', 'task_reminder_control', 'false', 'task_reminder', 'checkbox');
-INSERT INTO `config` VALUES ('', 'task_reminder_days_before', '1', 'task_reminder', 'text');
-INSERT INTO `config` VALUES ('', 'task_reminder_repeat', '100', 'task_reminder', 'text');
+INSERT INTO `config` VALUES (0, 'mail_transport', 'php', 'mail', 'select');
+INSERT INTO `config` VALUES (0, 'mail_host', 'localhost', 'mail', 'text');
+INSERT INTO `config` VALUES (0, 'mail_port', '25', 'mail', 'text');
+INSERT INTO `config` VALUES (0, 'mail_auth', 'false', 'mail', 'checkbox');
+INSERT INTO `config` VALUES (0, 'mail_user', '', 'mail', 'text');
+INSERT INTO `config` VALUES (0, 'mail_pass', '', 'mail', 'password');
+INSERT INTO `config` VALUES (0, 'mail_defer', 'false', 'mail', 'checkbox');
+INSERT INTO `config` VALUES (0, 'mail_timeout', '30', 'mail', 'text');
+INSERT INTO `config` VALUES (0, 'task_reminder_control', 'false', 'task_reminder', 'checkbox');
+INSERT INTO `config` VALUES (0, 'task_reminder_days_before', '1', 'task_reminder', 'text');
+INSERT INTO `config` VALUES (0, 'task_reminder_repeat', '100', 'task_reminder', 'text');
 
 
 INSERT INTO config_list (`config_id`, `config_list_name`)
@@ -794,7 +798,8 @@ value_module varchar(30),
 value_object_id integer,
 value_field_id integer,
 value_charvalue varchar(250),
-value_intvalue integer
+value_intvalue integer,
+KEY `idx_cfv_id` (`value_id`)
 );
 
 CREATE TABLE custom_fields_lists (
@@ -1173,6 +1178,7 @@ INSERT INTO `gacl_acl_sections` (id, value, order_value, name) VALUES (2, 'user'
 DROP TABLE IF EXISTS `sessions`;
 CREATE TABLE `sessions` (
 	`session_id` varchar(40) NOT NULL default '',
+	`session_user` INT DEFAULT '0' NOT NULL,
 	`session_data` LONGBLOB,
 	`session_updated` TIMESTAMP,
 	`session_created` DATETIME NOT NULL default '0000-00-00 00:00:00',
@@ -1191,11 +1197,24 @@ CREATE TABLE dpversion (
 	last_code_update date not null default '0000-00-00'
 );
 
-INSERT INTO dpversion VALUES ('2.0.2', 2, '2006-04-21', '2006-04-21');
+INSERT INTO dpversion VALUES ('2.1', 2, '2007-10-14', '2007-10-14');
 
 # 20050307
 # Additional LDAP search user and search password fields for Active Directory compatible LDAP authentication
-INSERT INTO config VALUES ('', 'ldap_search_user', 'Manager', 'ldap', 'text');
-INSERT INTO config VALUES ('', 'ldap_search_pass', 'secret', 'ldap', 'password');
-INSERT INTO config VALUES ('', 'ldap_allow_login', 'true', 'ldap', 'checkbox');
+INSERT INTO `config` VALUES (0, 'ldap_search_user', 'Manager', 'ldap', 'text');
+INSERT INTO `config` VALUES (0, 'ldap_search_pass', 'secret', 'ldap', 'password');
+INSERT INTO `config` VALUES (0, 'ldap_allow_login', 'true', 'ldap', 'checkbox');
 
+# 20070126
+#
+# Table structure for table `file_folders`
+#
+
+DROP TABLE IF EXISTS `file_folders`;
+CREATE TABLE `file_folders` (
+	`file_folder_id` int(11) NOT NULL auto_increment,
+	`file_folder_parent` int(11) NOT NULL default '0',
+	`file_folder_name` varchar(255) NOT NULL default '',
+	`file_folder_description` text,
+	PRIMARY KEY  (`file_folder_id`)
+) TYPE=MyISAM;

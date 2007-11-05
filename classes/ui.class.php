@@ -1,9 +1,13 @@
-<?php /* CLASSES $Id: ui.class.php,v 1.85.4.2 2006/06/22 10:10:11 ajdonnison Exp $ */
+<?php /* CLASSES $Id: ui.class.php,v 1.85.4.15 2007/09/03 21:22:54 caseydk Exp $ */
 /**
 * @package dotproject
 * @subpackage core
 * @license http://opensource.org/licenses/gpl-license.php GPL License Version 2
 */
+
+if (! defined('DP_BASE_DIR')) {
+	die('This file should not be called directly.');
+}
 
 // Message No Constants
 define( 'UI_MSG_OK', 1 );
@@ -24,14 +28,14 @@ define ("UI_OUTPUT_HTML", 0);
 define ("UI_OUTPUT_JS", 0x10);
 define ("UI_OUTPUT_RAW", 0x20);
 
-// $baseDir is set in index.php and fileviewer.php and is the base directory
+// DP_BASE_DIR is set in base.php and fileviewer.php and is the base directory
 // of the dotproject installation.
-require_once "$baseDir/classes/permissions.class.php";
+require_once DP_BASE_DIR."/classes/permissions.class.php";
 /**
 * The Application User Interface Class.
 *
 * @author Andrew Eddie <eddieajau@users.sourceforge.net>
-* @version $Revision: 1.85.4.2 $
+* @version $Revision: 1.85.4.15 $
 */
 class CAppUI {
 /** @var array generic array for holding the state of anything */
@@ -58,6 +62,8 @@ class CAppUI {
 // localisation
 /** @var string */
 	var $user_locale=null;
+/** @var string */
+	var $user_lang=null;
 /** @var string */
 	var $base_locale = 'en'; // do not change - the base 'keys' will always be in english
 
@@ -89,8 +95,6 @@ class CAppUI {
 * CAppUI Constructor
 */
 	function CAppUI() {
-		global $dPconfig;
-
 		$this->state = array();
 
 		$this->user_id = -1;
@@ -102,7 +106,7 @@ class CAppUI {
 
 		// cfg['locale_warn'] is the only cfgVariable stored in session data (for security reasons)
 		// this guarants the functionality of this->setWarning
-		$this->cfg['locale_warn'] = $dPconfig['locale_warn'];
+		$this->cfg['locale_warn'] = dPgetConfig('locale_warn');
 		
 		$this->project_id = 0;
 
@@ -117,9 +121,8 @@ class CAppUI {
 * @return string The path to the include file
  */
 	function getSystemClass( $name=null ) {
-		global $baseDir;
 		if ($name) {
-			return "$baseDir/classes/$name.class.php";
+			return DP_BASE_DIR."/classes/$name.class.php";
 		}
 	}
 
@@ -130,9 +133,8 @@ class CAppUI {
 * @return string The path to the include file
 */
 	function getLibraryClass( $name=null ) {
-		global $baseDir;
 		if ($name) {
-			return "$baseDir/lib/$name.php";
+			return DP_BASE_DIR."/lib/$name.php";
 		}
 	}
 
@@ -142,9 +144,8 @@ class CAppUI {
 * @return string The path to the include file
  */
 	function getModuleClass( $name=null ) {
-		global $baseDir;
 		if ($name) {
-			return "$baseDir/modules/$name/$name.class.php";
+			return DP_BASE_DIR."/modules/$name/$name.class.php";
 		}
 	}
 
@@ -154,9 +155,8 @@ class CAppUI {
 */
 	function getVersion() {
 		global $dPconfig;
-		global $baseDir;
 		if ( ! isset($this->version_major)) {
-			include_once $baseDir . '/includes/version.php';
+			include_once DP_BASE_DIR . '/includes/version.php';
 			$this->version_major = $dp_version_major;
 			$this->version_minor = $dp_version_minor;
 			$this->version_patch = $dp_version_patch;
@@ -173,14 +173,12 @@ class CAppUI {
 * Checks that the current user preferred style is valid/exists.
 */
 	function checkStyle() {
-		global $dPconfig;
-		global $baseDir;
 		// check if default user's uistyle is installed
 		$uistyle = $this->getPref("UISTYLE");
 
-		if ($uistyle && !is_dir("$baseDir/style/$uistyle")) {
+		if ($uistyle && !is_dir(DP_BASE_DIR."/style/$uistyle")) {
 			// fall back to host_style if user style is not installed
-			$this->setPref( 'UISTYLE', $dPconfig['host_style'] );
+			$this->setPref('UISTYLE', dPgetConfig('host_style'));
 		}
 	}
 
@@ -192,11 +190,10 @@ class CAppUI {
 * @return array A named array of the directories (the key and value are identical).
 */
 	function readDirs( $path ) {
-		global $baseDir;
 		$dirs = array();
-		$d = dir( "$baseDir/$path" );
+		$d = dir( DP_BASE_DIR."/$path" );
 		while (false !== ($name = $d->read())) {
-			if(is_dir( "$baseDir/$path/$name" ) && $name != "." && $name != ".." && $name != "CVS") {
+			if(is_dir( DP_BASE_DIR."/$path/$name" ) && $name != "." && $name != ".." && $name != "CVS") {
 				$dirs[$name] = $name;
 			}
 		}
@@ -271,12 +268,12 @@ class CAppUI {
 * @param string Locale abbreviation corresponding to the sub-directory name in the locales directory (usually the abbreviated language code).
 */
 	function setUserLocale( $loc='', $set = true ) {
-		global $dPconfig, $locale_char_set;
+		global $locale_char_set;
 
 		$LANGUAGES = $this->loadLanguages();
 
 		if (! $loc) {
-			$loc = @$this->user_prefs['LOCALE'] ? $this->user_prefs['LOCALE'] : $dPconfig['host_locale'];
+			$loc = @$this->user_prefs['LOCALE'] ? $this->user_prefs['LOCALE'] : dPgetConfig('host_locale');
 		}
 
 		if (isset($LANGUAGES[$loc]))
@@ -346,7 +343,6 @@ class CAppUI {
  *
  */
 	function loadLanguages() {
-		global $baseDir;
 
 		if ( isset($_SESSION['LANGUAGES'])) {
 			$LANGUAGES =& $_SESSION['LANGUAGES'];
@@ -354,8 +350,8 @@ class CAppUI {
 			$LANGUAGES = array();
 			$langs = $this->readDirs('locales');
 			foreach ($langs as $lang) {
-				if (file_exists("$baseDir/locales/$lang/lang.php")) {
-					include_once "$baseDir/locales/$lang/lang.php";
+				if (file_exists(DP_BASE_DIR."/locales/$lang/lang.php")) {
+					include_once DP_BASE_DIR."/locales/$lang/lang.php";
 				}
 			}
 			@$_SESSION['LANGUAGES'] =& $LANGUAGES;
@@ -389,7 +385,6 @@ class CAppUI {
 	}
 
 	function __( $str, $flags = 0) {
-		global $dPconfig;
 		$str = trim($str);
 		if (empty( $str )) {
 			return '';
@@ -398,10 +393,10 @@ class CAppUI {
 		
 		if ($x) {
 			$str = $x;
-		} else if (@$dPconfig['locale_warn']) {
+		} else if (dPgetConfig('locale_warn')) {
 			if ($this->base_locale != $this->user_locale ||
 				($this->base_locale == $this->user_locale && !in_array( $str, @$GLOBALS['translate'] )) ) {
-				$str .= @$dPconfig['locale_alert'];
+				$str .= dPgetConfig('locale_alert');
 			}
 		}
 		switch ($flags & UI_CASE_MASK) {
@@ -643,13 +638,13 @@ class CAppUI {
 */
 	function login($username, $password, $redirect)
 	{
-		global $dPconfig, $baseDir;
+		require_once DP_BASE_DIR."/classes/authenticator.class.php";
 
 		require_once "$baseDir/classes/authenticator.class.php";
 
 		$auth_method = isset($dPconfig['auth_method']) ? $dPconfig['auth_method'] : 'sql';
 /*
-		if (@$_POST['login'] != 'login' && @$_POST['login'] != $this->_('login') && $_REQUEST['login'] != $auth_method) {
+		if (@$_POST['login'] != 'login' && @$_POST['login'] != $this->_('login', UI_OUTPUT_RAW) && $_REQUEST['login'] != $auth_method) {
 			die("You have chosen to log in using an unsupported or disabled login method");
 		}
 */
@@ -815,7 +810,8 @@ class CAppUI {
 		$q  = new DBQuery;
 		$q->addTable('modules');
 		$q->addQuery('mod_directory, mod_ui_name, mod_ui_icon');
-		$q->addWhere("mod_active > 0 AND mod_ui_active > 0 AND mod_directory <> 'public'");
+		$q->addWhere('mod_active > 0 AND mod_ui_active > 0 AND mod_directory <> \'public\'');
+		$q->addWhere('mod_type != \'utility\'');
 		$q->addOrder('mod_ui_order');
 		return ($q->loadList());
 	}
@@ -846,15 +842,15 @@ class CAppUI {
  * javascript.
  */
 	function loadJS() {
-	  global $m, $a, $dPconfig, $baseDir;
+	  global $m, $a;
 	  // Search for the javascript files to load.
 	  if (! isset($m))
 	    return;
-	  $root = $baseDir;
+	  $root = DP_BASE_DIR;
 	  if (substr($root, -1) != '/')
 	    $root .= '/';
 
-	  $base = $dPconfig['base_url'];
+	  $base = dPgetConfig('base_url');
 	  if ( substr($base, -1) != '/')
 	    $base .= '/';
 	  // Load the basic javascript used by all modules.
@@ -870,23 +866,26 @@ class CAppUI {
 	  while(list(,$js_file_name) = each($js_files)){
 		  echo "<script type=\"text/javascript\" src=\"{$base}js/$js_file_name\"></script>\n";
 		  }
+
+		// additionally load overlib
+			echo "<script type=\"text/javascript\" src=\"{$base}lib/overlib/overlib.js\"></script>\n";
+
 		$this->getModuleJS($m, $a, true);
 	}
 
 	function getModuleJS($module, $file=null, $load_all = false) {
-		global $dPconfig, $baseDir;
-		$root = $baseDir;
+		$root = DP_BASE_DIR;
 		if (substr($root, -1) != '/');
 			$root .= '/';
-		$base = $dPconfig['base_url'];
+		$base = DP_BASE_URL;
 		if (substr($base, -1) != '/') 
 			$base .= '/';
 		if ($load_all || ! $file) {
 			if (file_exists("{$root}modules/$module/$module.module.js"))
-				echo "<script type=\"text/javascript\" src=\"{$base}modules/$module/$module.module.js\"></script>\n";
+				echo '<script type="text/javascript" src="'.$base.'modules/'.$module.'/'.$module.'.module.js"></script>'."\n";
 		}
 	  if (isset($file) && file_exists("{$root}modules/$module/$file.js"))
-	    echo "<script type=\"text/javascript\" src=\"{$base}modules/$module/$file.js\"></script>\n";
+	    echo '<script type="text/javascript" src="'.$base.'modules/'.$module.'/'.$file.'.js"></script>'."\n";
 	}
 
 }
@@ -896,16 +895,16 @@ class CAppUI {
 */
 class CTabBox_core {
 /** @var array */
-	var $tabs=NULL;
+	var $tabs = null;
 /** @var int The active tab */
-	var $active=NULL;
+	var $active = null;
 /** @var string The base URL query string to prefix tab links */
-	var $baseHRef=NULL;
+	var $baseHRef = null;
 /** @var string The base path to prefix the include file */
 	var $baseInc;
 /** @var string A javascript function that accepts two arguments,
 the active tab, and the selected tab **/
-	var $javascript = NULL;
+	var $javascript = null;
 
 /**
 * Constructor
@@ -934,8 +933,12 @@ the active tab, and the selected tab **/
 * @param string File to include
 * @param The display title/name of the tab
 */
-	function add( $file, $title, $translated = false ) {
-		$this->tabs[] = array( $file, $title, $translated );
+	function add( $file, $title, $translated = false, $key= NULL ) {
+		$t = array( $file, $title, $translated);
+		if (isset($key))
+			$this->tabs[$key] = $t;
+		else
+ 			$this->tabs[] = $t;
 	}
 
 	function isTabbed() {
@@ -1143,7 +1146,7 @@ class CTitleBlock_core {
 	function addCrumbDelete( $title, $canDelete='', $msg='' ) {
 		global $AppUI;
 		$this->addCrumbRight(
-			'<table cellspacing="0" cellpadding="0" border="0"?<tr><td>'
+			'<table cellspacing="0" cellpadding="0" border="0"><tr><td>'
 			. '<a href="javascript:delIt()" title="'.($canDelete?'':$msg).'">'
 			. dPshowImage( './images/icons/'.($canDelete?'stock_delete-16.png':'stock_trash_full-16.png'), '16', '16',  '' )
 			. '</a>'
@@ -1169,7 +1172,7 @@ class CTitleBlock_core {
 		$s .= $CR . '<td align="left" width="100%" nowrap="nowrap"><h1>' . $AppUI->_($this->title) . '</h1></td>';
 		foreach ($this->cells1 as $c) {
 			$s .= $c[2] ? $CR . $c[2] : '';
-			$s .= $CR . '<td align="right" nowrap="nowrap"' . ($c[0] ? " $c[0]" : '') . '>';
+			$s .= $CR . '<td align="right" nowrap="nowrap"' . ($c[0] ? (' '.$c[0]): '') . '>';
 			$s .= $c[1] ? $CT . $c[1] : '&nbsp;';
 			$s .= $CR . '</td>';
 			$s .= $c[3] ? $CR . $c[3] : '';
@@ -1178,7 +1181,7 @@ class CTitleBlock_core {
 			$s .= '<td nowrap="nowrap" width="20" align="right">';
 			//$s .= $CT . contextHelp( '<img src="./images/obj/help.gif" width="14" height="16" border="0" alt="'.$AppUI->_( 'Help' ).'" />', $this->helpref );
 
-			$s .= "\n\t<a href=\"#$this->helpref\" onClick=\"javascript:window.open('?m=help&dialog=1&hid=$this->helpref', 'contexthelp', 'width=400, height=400, left=50, top=50, scrollbars=yes, resizable=yes')\" title=\"".$AppUI->_( 'Help' )."\">";
+			$s .= "\n\t<a href=\"#".$this->helpref."\" onClick=\"javascript:window.open('?m=help&dialog=1&hid=".$this->helpref."', 'contexthelp', width=400, height=400, left=50, top=50, scrollbars=yes, resizable=yes)\" title=\"".$AppUI->_( 'Help' )."\">";
 			$s .= "\n\t\t" . dPshowImage( './images/icons/stock_help-16.png', '16', '16', $AppUI->_( 'Help' ) );
 			$s .= "\n\t</a>";
 			$s .= "\n</td>";
@@ -1196,7 +1199,7 @@ class CTitleBlock_core {
 			$s .= "\n<table border=\"0\" cellpadding=\"4\" cellspacing=\"0\" width=\"100%\">";
 			$s .= "\n<tr>";
 			$s .= "\n\t<td nowrap=\"nowrap\">";
-			$s .= "\n\t\t" . implode( ' <strong>:</strong> ', $crumbs );
+			$s .= "\n\t\t" . '<strong>' . implode(' : ', $crumbs) . '</strong>';
 			$s .= "\n\t</td>";
 
 			foreach ($this->cells2 as $c) {

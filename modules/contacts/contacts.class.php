@@ -1,8 +1,12 @@
-<?php /* CONTACTS $Id: contacts.class.php,v 1.14.2.3 2006/04/21 05:08:35 ajdonnison Exp $ */
+<?php /* CONTACTS $Id: contacts.class.php,v 1.14.2.6 2007/03/06 00:34:40 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 /**
  *	@package dotProject
  *	@subpackage modules
- *	@version $Revision: 1.14.2.3 $
+ *	@version $Revision: 1.14.2.6 $
 */
 
 require_once( $AppUI->getSystemClass ('dp' ) );
@@ -72,7 +76,7 @@ class CContact extends CDpObject{
 			$q->addWhere('user_contact = ' . (int)$oid);
 			$user_count = $q->loadResult();
 			if ($user_count > 0) {
-				$msg =  $AppUI->_('cannot delete, contact is a user');
+				$msg =  $AppUI->_('contactsDeleteUserError');
 				return false;
 			}
 		}

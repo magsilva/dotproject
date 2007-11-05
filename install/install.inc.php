@@ -1,5 +1,9 @@
 <?php
-// $Id: install.inc.php,v 1.2 2005/04/09 04:07:35 ajdonnison Exp $
+// $Id: install.inc.php,v 1.2.2.2 2007/02/26 21:04:48 merlinyoda Exp $
+
+if (!defined('DP_BASE_DIR')) {
+	die('You should not access this file directly.');
+}
 
 // Provide fake interface classes and installation functions
 // so that most db shortcuts will work without, for example, an AppUI instance.
@@ -49,15 +53,13 @@ function InstallGetVersion($mode, $db) {
   'code_version' => '1.0.2',
   'db_version' => '1'
  );
- if ($mode == 'upgrade') {
-  $res = $db->Execute('SELECT * FROM dpversion LIMIT 1');
-  if ($res && $res->RecordCount() > 0) {
+ $res = $db->Execute('SELECT * FROM dpversion LIMIT 1');
+ if ($res && $res->RecordCount() > 0) {
    $row = $res->FetchRow();
    $result['last_db_update'] = str_replace('-', '', $row['last_db_update']);
    $result['last_code_update'] = str_replace('-', '', $row['last_code_update']);
    $result['code_version'] = $row['code_version'] ? $row['code_version'] : '1.0.2';
    $result['db_version'] = $row['db_version'] ? $row['db_version'] : '1';
-  }
  }
  return $result;
 

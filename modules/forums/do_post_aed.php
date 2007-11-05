@@ -1,4 +1,8 @@
-<?php /* FORUMS $Id: do_post_aed.php,v 1.5 2005/03/31 01:25:24 ajdonnison Exp $ */
+<?php /* FORUMS $Id: do_post_aed.php,v 1.5.6.2 2007/03/06 00:34:41 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $del = isset($_POST['del']) ? $_POST['del'] : 0;
 
 $obj = new CForumMessage();

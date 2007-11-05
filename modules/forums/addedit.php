@@ -1,4 +1,8 @@
-<?php /* FORUMS $Id: addedit.php,v 1.26.6.1 2006/03/19 19:13:37 pedroix Exp $ */
+<?php /* FORUMS $Id: addedit.php,v 1.26.6.4 2007/03/06 00:34:41 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 // Add / Edit forum
 
 $forum_id = intval( dPgetParam( $_GET, 'forum_id', 0 ) );
@@ -34,7 +38,7 @@ $projObj = new CProject();
 $q =& new DBQuery;
 $q->addTable('projects');
 $q->addQuery('project_id, project_name');
-$q->addWhere('project_active <> 0');
+$q->addWhere('project_status <> 7');
 $q->addOrder('project_name');
 $projObj->setAllowedSQL($AppUI->user_id, $q);
 if (isset($company_id))

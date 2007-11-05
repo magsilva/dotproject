@@ -1,4 +1,8 @@
-<?php /* SYSKEYS $Id: do_syskey_aed.php,v 1.4 2003/04/24 19:08:28 eddieajau Exp $ */
+<?php /* SYSKEYS $Id: do_syskey_aed.php,v 1.4.12.2 2007/03/06 00:34:44 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $del = isset($_POST['del']) ? $_POST['del'] : 0;
 
 $obj = new CSysKey();

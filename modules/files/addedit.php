@@ -1,4 +1,9 @@
-<?php /* FILES $Id: addedit.php,v 1.44.4.2 2006/02/17 08:37:48 cyberhorse Exp $ */
+<?php /* FILES $Id: addedit.php,v 1.44.4.19 2007/10/10 17:38:46 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
+$folder = intval( dPgetParam( $_GET, 'folder', 0 ) );
 $file_id = intval( dPgetParam( $_GET, 'file_id', 0 ) );
 $ci = dPgetParam($_GET, 'ci', 0) == 1 ? true : false;
 $preserve = $dPconfig['files_ci_preserve_attr'];
@@ -10,16 +15,23 @@ $canEdit = $perms->checkModuleItem( $m, 'edit', $file_id );
 if (!$canEdit) {
 	$AppUI->redirect( "m=public&a=access_denied" );
 }
-
+if (file_exists(DP_BASE_DIR.'/modules/helpdesk/config.php')) {
+	include (DP_BASE_DIR . '/modules/helpdesk/config.php');
+}
 $canAdmin = $perms->checkModule('system', 'edit');
+// add to allow for returning to other modules besides Files
+$referrerArray = parse_url($_SERVER['HTTP_REFERER']);
+$referrer = $referrerArray['query'] . $referrerArray['fragment'];
 
 // load the companies class to retrieved denied companies
+require_once( $AppUI->getModuleClass( 'companies' ) );
 require_once( $AppUI->getModuleClass( 'projects' ) );
 require_once $AppUI->getModuleClass('tasks');
 
 $file_task = intval( dPgetParam( $_GET, 'file_task', 0 ) );
 $file_parent = intval( dPgetParam( $_GET, 'file_parent', 0 ) );
 $file_project = intval( dPgetParam( $_GET, 'project_id', 0 ) );
+$file_helpdesk_item = intval( dPgetParam( $_GET, 'file_helpdesk_item', 0 ) );
 
 $q =& new DBQuery;
 
@@ -87,13 +99,18 @@ if ($obj->file_task) {
 } else {
 	$task_name = '';
 }
+if ($obj->file_helpdesk_item) {
+	$file_helpdesk_item = $obj->file_helpdesk_item;	
+}
 
 $extra = array(
-	'where'=>'project_active <> 0'
+	'where'=>'project_status <> 7'
 );
 $project = new CProject();
 $projects = $project->getAllowedRecords( $AppUI->user_id, 'project_id,project_name', 'project_name', null, $extra );
-$projects = arrayMerge( array( '0'=>$AppUI->_('All', UI_OUTPUT_RAW) ), $projects );
+$projects = arrayMerge( array( '0'=>$AppUI->_('None', UI_OUTPUT_RAW) ), $projects );
+
+$folders = getFolderSelectList();
 ?>
 <script language="javascript">
 function submitIt() {
@@ -120,7 +137,7 @@ function popTask() {
 function finalCI()
 {
         var f = document.uploadFrm;
-        if (f.final_ci.value = '1')
+        if (f.final_ci.value == '1')
         {
                 f.file_checkout.value = 'final';
                 f.file_co_reason.value = 'Final Version';
@@ -152,10 +169,20 @@ function setTask( key, val ) {
 	<input type="hidden" name="del" value="0" />
 	<input type="hidden" name="file_id" value="<?php echo $file_id;?>" />
 	<input type="hidden" name="file_version_id" value="<?php echo $obj->file_version_id;?>" />
+	<input type="hidden" name="redirect" value="<?php echo $referrer; ?>" />
+	<input type="hidden" name="file_helpdesk_item" value="<?php echo $file_helpdesk_item;?>" />
 
 <tr>
 	<td width="100%" valign="top" align="center">
 		<table cellspacing="1" cellpadding="2" width="60%">
+		<tr>
+			<td align="right" nowrap="nowrap"><?php echo $AppUI->_( 'Folder' );?>:</td>
+			<?php if ($file_id == 0 && !$ci) { ?>
+				<td align="left"><?php echo arraySelectTree( $folders, 'file_folder', 'style="width:175px;" class="text"', ($file_helpdesk_item ? getHelpdeskFolder() : $folder) ); ?></td>
+			<?php } else { ?>
+				<td align="left"><?php echo arraySelectTree( $folders, 'file_folder', 'style="width:175px;" class="text"', ($file_helpdesk_item ? getHelpdeskFolder() : $obj->file_folder) ); ?></td>
+			<?php } ?>
+		</tr>		
 	<?php if ($file_id) { ?>
 		<tr>
 			<td align="right" nowrap="nowrap"><?php echo $AppUI->_( 'File Name' );?>:</td>
@@ -189,7 +216,7 @@ function setTask( key, val ) {
 			<?php
 				// TODO - Add custom fields to files, doesnt make sense without a detail view.
 				/*
-				require_once("./classes/CustomFields.class.php");
+				require_once($AppUI->getSystemClass( 'CustomFields' ));
 				$custom_fields = New CustomFields( $m, $a, $obj->file_id, "edit" );
 				$custom_fields->printHTML();
 				*/
@@ -203,12 +230,12 @@ function setTask( key, val ) {
                 ?>
 		<tr>
 			<td align="right" nowrap="nowrap">&nbsp;</td>
-			<td align="left"><input type="checkbox" name="final_ci" onClick="finalCI()"><?php echo $AppUI->_('Final Version'); ?></td>		
+			<td align="left"><input type="checkbox" name="final_ci" id="final_ci" onclick="finalCI()" /><label for="final_ci"><?php echo $AppUI->_('Final Version'); ?></label></td>		
 		</tr>
                 <?php } ?>
 		<tr>
 			<td align="right" nowrap="nowrap">&nbsp;</td>
-			<td align="left"><input type="checkbox" name="notify" checked="checked"><?php echo $AppUI->_('Notify Assignees of Task or Project Owner by Email'); ?></td>		
+			<td align="left"><input type="checkbox" name="notify" id="notify" checked="checked" /><label for="notify"><?php echo $AppUI->_('Notify Assignees of Task or Project Owner by Email'); ?></label></td>		
 		</tr>
 		
 		</table>
@@ -216,7 +243,7 @@ function setTask( key, val ) {
 </tr>
 <tr>
 	<td>
-		<input class="button" type="button" name="cancel" value="<?php echo $AppUI->_('cancel');?>" onClick="javascript:if(confirm('<?php echo $AppUI->_('Are you sure you want to cancel?', UI_OUTPUT_JS); ?>')){location.href = './index.php?m=files';}" />
+		<input class="button" type="button" name="cancel" value="<?php echo $AppUI->_('cancel');?>" onClick="javascript:if(confirm('<?php echo $AppUI->_('Are you sure you want to cancel?', UI_OUTPUT_JS); ?>')){location.href = '?<?php echo $AppUI->getPlace();?>'; }" />
 	</td>
 	<td align="right">
 		<input type="button" class="button" value="<?php echo $AppUI->_( 'submit' );?>" onclick="submitIt()" />
@@ -229,100 +256,122 @@ function setTask( key, val ) {
 function file_show_attr()
 {
 	global $AppUI, $obj, $ci, $canAdmin, $projects,
-	$file_project, $file_task, $task_name, $preserve;
+	$file_project, $file_task, $task_name, $preserve, $file_helpdesk_item;
 
 
-if ($ci) 
-{
-  $str_out = "<tr>" .
-             '<td align="right" nowrap="nowrap">' .
-             $AppUI->_( 'Minor Revision' ) . 
-             "</td>" .
-             "<td>" .
-             '<input type="Radio" name="revision_type" value="minor" checked>' .
-             "</td>" .
-             '<tr>' .
-             '<td align="right" nowrap="nowrap">' .
-             $AppUI->_( 'Major Revision' ) . 
-             "</td>" .
-             "<td>" .
-             '<input type="Radio" name="revision_type" value="major" >' .
-             "</td>";
+      if ($ci) 
+      {
+        $str_out = "<tr>" .
+                   '<td align="right" nowrap="nowrap">' .
+                   $AppUI->_( 'Minor Revision' ) . 
+                   "</td>" .
+                   "<td>" .
+                   '<input type="Radio" name="revision_type" value="minor" checked>' .
+                   "</td>" .
+                   '<tr>' .
+                   '<td align="right" nowrap="nowrap">' .
+                   $AppUI->_( 'Major Revision' ) . 
+                   "</td>" .
+                   "<td>" .
+                   '<input type="Radio" name="revision_type" value="major" >' .
+                   "</td>";
+      }
+      else
+      {
+        $str_out = "<tr>" .
+                   '<td align="right" nowrap="nowrap">' .
+                   $AppUI->_( 'Version' ) . ":</td>";
+      }
+      
+      $str_out .= '<td align="left">';
+      
+      if ($ci || ($canAdmin && $obj->file_checkout == 'final') ) 
+      {
+        $str_out .= '<input type="hidden" name="file_checkout" value="" />' .
+      				      '<input type="hidden" name="file_co_reason" value="" />';
+      }
+      
+      if ($ci ) 
+      {
+        $the_value = (strlen( $obj->file_version ) > 0 ? $obj->file_version+0.01 : "1");
+        $str_out .= '<input type="hidden" name="file_version" value="' . $the_value . '" />';
+      }
+      else
+      {
+        $the_value = (strlen( $obj->file_version ) > 0 ? $obj->file_version : "1");
+        $str_out .= '<input type="text" name="file_version" maxlength="10" size="5" ' .
+                    'value="' . $the_value . '" />';
+      }
+      
+      $str_out .= '</td>';
+                
+      
+      $select_disabled=' ';  
+      $onclick_task=' onclick="popTask()" ';
+      if ( $ci && $preserve)
+      {
+        $select_disabled=' disabled ';  
+        $onclick_task=' ';
+        // need because when a html is disabled, it's value it's not sent in submit
+        $str_out .= '<input type="hidden" name="file_project" value="' .  $file_project . '" />';
+        $str_out .= '<input type="hidden" name="file_category" value="' .  $obj->file_category . '" />'; 
+      }
+      
+      
+      // Category
+      $str_out .= "<tr>" .
+                 '<td align="right" nowrap="nowrap">' . $AppUI->_('Category') . ':</td>';
+      $str_out .= '<td align="left">' .
+                  arraySelect(dPgetSysVal("FileType"), 'file_category', 
+                              '' . $select_disabled, $obj->file_category, true) . '<td>';
+                              
+                              
+      // ---------------------------------------------------------------------------------
+      
+      if ($file_helpdesk_item) {
+            $hd_item = new CHelpDeskItem();
+            $hd_item->load($file_helpdesk_item);
+            //Helpdesk Item
+            $str_out .= "<tr>" .
+               			    '<td align="right" nowrap="nowrap">' . $AppUI->_( 'Helpdesk Item' ) . ':</td>';
+            $str_out .= '<td align="left"><strong>' . $hd_item->item_id . ' - ' . $hd_item->item_title . '</strong></td></tr>';
+            // Project
+            $str_out .= '<input type="hidden" name="file_project" value="' .  $file_project . '" />';
+            
+            // Task 
+            $str_out .= '<input type="hidden" name="file_task" value="0" />';
+      } else {
+            // Project
+            $str_out .= "<tr>" .
+               			    '<td align="right" nowrap="nowrap">' . $AppUI->_( 'Project' ) . ':</td>';
+            $str_out .= '<td align="left">' .
+            projectSelectWithOptGroup( $AppUI->user_id, 'file_project', 'size="1" class="text" style="width:270px"' . $select_disabled, $file_project  ) .
+                     		'</td></tr>';
+            
+            // ---------------------------------------------------------------------------------
+            
+            // Task 
+            $str_out .= "<tr>" .
+                        '<td align="right" nowrap="nowrap">' . $AppUI->_( 'Task' ) . ':</td>'.
+            			      '<td align="left" colspan="2" valign="top">' .
+            				    '<input type="hidden" name="file_task" value="' .  $file_task . '" />' .
+            				    '<input type="text" class="text" name="task_name" value="' . $task_name. '" size="40" disabled />' .
+            				    '<input type="button" class="button" value="' . $AppUI->_('select task') . '..."' .
+            				     $onclick_task . '/>' .	'</td></tr>';
+      }
+      
+      
+      return ($str_out);
 }
-else
-{
-  $str_out = "<tr>" .
-             '<td align="right" nowrap="nowrap">' .
-             $AppUI->_( 'Version' ) . ":</td>";
-}
 
-$str_out .= '<td align="left">';
-
-if ($ci || ($canAdmin && $obj->file_checkout == 'final') ) 
-{
-  $str_out .= '<input type="hidden" name="file_checkout" value="" />' .
-				      '<input type="hidden" name="file_co_reason" value="" />';
-}
-
-if ($ci ) 
-{
-  $the_value = (strlen( $obj->file_version ) > 0 ? $obj->file_version+0.01 : "1");
-  $str_out .= '<input type="hidden" name="file_version" value="' . $the_value . '" />';
-}
-else
-{
-  $the_value = (strlen( $obj->file_version ) > 0 ? $obj->file_version : "1");
-  $str_out .= '<input type="text" name="file_version" maxlength="10" size="5" ' .
-              'value="' . $the_value . '" />';
-}
-
-$str_out .= '</td>';
-          
-
-$select_disabled=' ';  
-$onclick_task=' onclick="popTask()" ';
-if ( $ci && $preserve)
-{
-  $select_disabled=' disabled ';  
-  $onclick_task=' ';
-  // need because when a html is disabled, it's value it's not sent in submit
-  $str_out .= '<input type="hidden" name="file_project" value="' .  $file_project . '" />';
-  $str_out .= '<input type="hidden" name="file_category" value="' .  $obj->file_category . '" />'; 
-}
-
-
-// Category
-$str_out .= "<tr>" .
-           '<td align="right" nowrap="nowrap">' . $AppUI->_('Category') . ':</td>';
-$str_out .= '<td align="left">' .
-            arraySelect(dPgetSysVal("FileType"), 'file_category', 
-                        '' . $select_disabled, $obj->file_category, true) . '<td>';
-                        
-                        
-// ---------------------------------------------------------------------------------
-
-// Project
-$str_out .= "<tr>" .
-   			    '<td align="right" nowrap="nowrap">' . $AppUI->_( 'Project' ) . ':</td>';
-$str_out .= '<td align="left">' .
-            arraySelect( $projects, 'file_project', 
-                         'size="1" class="text" style="width:270px"' . $select_disabled,
-                          $file_project  ) . 
-         		'</td></tr>';
-
-// ---------------------------------------------------------------------------------
-
-// Task 
-$str_out .= "<tr>" .
-            '<td align="right" nowrap="nowrap">' . $AppUI->_( 'Task' ) . ':</td>'.
-			      '<td align="left" colspan="2" valign="top">' .
-				    '<input type="hidden" name="file_task" value="' .  $file_task . '" />' .
-				    '<input type="text" class="text" name="task_name" value="' . $task_name. '" size="40" disabled />' .
-				    '<input type="button" class="button" value="' . $AppUI->_('select task') . '..."' .
-				     $onclick_task . '/>' .	'</td></tr>';
-
-
-return ($str_out);
+function getHelpdeskFolder() {
+      $q = new DBQuery();
+	$q->addTable('file_folders', 'ff');
+	$q->addQuery('file_folder_id');
+	$q->addWhere('ff.file_folder_name = "Helpdesk"');
+	$ffid = $q->loadResult();
+	$q->clear();
+	return intval($ffid);
 }
 
 ?>

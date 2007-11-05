@@ -1,6 +1,7 @@
 ##
 ## DO NOT MODIFY THIS FILE BY HAND!
 ##
+"session_name_tooltip"=>"Define your own Cookie Name. Attention: Change of Session Name will immediately log out all users! They will need to login again.",
 "Abbreviation",
 "All Events",
 "Are you sure you want to delete this?",
@@ -191,10 +192,6 @@ A negative value defines the absence of a limit (index all files).",
 "install",
 "it"=>"Italian",
 "ja"=>"Japanese",
-"jpLocale_title"=>"jpGraph Locale",
-"jpLocale_tooltip"=>"Use this option to set a locale for jpGraph if it is required.
-
-jpGraph is the third party package that is used throughout dotProject to create graphics or charts (eg the Gantt chart).  Leave blank if you experience problems.",
 "ldap_allow_login_title"=>"LDAP also allows standard login",
 "ldap_allow_login_tooltip"=>"dotProject database based users will also be allowed to login",
 "ldap_base_dn_title"=>"LDAP Base DN",
@@ -207,7 +204,7 @@ jpGraph is the third party package that is used throughout dotProject to create 
 "ldap_port_tooltip"=>"Port Number to use to connect to LDAP authentication host.",
 "ldap_search_pass_title"=>"LDAP Search User Password",
 "ldap_search_user_title"=>"LDAP Search User",
-"ldap_search_user_tooltip"=>"The full CN of a user who has access to search your users directory",
+"ldap_search_user_tooltip"=>"The full DN of a user who has access to search your users directory",
 "ldap_user_filter_title"=>"LDAP User Filter",
 "ldap_user_filter_tooltip"=>"User Filter to use for determining matching users on LDAP queries.  Check with your site administrator for details.",
 "ldap_version_title"=>"LDAP Version",
@@ -290,6 +287,7 @@ Values are in seconds unless followed by a letter: h = hours, d = days, m = mont
 You can only have 1 character within a string, so 2d4h is NOT valid, but 28h is.",
 "session_max_lifetime_title"=>"Session Maximum Lifetime",
 "session_max_lifetime_tooltip"=>"The maximum time a session can exist before it is trashed, regardless of how active it is.",
+"session_name_title"=>"Session/Cookie Name",
 "show_all_task_assignees_title"=>"Show All Task Assignees",
 "show_all_task_assignees_tooltip"=>"Set this option on if you wish to show all assignee names in the project task task list or off if you would prefer to see just the main assignee name and a count in brackets of the number of other assignees.
 ",
@@ -317,6 +315,8 @@ There are mouseover-tooltips and (?)-information popups with each of the fields 
 "task_reminder_group_title"=>"Task Reminders",
 "task_reminder_repeat_title"=>"Maximum number of reminders to send",
 "task_reminder_repeat_tooltip"=>"If a task is overdue for a large number of days, it may not be worth sending any more reminders. This value determines the total number of reminders that will be sent, including pre-due date warnings and overdue alerts.",
+"tasks_ajax_list_title"=>"Use AJAX for dynamic tasks",
+"tasks_ajax_list_tooltip"=>"If your browser doesn\'t support ajax, turn this off. Dynamically loading tasks the first time they are requested.",
 "updated",
 "username_min_len_title"=>"Minimum Username Length",
 "username_min_len_tooltip"=>"Establish the minimum length of any user names for dotProject.  This can NOT be longer than the length of the column in DB",

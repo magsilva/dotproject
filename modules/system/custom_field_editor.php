@@ -1,4 +1,8 @@
 <?php
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 	/*
 	 *	Custom Field Editor (NEW)
 	 *
@@ -6,7 +10,7 @@
 
 	$AppUI->savePlace();
 
-	require_once("./classes/CustomFields.class.php");
+	require_once($AppUI->getSystemClass( 'CustomFields' ));
 
 	$titleBlock = new CTitleBlock('Custom field editor', "customfields.png", "admin", "admin.custom_field_editor");
 	$titleBlock->addCrumb( "?m=system", "system admin" );

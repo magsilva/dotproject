@@ -1,4 +1,8 @@
-<?php /* CALENDAR $Id: calendar.class.php,v 1.32.4.4 2006/01/28 18:08:49 pedroix Exp $ */
+<?php /* CALENDAR $Id: calendar.class.php,v 1.32.4.23 2007/09/21 21:40:59 gregorerhardt Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 ##
 ## Calendar classes
 ##
@@ -317,7 +321,7 @@ class CMonthCalendar {
 				if($this->showHighlightedDays && isset($this->highlightedDays[$day])){
 					$html .= " style=\"border: 1px solid ".$this->highlightedDays[$day]."\"";
 				}
-				$html .= ">";
+				$html .= " onclick=\"$this->dayFunc('$day','".$this_day->format( $df )."')\">";
 				if ($m == $this_month) {
 				    if ($this->dayFunc) {
 					$html .= "<a href=\"javascript:$this->dayFunc('$day','".$this_day->format( $df )."')\" class=\"$class\">";
@@ -419,6 +423,31 @@ class CEvent extends CDpObject {
 		return NULL;
 	}
 
+
+ /**
+     *	Overloaded delete method
+     *
+     *	@author gregorerhardt
+     *	@return null|string null if successful otherwise returns and error message
+     */
+	function delete() {
+		global $AppUI;
+		// call default delete method first
+		$deleted = parent::delete($this->event_id);
+		
+		// if object deletion succeeded then iteratively delete relationships
+		if (empty($deleted)) {
+			// delete user_events relationship
+			$q  = new DBQuery;
+			$q->setDelete('user_events');
+			$q->addWhere('event_id = '. $this->event_id);
+			$deleted = ((!$q->exec())? $AppUI->_('Could not delete Event-User relationship').'. '.db_error():null);
+			$q->clear;
+		} 
+
+		return $deleted;
+	}
+
 /**
 * Calculating if an recurrent date is in the given period
 * @param Date Start date of the period
@@ -509,47 +538,55 @@ class CEvent extends CDpObject {
 		if (! isset($user_id))
 		  $user_id = $AppUI->user_id;
 
+		
 		$project =& new CProject;
 		$allowedProjects = $project->getAllowedSQL($user_id, 'event_project');
 		
-		$q  = new DBQuery;
-		$q->addTable('events', 'e');
-		$q->addQuery('e.*');
+		//do similiar actions for recurring and non-recurring events
+		$queries = array('q'=>'q', 'r'=>'r');
 		
-		if (count ($allowedProjects)) {
-		  $q->addWhere('( ( ' . implode(' AND ', $allowedProjects) . ") OR event_project = 0 )");
-		  $q->addJoin('projects', 'p', 'p.project_id = e.event_project');
+		foreach ($queries as $query_set) {
+			
+			$$query_set  = new DBQuery;
+			$$query_set->addTable('events', 'e');
+			$$query_set->addQuery('e.*');
+			$$query_set->addOrder('e.event_start_date, e.event_end_date ASC');
+			
+			$$query_set->addJoin('projects', 'p', 'p.project_id =  e.event_project');
+			if (($AppUI->getState('CalIdxCompany'))) {
+				$$query_set->addWhere('project_company = ' . $AppUI->getState('CalIdxCompany') );
+			}
+			
+			if (count($allowedProjects)) {
+				$$query_set->addWhere('( ( ' . implode(' AND ',  $allowedProjects) . ' ) ' 
+					. (($AppUI->getState('CalIdxCompany'))?'':' OR event_project = 0 ').')');
+			}
+			
+			switch ($filter) {
+				case 'my':
+					$$query_set->addJoin('user_events', 'ue', 'ue.event_id = e.event_id AND ue.user_id ='.$user_id);
+					$$query_set->addWhere('(ue.user_id = '.$user_id.') AND (event_private=0 OR event_owner='.$user_id.')');
+					break;
+				case 'own':
+					$$query_set->addWhere('event_owner ='. $user_id);
+					break;
+				case 'all':
+					$$query_set->addWhere('(event_private=0 OR event_owner='.$user_id.')');
+					break;
+			}
+			
+			if ($query_set == 'q') { // assemble query for non-recursive events
+				$$query_set->addWhere('(event_recurs <= 0)');
+				// following line is only good for *non-recursive* events
+				$$query_set->addWhere("(event_start_date <= '$db_end' AND event_end_date >= '$db_start' "
+					."OR event_start_date BETWEEN '$db_start' AND '$db_end')");
+				$eventList = $$query_set->loadList();
+			} else if ($query_set == 'r') { // assemble query for recursive events
+				$$query_set->addWhere('(event_recurs > 0)');
+				$eventListRec = $$query_set->loadList();
+			}
 		}
-
-		switch ($filter) {
-			case 'my':
-				$q->addJoin('user_events', 'ue', 'ue.event_id = e.event_id AND ue.user_id ='.$user_id);
-				$q->addWhere("( ( event_private = 0 AND ue.user_id = $user_id )
-						OR event_owner=$user_id )");
-				break;
-			case 'own':
-				$q->addWhere("( event_owner = $user_id )");
-				break;
-			case 'all':
-				$q->addWhere("( event_private=0 OR (event_private=1 AND event_owner=$user_id) )");
-				break;
-		}
-		
-		// duplicate query object for recursive events; must reside before the date limits where clause
-		$r = $q;
-		
-		$q->addWhere("( event_start_date <= '$db_end' AND event_end_date >= '$db_start'
-				OR event_start_date BETWEEN '$db_start' AND '$db_end')");	
-		
-		
-		// assemble query for non-recursive events
-		$q->addWhere('( event_recurs <= 0 )');
-		$eventList = $q->loadList();
-
-
-		// assemble query for recursive events
-		$r->addWhere('( event_recurs > 0 )');
-		$eventListRec = $r->loadList();
+        
 
 	//Calculate the Length of Period (Daily, Weekly, Monthly View)
 		$periodLength = Date_Calc::dateDiff($start_date->getDay(),$start_date->getMonth(),$start_date->getYear(),$end_date->getDay(),$end_date->getMonth(),$end_date->getYear());
@@ -559,8 +596,12 @@ class CEvent extends CDpObject {
 		// If it should then a comment to that effect would be nice.
 		// for ($i=0; $i < sizeof($eventListRec)+1;  $i++) {
 		for ($i=0; $i < sizeof($eventListRec);  $i++) {
-
-			for ($j=0; $j < intval($eventListRec[$i]['event_times_recuring']); $j++) {
+            
+            //note from merlinyoda: j=0 is the original event according to getRecurrentEventforPeriod
+            // So, since the event is *recurring* x times, the loop condition should be j <= x, not j < x.
+            // This way the original and all recurrances are covered.
+			//for ($j=0; $j < intval($eventListRec[$i]['event_times_recuring']); $j++) {
+            for ($j=0; $j <= intval($eventListRec[$i]['event_times_recuring']); $j++) {
 
 				//Daily View
 				//show all
@@ -682,7 +723,7 @@ class CEvent extends CDpObject {
 
 	  $body = '';
 	  if ($clash) {
-	    $body .= "You have been invited to an event by $AppUI->user_first_name $AppUI->uset_last_name\n";
+	    $body .= "You have been invited to an event by $AppUI->user_first_name $AppUI->user_last_name\n";
 	    $body .= "However, either you or another intended invitee has a competing event\n";
 	    $body .= "$AppUI->user_first_name $AppUI->user_last_name has requested that you reply to this message\n";
 	    $body .= "and confirm if you can or can not make the requested time.\n\n";
@@ -703,7 +744,7 @@ class CEvent extends CDpObject {
 		$sql = $q->prepare();
 		$q->clear();
 		if (db_loadHash($sql, $prj)){
-			$body .= $AppUI->_('Project') . ":\t". $prj['project_name'];
+			$body .= $AppUI->_('Project') . ":\t". $prj['project_name'] . "\n";
 		}
 	  }
 

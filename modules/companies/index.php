@@ -1,4 +1,8 @@
-<?php /* COMPANIES $Id: index.php,v 1.55 2005/03/08 05:48:33 revelation7 Exp $ */
+<?php /* COMPANIES $Id: index.php,v 1.55.10.3 2007/03/06 13:57:51 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $AppUI->savePlace();
 
 // retrieve any state parameters
@@ -50,9 +54,9 @@ $titleBlock->addCell("<form name='searchform' action='?m=companies&amp;search_st
 						<table>
 							<tr>
                       			<td>
-                                    <strong>".$AppUI->_('Search')."</strong>
-                                    <input class='text' type='text' name='search_string' value='$search_string' /><br />
-						<a href='index.php?m=companies&search_string=-1'>".$AppUI->_("Reset search")."</a></td>
+                                    <strong>".$AppUI->_('Search').'</strong>
+                                    <input class="text" type="text" name="search_string" value="'.$search_string.'" /><br />
+						<a href="index.php?m=companies&search_string=-1">'.$AppUI->_("Reset search")."</a></td>
 								<td valign='top'>
 									<strong>".$AppUI->_("Owner filter")."</strong> $owner_combo
 								</td>
@@ -78,7 +82,7 @@ $companiesTypeTab = defVal( $AppUI->getState( 'CompaniesIdxTab' ),  0 );
 // $tabTypes = array(getCompanyTypeID('Client'), getCompanyTypeID('Supplier'), 0);
 $companiesType = $companiesTypeTab;
 
-$tabBox = new CTabBox( "?m=companies", dPgetConfig('root_dir')."/modules/companies/", $companiesTypeTab );
+$tabBox = new CTabBox( '?m=companies', DP_BASE_DIR.'/modules/companies/', $companiesTypeTab );
 if ($tabbed = $tabBox->isTabbed()) {
 	$add_na = true;
 	if (isset($types[0])) { // They have a Not Applicable entry.

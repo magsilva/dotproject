@@ -1,4 +1,8 @@
-<?php /* STYLE/DEFAULT $Id: login.php,v 1.6 2005/03/31 20:12:54 gregorerhardt Exp $ */
+<?php /* STYLE/DEFAULT $Id: login.php,v 1.6.6.2 2007/03/17 15:54:04 caseydk Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly');
+}
+
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 	   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -28,7 +32,7 @@
 </tr>
 <tr>
 	<td align="right" nowrap><?php echo $AppUI->_('Username');?>:</td>
-	<td align="left" nowrap><input type="text" size="25" maxlength="20" name="username" class="text" /></td>
+	<td align="left" nowrap><input type="text" size="25" maxlength="255" name="username" class="text" /></td>
 </tr>
 <tr>
 	<td align="right" nowrap><?php echo $AppUI->_('Password');?>:</td>

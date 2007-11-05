@@ -1,4 +1,8 @@
-<?php /* FORUMS $Id: index.php,v 1.35.6.2 2006/03/19 19:13:58 pedroix Exp $ */
+<?php /* FORUMS $Id: index.php,v 1.35.6.5 2007/09/19 13:45:54 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly');
+}
+
 $AppUI->savePlace();
 
 // retrieve any state parameters
@@ -50,22 +54,22 @@ $q->addWhere("user_id = forum_owner AND project_id = forum_project");
 
 switch ($f) {
 	case 1:
-		$q->addWhere("project_active=1 AND forum_owner = $AppUI->user_id");
+		$q->addWhere("project_status <> 7 AND forum_owner = $AppUI->user_id");
 		break;
 	case 2:
-		$q->addWhere("project_active=1 AND watch_user IS NOT NULL");
+		$q->addWhere("project_status <> 7 AND watch_user IS NOT NULL");
 		break;
 	case 3:
-		$q->addWhere("project_active=1 AND project_owner = $AppUI->user_id");
+		$q->addWhere("project_status <> 7 AND project_owner = $AppUI->user_id");
 		break;
 	case 4:
-		$q->addWhere("project_active=1 AND project_company = $AppUI->user_company");
+		$q->addWhere("project_status <> 7 AND project_company = $AppUI->user_company");
 		break;
 	case 5:
-		$q->addWhere("project_active=0");
+		$q->addWhere("project_status = 7");
 		break;
 	default:
-		$q->addWhere("project_active=1");
+		$q->addWhere("project_status <> 7");
 		break;
 }
 
@@ -135,7 +139,7 @@ foreach ($forums as $row) {
 	</td>
 
 	<td nowrap="nowrap" align="center">
-		<input type="checkbox" name="forum_<?php echo $row['forum_id'];?>" <?php echo $row['watch_user'] ? 'checked' : '';?> />
+		<input type="checkbox" name="forum_<?php echo $row['forum_id'];?>" <?php echo $row['watch_user'] ? 'checked="checked"' : '';?> />
 	</td>
 
 	<td>

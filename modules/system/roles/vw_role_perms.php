@@ -1,4 +1,8 @@
-<?php /* ADMIN $Id: vw_role_perms.php,v 1.2 2005/04/01 20:51:51 gregorerhardt Exp $ */
+<?php /* ADMIN $Id: vw_role_perms.php,v 1.2.4.3 2007/09/19 13:45:54 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 GLOBAL $AppUI, $role_id, $canEdit, $canDelete, $tab;
 
 $perms =& $AppUI->acl();
@@ -147,9 +151,9 @@ foreach ($role_acls as $acl){
 	foreach ($perm_list as $perm_id => $perm_name) {
 ?>
 <tr>
-	<td nowrap align='right'><?php echo $AppUI->_($perm_name);?>:</td>
+	<td nowrap="nowrap" align="right"><label for="permission_type_<?php echo $perm_id; ?>"><?php echo $AppUI->_($perm_name);?>:</label></td>
 	<td>
-	  <input type='checkbox' name='permission_type[]' value='<?php echo $perm_id;?>'>
+	  <input type="checkbox" name="permission_type[]" id="permission_type_<?php echo $perm_id; ?>" value="<?php echo $perm_id;?>" />
 	</td>
 </tr>
 <?php

@@ -1,4 +1,8 @@
-<?php /* TASKS $Id: addedit.php,v 1.138.4.3 2005/11/17 10:05:55 gregorerhardt Exp $ */
+<?php /* TASKS $Id: addedit.php,v 1.138.4.12 2007/09/19 13:45:52 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 /**
 * Tasks :: Add/Edit Form
 *
@@ -173,11 +177,11 @@ $selected_departments      = $obj->task_departments != "" ? explode(",", $obj->t
 $departments_count         = 0;
 $department_selection_list = getDepartmentSelectionList($company_id, $selected_departments);
 if($department_selection_list!=""){
-	$department_selection_list = "<select name='dept_ids[]' size='$departments_count' multiple class='text'>
-								  $department_selection_list
-    	                          </select>";
+  $department_selection_list = ("<select name=\"dept_ids[]\" class=\"text\">\n"
+								."<option value=\"0\"></option>\n"
+								."{$department_selection_list}\n"
+								."</select>");
 }
-
 
 
 function getDepartmentSelectionList($company_id, $checked_array = array(), $dept_parent=0, $spaces = 0){
@@ -192,13 +196,13 @@ function getDepartmentSelectionList($company_id, $checked_array = array(), $dept
 	$depts_list = db_loadHashList($sql, "dept_id");
 
 	foreach($depts_list as $dept_id => $dept_info){
-		$selected = in_array($dept_id, $checked_array) ? "selected" : "";
+		$selected = in_array($dept_id, $checked_array) ? " selected=\"selected\"" : "";
 
 		if(strlen($dept_info["dept_name"]) > 30){
 			$dept_info["dept_name"] = substr($dept_info["dept_name"], 0, 28)."...";
 		}
 
-		$parsed .= "<option value='$dept_id' $selected>".str_repeat("&nbsp;", $spaces).$dept_info["dept_name"]."</option>";
+		$parsed .= "<option value=\"{$dept_id}\"{$selected}>".str_repeat("&nbsp;", $spaces).$dept_info["dept_name"]."</option>";
 		$parsed .= getDepartmentSelectionList($company_id, $checked_array, $dept_id, $spaces+5);
 	}
 
@@ -216,7 +220,7 @@ $pq = new DBQuery;
 $pq->addQuery('project_id, project_name');
 $pq->addTable('projects');
 $pq->addWhere("project_company = '$company_id'");
-$pq->addWhere('( project_active = 1 or project_id = \''. $task_project . '\')');
+$pq->addWhere('( project_status <> 7 or project_id = \''. $task_project . '\')');
 $pq->addOrder('project_name');
 $project->setAllowedSQL($AppUI->user_id, $pq);
 $projects = $pq->loadHashList();
@@ -243,8 +247,6 @@ var working_days = new Array(<?php echo dPgetConfig( 'cal_working_days' );?>);
 var cal_day_start = <?php echo intval(dPgetConfig( 'cal_day_start' ));?>;
 var cal_day_end = <?php echo intval(dPgetConfig( 'cal_day_end' ));?>;
 var daily_working_hours = <?php echo intval(dPgetConfig('daily_working_hours')); ?>;
-
-
 </script>
 
 <table border="1" cellpadding="4" cellspacing="0" width="100%" class="std">
@@ -264,7 +266,7 @@ var daily_working_hours = <?php echo intval(dPgetConfig('daily_working_hours'));
 <tr valign="top" width="50%">
 	<td>
 		<?php echo $AppUI->_( 'Task Name' );?> *
-		<br /><input type="text" class="text" name="task_name" value="<?php echo dPformSafe( $obj->task_name );?>" size="40" maxlength="255" />
+		<br /><input type="text" class="text" name="task_name" value="<?php echo( $obj->task_name );?>" size="40" maxlength="255" />
 	</td>
 	<td>
 		<table cellspacing="0" cellpadding="2" border="0" width="100%">
@@ -275,7 +277,7 @@ var daily_working_hours = <?php echo intval(dPgetConfig('daily_working_hours'));
 			</td>
 
 			<td align="right" nowrap="nowrap"><?php echo $AppUI->_( 'Priority' );?> *</td>
-			<td nowrap>
+			<td nowrap="nowrap">
 				<?php echo arraySelect( $priority, 'task_priority', 'size="1" class="text"', $obj->task_priority, true );?>
 			</td>
 		</tr>
@@ -285,9 +287,9 @@ var daily_working_hours = <?php echo intval(dPgetConfig('daily_working_hours'));
 				<?php echo arraySelect( $percent, 'task_percent_complete', 'size="1" class="text"', $obj->task_percent_complete ) . '%';?>
 			</td>
 
-			<td align="right" nowrap="nowrap"><?php echo $AppUI->_( 'Milestone' );?>?</td>
+			<td align="right" nowrap="nowrap"><label for="task_milestone"><?php echo $AppUI->_( 'Milestone' );?>?</label></td>
 			<td>
-				<input type="checkbox" value=1 name="task_milestone" <?php if($obj->task_milestone){?>checked<?php }?> />
+				<input type="checkbox" value="1" name="task_milestone" id="task_milestone" <?php if($obj->task_milestone){?>checked="checked"<?php }?> />
 			</td>
 		</tr>
 		</table>
@@ -321,10 +323,30 @@ var daily_working_hours = <?php echo intval(dPgetConfig('daily_working_hours'));
 	  $AppUI->setState('TaskAeTabIdx', dPgetParam($_GET, 'tab', 0));
 	$tab = $AppUI->getState('TaskAeTabIdx', 0);
 	$tabBox =& new CTabBox("?m=tasks&a=addedit&task_id=$task_id", "", $tab, "");
-	$tabBox->add("{$dPconfig['root_dir']}/modules/tasks/ae_desc", "Details");
-        $tabBox->add("{$dPconfig['root_dir']}/modules/tasks/ae_dates", "Dates");
-	$tabBox->add("{$dPconfig['root_dir']}/modules/tasks/ae_depend", "Dependencies");
-	$tabBox->add("{$dPconfig['root_dir']}/modules/tasks/ae_resource", "Human Resources");
+	$tabBox->add(DP_BASE_DIR.'/modules/tasks/ae_desc', 'Details');
+	$tabBox->add(DP_BASE_DIR.'/modules/tasks/ae_dates', 'Dates');
+	$tabBox->add(DP_BASE_DIR.'/modules/tasks/ae_depend', 'Dependencies');
+	$tabBox->add(DP_BASE_DIR.'/modules/tasks/ae_resource', 'Human Resources');
 	$tabBox->loadExtras('tasks', 'addedit');
 	$tabBox->show('', true);
 ?>
+<table border="0" cellspacing="0" cellpadding="3" width="100%">
+<tr>
+	<td height="40" width="35%">
+		* <?php echo $AppUI->_( 'requiredField' );?>
+	</td>
+	<td height="40" width="30%">&nbsp;</td>
+	<td  height="40" width="35%" align="right">
+		<table>
+		<tr>
+			<td>
+				<input class="button" type="button" name="cancel2" value="<?php echo $AppUI->_('cancel');?>" onClick="if(confirm('<?php echo $AppUI->_('taskCancel', UI_OUTPUT_JS);?>')){location.href = '?<?php echo $AppUI->getPlace();?>';}" />
+			</td>
+			<td>
+				<input class="button" type="button" name="btnFuseAction2" value="<?php echo $AppUI->_('save');?>" onClick="submitIt(document.editFrm);" />
+			</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>

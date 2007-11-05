@@ -1,4 +1,9 @@
-<?php /*  STYLE/CLASSIC $Id: login.php,v 1.14 2005/03/23 21:51:45 gregorerhardt Exp $ */ ?>
+<?php /*  STYLE/CLASSIC $Id: login.php,v 1.14.6.2 2007/03/17 15:54:04 caseydk Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly');
+}
+?>
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 	   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -28,7 +33,7 @@
 		<?php echo $AppUI->_('Username');?>:
 	</td>
 	<td bgcolor="#eeeeee" align="left" class="menufontlight" nowrap>
-		<input type="text" size="25" maxlength="32" name="username" class="text" />
+		<input type="text" size="25" maxlength="255" name="username" class="text" />
 	</td>
 </tr>
 <tr>

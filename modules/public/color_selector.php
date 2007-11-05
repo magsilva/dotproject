@@ -1,4 +1,8 @@
-<?php /* PUBLIC $Id: color_selector.php,v 1.5 2005/03/13 11:38:23 gregorerhardt Exp $ */
+<?php /* PUBLIC $Id: color_selector.php,v 1.5.8.2 2007/03/06 00:34:43 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 $callback = isset( $_GET['callback'] ) ? $_GET['callback'] : 0;
 ?>
 <script language="javascript">

@@ -1,4 +1,8 @@
-<?php /* CALENDAR $Id: links_tasks.php,v 1.12 2005/03/29 14:51:19 gregorerhardt Exp $ */
+<?php /* CALENDAR $Id: links_tasks.php,v 1.12.6.2 2007/03/06 00:34:40 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 
 /**
 * Sub-function to collect tasks within a period

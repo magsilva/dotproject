@@ -4,7 +4,7 @@
 // Description:	Configuration file for JpGraph library
 // Created: 	2004-03-27
 // Author:	Johan Persson (johanp@aditus.nu)
-// Ver:		$Id: jpg-config.inc,v 1.2.10.3 2006/03/18 15:09:32 gregorerhardt Exp $
+// Ver:		$Id: jpg-config.inc,v 1.2.10.4 2007/07/04 15:07:49 caseydk Exp $
 //
 // Copyright (c) Aditus Consulting. All rights reserved.
 //========================================================================
@@ -62,6 +62,14 @@ DEFINE("CSIMCACHE_HTTP_DIR","csimcache/");
 // Actual name of the TTF file used together with FF_CHINESE aka FF_BIG5
 // This is the TTF file being used when the font family is specified as
 // either FF_CHINESE or FF_BIG5
+define('TTF_DIR', DP_BASE_DIR . '/lib/fonts/');
+define('FF_CUSTOM', 18);
+define('BASE_FONT', 'FreeSans');
+define('CUSTOM_TTF_FONT', BASE_FONT . '.ttf');
+define('CUSTOM_TTF_FONT_BOLD', BASE_FONT.'Bold.ttf');
+define('CUSTOM_TTF_FONT_ITALIC', BASE_FONT.'Oblique.ttf');
+define('CUSTOM_TTF_FONT_BOLDITALIC', BASE_FONT.'BoldOblique.ttf');
+
 DEFINE('CHINESE_TTF_FONT','bkai00mp.ttf');
 
 // Special unicode cyrillic language support

@@ -1,4 +1,8 @@
-<?php /* CALENDAR $Id: do_event_aed.php,v 1.11 2005/04/08 05:01:19 ajdonnison Exp $ */
+<?php /* CALENDAR $Id: do_event_aed.php,v 1.11.4.3 2007/09/21 21:40:59 gregorerhardt Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $obj = new CEvent();
 $msg = '';
 
@@ -39,7 +43,7 @@ if ($del) {
 	if (($msg = $obj->delete())) {
 		$AppUI->setMsg( $msg, UI_MSG_ERROR );
 	} else {
-		$AppUI->setMsg( "deleted", UI_MSG_ALERT, true );
+		$AppUI->setMsg( "deleted", UI_MSG_OK, true );
 	}
 	$AppUI->redirect( 'm=calendar' );
 } else {

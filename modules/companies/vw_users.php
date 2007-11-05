@@ -1,7 +1,12 @@
-<?php /* COMPANIES $Id: vw_users.php,v 1.12 2005/04/08 13:41:51 gregorerhardt Exp $ */
+<?php /* COMPANIES $Id: vw_users.php,v 1.12.4.2 2007/03/06 00:34:40 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 ##
 ##	Companies: View User sub-table
 ##
+
 GLOBAL $AppUI, $company_id;
 
 $q  = new DBQuery;

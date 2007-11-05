@@ -1,14 +1,28 @@
-<?php //$Id: listtasks.php,v 1.3 2005/03/19 05:58:52 ajdonnison Exp $
+<?php //$Id: listtasks.php,v 1.3.6.5 2007/07/23 19:22:55 caseydk Exp $
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
 $perms =& $AppUI->acl();
-if (! $perms->checkModule('tasks', 'view'))
+if (! $perms->checkModule('tasks', 'view')) {
 	$AppUI->redirect("m=public&a=access_denied");
+}
+$proj = dPgetParam($_GET, 'project', 0);
+$userFilter = dPgetParam($_GET, 'userFilter', false);	
 
-$proj = $_GET['project'];
-$sql = 'SELECT task_id, task_name
-        FROM tasks';
-if ($proj != 0)
-  $sql .= ' WHERE task_project = ' . $proj;
+$q = new DBQuery();
+$q->addQuery('t.task_id, t.task_name');
+$q->addTable('tasks', 't');
+
+if ($userFilter) {
+	$q->addJoin('user_tasks', 'ut', 'ut.task_id = t.task_id');
+	$q->addWhere('ut.user_id = '.$AppUI->user_id);
+}
+if ($proj != 0) {
+  $q->addWhere('task_project = '.$proj);
+}
+
+$sql = $q->prepare();
 $tasks = db_loadList($sql);
 ?>
 
@@ -23,11 +37,10 @@ function loadTasks()
   sel.options[0] = new Option('[top task]', 0);
   <?php
     $i = 0;
-    foreach($tasks as $task)
-    {
+    foreach($tasks as $task) {
       ++$i;
     ?>
-  sel.options[<?php echo $i; ?>] = new Option('<?php echo $task['task_name']; ?>', <?php echo $task['task_id']; ?>);
+  sel.options[<?php echo $i; ?>] = new Option("<?php echo $task['task_name']; ?>", <?php echo $task['task_id']; ?>);
     <?php
     }
     ?>

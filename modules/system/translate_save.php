@@ -1,12 +1,16 @@
-<?php /* SYSTEM $Id: translate_save.php,v 1.11.6.2 2006/04/06 13:43:04 cyberhorse Exp $ */
+<?php /* SYSTEM $Id: translate_save.php,v 1.11.6.5 2007/07/26 13:56:03 cyberhorse Exp $ */
 /**
 * Processes the entries in the translation form.
-* @version $Revision: 1.11.6.2 $
+* @version $Revision: 1.11.6.5 $
 * @author Andrew Eddie <users.sourceforge.net>
 */
 
+if (! defined('DP_BASE_DIR')) {
+	die('You should not call this file directly.');
+}
+
 $module = dPgetParam($_POST, 'module', 0);
-$lang = dPgetParam($_POST, 'lang', 'en');
+$lang = dPgetParam($_POST, 'lang', $AppUI->user_locale);
 
 $trans = dPgetParam($_POST, 'trans', 0);
 //echo '<pre>';print_r( $trans );echo '</pre>';die;
@@ -14,22 +18,22 @@ $trans = dPgetParam($_POST, 'trans', 0);
 // save to core locales if a translation exists there, otherwise save
 // into the module's local locale area if it exists.  If not then
 // the core table is updated.
-$core_filename = "$baseDir/locales/$lang/$module.inc";
+$core_filename = DP_BASE_DIR.'/locales/'.$lang.'/'.$module.'.inc';
 if ( file_exists( $core_filename ) ) {
 	$filename = $core_filename;
 } else {
-	$mod_locale = "$baseDir/modules/$module/locales";
+	$mod_locale = DP_BASE_DIR.'/modules/'.$module.'/locales';
 	if ( is_dir($mod_locale))
-		$filename = "$baseDir/modules/$module/locales/$lang.inc";
+		$filename = DP_BASE_DIR.'/modules/'.$module.'/locales/'.$lang.'.inc';
 	else
 		$filename = $core_filename;
 }
 
-$fp = fopen ($filename, "wt");
+$fp = fopen ($filename, 'wt');
 
 if (!$fp) {
 	$AppUI->setMsg( "Could not open locales file ($filename) to save.", UI_MSG_ERROR );
-	$AppUI->redirect( "m=system" );
+	$AppUI->redirect( 'm=system' );
 }
 
 $txt = "##\n## DO NOT MODIFY THIS FILE BY HAND!\n##\n";
@@ -61,6 +65,6 @@ if ($lang == 'en') {
 fwrite( $fp, $txt );
 fclose( $fp );
 
-$AppUI->setMsg( "Locales file saved", UI_MSG_OK );
-$AppUI->redirect();
+$AppUI->setMsg( 'Locales file saved', UI_MSG_OK );
+$AppUI->redirect($AppUI->getPlace());
 ?>

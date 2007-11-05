@@ -1,4 +1,8 @@
-<?php /* DEPARTMENTS $Id: do_dept_aed.php,v 1.2.12.1 2006/02/18 18:12:20 gregorerhardt Exp $ */
+<?php /* DEPARTMENTS $Id: do_dept_aed.php,v 1.2.12.3 2007/03/06 00:34:40 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $del = isset($_POST['del']) ? $_POST['del'] : 0;
 
 $dept = new CDepartment();

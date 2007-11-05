@@ -1,6 +1,9 @@
-<?php /* SYSKEYS $Id: do_sysval_aed.php,v 1.4 2003/04/24 19:08:27 eddieajau Exp $ */
-$del = isset($_POST['del']) ? $_POST['del'] : 0;
+<?php /* SYSKEYS $Id: do_sysval_aed.php,v 1.4.12.3 2007/04/13 03:45:07 caseydk Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
+$del = isset($_POST['del']) ? $_POST['del'] : 0;
 $obj = new CSysVal();
 
 if (!$obj->bind( $_POST )) {

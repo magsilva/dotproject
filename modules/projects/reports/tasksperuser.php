@@ -1,4 +1,7 @@
 <?php
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
 $do_report 		    = dPgetParam( $_POST, "do_report", 0 );
 $log_start_date 	= dPgetParam( $_POST, "log_start_date", 0 );
@@ -8,7 +11,8 @@ $use_period			= dPgetParam($_POST,"use_period",0);
 $display_week_hours	= dPgetParam($_POST,"display_week_hours",0); 
 $max_levels        	= dPgetParam($_POST,"max_levels","max"); 
 $log_userfilter		= dPgetParam($_POST,"log_userfilter","");
-
+$log_open		= dPgetParam($_POST,"log_open",0);
+$pdf_output		= dPgetParam($_POST,"pdf_output",0);
 
 $table_header = "";
 $table_rows="";
@@ -29,7 +33,7 @@ var calendarField = '';
 function popCalendar( field ){
 	calendarField = field;
 	idate = eval( 'document.editFrm.log_' + field + '.value' );
-	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=250, height=220, scollbars=false' );
+	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=250, height=220, scrollbars=no' );
 }
 
 /**
@@ -90,16 +94,17 @@ function setCalendar( idate, fdate ) {
 
 	</td>
 
-	<td nowrap="nowrap">
-		<input type="checkbox" name="use_period" <?php if ($use_period) echo "checked" ?> >
-		<?php echo $AppUI->_( 'Use the period' );?>
-		</input>
-		<br>
-		<input type="checkbox" name="display_week_hours" <?php if ($display_week_hours) echo "checked" ?> >
-		<?php echo $AppUI->_( 'Display allocated hours/week' );?>
-		</input>
-		<br> 
-
+	<td nowrap="nowrap" rowspan="2">
+		<table>
+		<tr><td>
+			<input type="checkbox" name="use_period" id="use_period" <?php if ($use_period) echo 'checked="checked"' ?> />
+			<label for="use_period"><?php echo $AppUI->_( 'Use the period' );?></label>
+		</td></tr>
+		<tr><td>
+			<input type="checkbox" name="display_week_hours" id="display_week_hours" <?php if ($display_week_hours) echo 'checked="checked"' ?> />
+			<label for="display_week_hours"><?php echo $AppUI->_( 'Display allocated hours/week' );?></label>
+		</td></tr> 
+		</table>
 	</td> 
 	
 	<td align="right" width="50%" nowrap="nowrap">
@@ -257,26 +262,29 @@ if($do_report){
 			}
 		}
 	
-		$table_header = "<tr>".
-						"<td nowrap=\"nowrap\" bgcolor='#A0A0A0'><font color='black'><B>".$AppUI->_("Task")."</B></font></td>".
-						( $project_id != 0 ? "<td nowrap=\"nowrap\" bgcolor='#A0A0A0'><font color='black'><B>".$AppUI->_("Project")."</B></font></td>" : "" ) .
-						"<td nowrap=\"nowrap\" bgcolor='#A0A0A0'><font color='black'><B>".$AppUI->_("Start Date")."</B></font></td>".
-						"<td nowrap=\"nowrap\" bgcolor='#A0A0A0'><font color='black'><B>".$AppUI->_("End Date")."</B></font></td>".
-						weekDates($display_week_hours,$sss,$sse).
-						"</tr>";
-		$table_rows = "";
+		$table_header = '
+			<tr>
+				<td nowrap="nowrap" bgcolor="#A0A0A0">
+				<font color="black"><b>'.$AppUI->_('Task').'</b></font> </td>'.
+				( $project_id == 0 ? '<td nowrap="nowrap" bgcolor="#A0A0A0"><font color="black"><b>'.$AppUI->_('Project').'</b></font></td>' : '' ) . '
+				<td nowrap="nowrap" bgcolor="#A0A0A0"><font color="black"><b>'.$AppUI->_('Start Date').'</b></font></td>
+				<td nowrap="nowrap" bgcolor="#A0A0A0"><font color="black"><b>'.$AppUI->_('End Date').'</b></font></td>'.
+		weekDates($display_week_hours,$sss,$sse).'
+			</tr>';
+		$table_rows = '';
 		
 		foreach($user_list as $user_id => $user_data){
 
 			$tmpuser= "<tr><td align='left' nowrap='nowrap' bgcolor='#D0D0D0'><font color='black'><B>"
 					  .$user_data["contact_first_name"]
 				      ." "
-					  .$user_data["contact_last_name"]
-					  ."</B></font></td>";
-		    for($w=0;$w<=(1 + ($project_id != 0 ? 1 : 0) + weekCells($display_week_hours,$sss,$sse));$w++) {
-				 $tmpuser.="<td bgcolor='#D0D0D0'></td>";
+					  .$user_data['contact_last_name']
+					  .'</b></font>
+	</td>';
+		    for($w=0;$w<=(1 + ($project_id == 0 ? 1 : 0) + weekCells($display_week_hours,$sss,$sse));$w++) {
+				 $tmpuser.='<td bgcolor="#D0D0D0">&nbsp;</td>';
 			}
-			$tmpuser.="</tr>";
+			$tmpuser.='</tr>';
 
 			$tmptasks="";
 			$actual_date = $start_date;

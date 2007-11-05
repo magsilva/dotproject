@@ -1,30 +1,35 @@
-<?php /* SYSTEM $Id: translate.php,v 1.31.12.1 2006/02/21 19:29:03 gregorerhardt Exp $ */
+<?php /* SYSTEM $Id: translate.php,v 1.31.12.6 2007/09/19 13:45:53 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 
 // only user_type of Administrator (1) can access this page
 if (!$canEdit || $AppUI->user_type != 1) {
 	$AppUI->redirect( "m=public&a=access_denied" );
 }
 
-$module = isset( $_REQUEST['module'] ) ? $_REQUEST['module'] : 'admin';
-$lang = isset( $_REQUEST['lang'] ) ? $_REQUEST['lang'] : 'en';
+$module = dPgetParam($_REQUEST, 'module', 'admin');
+$lang = dPgetParam($_REQUEST, 'lang', $AppUI->user_locale);
 
 $AppUI->savePlace( "m=system&a=translate&module=$module&lang=$lang" );
 
 // read the installed modules
-$modules = arrayMerge( array( 'common', 'styles' ), $AppUI->readDirs( 'modules' ));
+$modules = arrayMerge( $AppUI->readDirs( 'modules' ), array( 'common' => 'common', 'styles' => 'styles' ));
+asort($modules);
 
 // read the installed languages
 $locales = $AppUI->readDirs( 'locales' );
 
 ob_start();
 // read language files from module's locale directory preferrably
-	if ( file_exists( "{$dPconfig['root_dir']}/modules/$modules[$module]/locales/en.inc" ) )
+	if ( file_exists( DP_BASE_DIR.'/modules/'.$modules[$module].'/locales/en.inc' ) )
 	{
-		@readfile( "{$dPconfig['root_dir']}/modules/$modules[$module]/locales/en.inc" );
+		@readfile( DP_BASE_DIR.'/modules/'.$modules[$module].'/locales/en.inc' );
 	}
 	else
 	{
-		@readfile( "{$dPconfig['root_dir']}/locales/en/$modules[$module].inc" );
+		@readfile( DP_BASE_DIR.'/locales/en/'.$modules[$module].'.inc' );
 	}
 	eval( "\$english=array(".ob_get_contents()."\n'0');" );
 ob_end_clean();
@@ -43,13 +48,13 @@ foreach( $english as $k => $v ) {
 if ($lang != 'en') {
 	ob_start();
 // read language files from module's locale directory preferrably
-		if ( file_exists( "{$dPconfig['root_dir']}/modules/$modules[$module]/locales/$lang.inc" ) )
+		if ( file_exists( DP_BASE_DIR.'/modules/'.$modules[$module].'/locales/'.$lang.'.inc' ) )
 		{
-			@readfile( "{$dPconfig['root_dir']}/modules/$modules[$module]/locales/$lang.inc" );
+			@readfile( DP_BASE_DIR.'/modules/'.$modules[$module].'/locales/'.$lang.'.inc' );
 		}
 		else
 		{
-			@readfile( "{$dPconfig['root_dir']}/locales/$lang/$modules[$module].inc" );
+			@readfile( DP_BASE_DIR.'/locales/'.$lang.'/'.$modules[$module].'.inc' );
 		}
 		eval( "\$locale=array(".ob_get_contents()."\n'0');" );
 	ob_end_clean();
@@ -148,7 +153,7 @@ foreach ($trans as $k => $langs){
 			}
 		}
 	?></td>
-	<td align="center"><?php echo "<input type=\"checkbox\" name=\"trans[$index][del]\" />";?></td>
+	<td align="center"><input type="checkbox" name="trans[<?php echo $index; ?>][del]" /></td>
 </tr>
 <?php
 	$index++;

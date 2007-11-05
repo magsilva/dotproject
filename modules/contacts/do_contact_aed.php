@@ -1,4 +1,7 @@
-<?php /* CONTACTS $Id: do_contact_aed.php,v 1.5 2005/01/17 07:48:25 ajdonnison Exp $ */
+<?php /* CONTACTS $Id: do_contact_aed.php,v 1.5.10.2 2007/03/06 00:34:40 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
 $obj = new CContact();
 $msg = '';

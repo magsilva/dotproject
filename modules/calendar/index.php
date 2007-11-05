@@ -1,4 +1,8 @@
-<?php /* CALENDAR $Id: index.php,v 1.30 2005/03/18 08:35:50 gregorerhardt Exp $ */
+<?php /* CALENDAR $Id: index.php,v 1.30.6.5 2007/07/26 14:16:28 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $AppUI->savePlace();
 
 dPsetMicroTime();
@@ -10,13 +14,15 @@ require_once( $AppUI->getModuleClass( 'tasks' ) );
 if (isset( $_REQUEST['company_id'] )) {
 	$AppUI->setState( 'CalIdxCompany', intval( $_REQUEST['company_id'] ) );
 }
-$company_id = $AppUI->getState( 'CalIdxCompany', $AppUI->user_company);
+$company_id = $AppUI->getState( 'CalIdxCompany', 0);
 
 // Using simplified set/get semantics. Doesn't need as much code in the module.
 $event_filter = $AppUI->checkPrefState('CalIdxFilter', @$_REQUEST['event_filter'], 'EVENTFILTER', 'my');
 
 // get the passed timestamp (today if none)
-$date = dPgetParam( $_GET, 'date', null );
+$ctoday = new CDate();
+$today = $ctoday->format(FMT_TIMESTAMP_DATE);
+$date = dPgetParam( $_GET, 'date', $today);
 
 // get the list of visible companies
 $company = new CCompany();
@@ -41,7 +47,7 @@ $titleBlock->show();
 
 <script language="javascript">
 function clickDay( uts, fdate ) {
-	window.location = './index.php?m=calendar&a=day_view&date='+uts;
+	window.location = './index.php?m=calendar&a=day_view&date='+uts+'&tab=0';
 }
 function clickWeek( uts, fdate ) {
 	window.location = './index.php?m=calendar&a=week_view&date='+uts;
@@ -65,11 +71,11 @@ $last_time->setTime( 23, 59, 59 );
 $links = array();
 
 // assemble the links for the tasks
-require_once( dPgetConfig( 'root_dir' )."/modules/calendar/links_tasks.php" );
+require_once( DP_BASE_DIR.'/modules/calendar/links_tasks.php' );
 getTaskLinks( $first_time, $last_time, $links, 20, $company_id );
 
 // assemble the links for the events
-require_once( dPgetConfig( 'root_dir' )."/modules/calendar/links_events.php" );
+require_once( DP_BASE_DIR.'/modules/calendar/links_events.php' );
 getEventLinks( $first_time, $last_time, $links, 20 );
 
 // create the main calendar

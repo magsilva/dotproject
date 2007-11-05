@@ -1,4 +1,8 @@
-<?php /* FILES $Id: do_link_aed.php,v 1.1.1.1.2.4 2006/03/19 07:50:27 cyberhorse Exp $ */
+<?php /* FILES $Id: do_link_aed.php,v 1.1.1.1.2.6 2007/03/06 00:34:41 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 //addlink sql
 $link_id = intval( dPgetParam( $_POST, 'link_id', 0 ) );
 $del = intval( dPgetParam( $_POST, 'del', 0 ) );

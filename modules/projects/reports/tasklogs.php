@@ -1,10 +1,15 @@
-<?php /* PROJECTS $Id: tasklogs.php,v 1.12.10.3 2006/03/22 08:20:00 cyberhorse Exp $ */
+<?php /* PROJECTS $Id: tasklogs.php,v 1.12.10.12 2007/09/19 13:45:53 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 /**
 * Generates a report of the task logs for given dates
 */
 $perms =& $AppUI->acl();
-if (! $perms->checkModule('tasks', 'view'))
+if (! $perms->checkModule('tasks', 'view')) {
 	redirect('m=public&a=access_denied');
+}	
 $do_report = dPgetParam( $_GET, "do_report", 0 );
 $log_all = dPgetParam( $_GET, 'log_all', 0 );
 $log_pdf = dPgetParam( $_GET, 'log_pdf', 0 );
@@ -30,7 +35,7 @@ var calendarField = '';
 function popCalendar( field ){
 	calendarField = field;
 	idate = eval( 'document.editFrm.log_' + field + '.value' );
-	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=250, height=220, scollbars=false' );
+	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=250, height=220, scrollbars=no' );
 }
 
 /**
@@ -78,17 +83,17 @@ function setCalendar( idate, fdate ) {
 	<?php
 		$usersql = "
 		SELECT user_id, user_username, contact_first_name, contact_last_name
-		FROM users
-                LEFT JOIN contacts ON user_contact = contact_id
+		FROM users LEFT JOIN contacts ON user_contact = contact_id ORDER BY user_username
 		";
 
-		if ( $log_userfilter == 0 ) echo '<OPTION VALUE="0" SELECTED>'.$AppUI->_('All users' );
-		else echo '<OPTION VALUE="0">All users';
+		if ( $log_userfilter == 0 ) {
+			echo '<OPTION VALUE="0" SELECTED>'.$AppUI->_('All users' );
+		} else {
+			echo '<OPTION VALUE="0">All users';
+		}
 
-		if (($rows = db_loadList( $usersql, NULL )))
-		{
-			foreach ($rows as $row)
-			{
+		if (($rows = db_loadList( $usersql, NULL ))) {
+			foreach ($rows as $row) {
 				if ( $log_userfilter == $row["user_id"])
 					echo "<OPTION VALUE='".$row["user_id"]."' SELECTED>".$row["user_username"];
 				else
@@ -102,18 +107,18 @@ function setCalendar( idate, fdate ) {
 	</TD>
 
 	<td nowrap="nowrap">
-		<input type="checkbox" name="log_all" <?php if ($log_all) echo "checked" ?> />
-		<?php echo $AppUI->_( 'Log All' );?>
+		<input type="checkbox" name="log_all" id="log_all" <?php if ($log_all) echo 'checked="checked"' ?> />
+		<label for="log_all"><?php echo $AppUI->_( 'Log All' );?></label>
 	</td>
 
 	<td nowrap="nowrap">
-		<input type="checkbox" name="log_pdf" <?php if ($log_pdf) echo "checked" ?> />
-		<?php echo $AppUI->_( 'Make PDF' );?>
+		<input type="checkbox" name="log_pdf" id="log_pdf" <?php if ($log_pdf) echo 'checked="checked"' ?> />
+		<label for="log_pdf"><?php echo $AppUI->_( 'Make PDF' );?></label>
 	</td>
 
 	<td nowrap="nowrap">
-		<input type="checkbox" name="log_ignore" />
-		<?php echo $AppUI->_( 'Ignore 0 hours' );?>
+		<input type="checkbox" name="log_ignore" id="log_ignore" />
+		<label for="log_ignore"><?php echo $AppUI->_( 'Ignore 0 hours' );?></label>
 	</td>
 
 	<td align="right" width="50%" nowrap="nowrap">
@@ -126,15 +131,17 @@ function setCalendar( idate, fdate ) {
 <?php
 if ($do_report) {
 
-	$sql = "SELECT t.*, CONCAT_WS(' ',contact_first_name,contact_last_name) AS creator"
-		."\nFROM task_log AS t, tasks"
+	$sql = "SELECT p.project_id, p.project_name, t.*, CONCAT_WS(' ',contact_first_name,contact_last_name) AS creator, " 
+		."\n if(bc.billingcode_name is null, '', bc.billingcode_name) as billingcode_name"
+		."\nFROM task_log AS t"
+		."\nLEFT JOIN billingcode bc ON bc.billingcode_id = t.task_log_costcode "
 		."\nLEFT JOIN users AS u ON user_id = task_log_creator"
-                ."\nLEFT JOIN contacts ON user_contact = contact_id"
-		."\nLEFT JOIN projects ON project_id = task_project"
+                ."\nLEFT JOIN contacts ON user_contact = contact_id, tasks"
+		."\nLEFT JOIN projects p ON p.project_id = task_project"
 		."\nWHERE task_log_task = task_id";
-	if ($project_id != 0)
+	if ($project_id != 0) {
 		$sql .= "\nAND task_project = $project_id";
-	
+	}
 	if (!$log_all) {
 		$sql .= "\n	AND task_log_date >= '".$start_date->format( FMT_DATETIME_MYSQL )."'"
 		."\n	AND task_log_date <= '".$end_date->format( FMT_DATETIME_MYSQL )."'";
@@ -162,6 +169,9 @@ if ($do_report) {
 	<table cellspacing="1" cellpadding="4" border="0" class="tbl">
 	<tr>
 		<th nowrap="nowrap"><?php echo $AppUI->_('Created by');?></th>
+		<?php if ($project_id == 0) { ?>
+			<th><?php echo $AppUI->_('Project');?></th>
+		<?php } ?>
 		<th><?php echo $AppUI->_('Summary');?></th>
 		<th><?php echo $AppUI->_('Description');?></th>
 		<th><?php echo $AppUI->_('Date');?></th>
@@ -182,22 +192,24 @@ if ($do_report) {
 			$log['task_log_description'],
 			$date->format( $df ),
 			sprintf( "%.2f", $log['task_log_hours'] ),
-			$log['task_log_costcode'],
+			$log['billingcode_name'],
 		);
 ?>
 	<tr>
 		<td><?php echo $log['creator'];?></td>
+		<?php if ($project_id == 0) { ?>
+			<td><a href="index.php?m=projects&a=view&project_id=<?php echo $log['project_id']; ?>"><?php echo $log['project_name'] ?></a></td>
+		<?php } ?>
 		<td>
 			<a href="index.php?m=tasks&a=view&tab=1&task_id=<?php echo $log['task_log_task'];?>&task_log_id=<?php echo $log['task_log_id'];?>"><?php echo $log['task_log_name'];?></a>
 		</td>
 		<td><?php
-// dylan_cuthbert: auto-transation system in-progress, leave these lines for time-being
-            $transbrk = "\n[translation]\n";
+      $transbrk = "\n[translation]\n";
 			$descrip = str_replace( "\n", "<br />", $log['task_log_description'] );
 			$tranpos = strpos( $descrip, str_replace( "\n", "<br />", $transbrk ) );
-			if ( $tranpos === false) echo $descrip;
-			else
-			{
+			if ( $tranpos === false) {
+				echo $descrip;
+			} else {
 				$descrip = substr( $descrip, 0, $tranpos );
 				$tranpos = strpos( $log['task_log_description'], $transbrk );
 				$transla = substr( $log['task_log_description'], $tranpos + strlen( $transbrk ) );
@@ -208,7 +220,7 @@ if ($do_report) {
 			?></td>
 		<td><?php echo $date->format( $df );?></td>
 		<td align="right"><?php printf( "%.2f", $log['task_log_hours'] );?></td>
-		<td><?php echo $log['task_log_costcode'];?></td>
+		<td><?php echo $log['billingcode_name'];?></td>
 	</tr>
 <?php
 	}
@@ -222,6 +234,9 @@ if ($do_report) {
 	);
 ?>
 	<tr>
+		<?php if ($project_id == 0) { ?>
+			<td></td>
+		<?php } ?>
 		<td align="right" colspan="4"><?php echo $AppUI->_('Total Hours');?>:</td>
 		<td align="right"><?php printf( "%.2f", $hours );?></td>
 	</tr>
@@ -229,17 +244,17 @@ if ($do_report) {
 <?php
 	if ($log_pdf) {
 	// make the PDF file
-		 if ($project_id != 0){
+		if ($project_id != 0) {
 			$sql = "SELECT project_name FROM projects WHERE project_id=$project_id";
 			$pname = db_loadResult( $sql );
-		}
-		else
+		} else {
 			$pname = "All Projects";
+		}
 		echo db_error();
 
-		$font_dir = dPgetConfig( 'root_dir' )."/lib/ezpdf/fonts";
-		$temp_dir = dPgetConfig( 'root_dir' )."/files/temp";
-		$base_url  = dPgetConfig( 'base_url' );
+		$font_dir = DP_BASE_DIR.'/lib/ezpdf/fonts';
+		$temp_dir = DP_BASE_DIR.'/files/temp';
+		
 		require( $AppUI->getLibraryClass( 'ezpdf/class.ezpdf' ) );
 
 		$pdf =& new Cezpdf();
@@ -247,7 +262,6 @@ if ($do_report) {
 		$pdf->selectFont( "$font_dir/Helvetica.afm" );
 
 		$pdf->ezText( dPgetConfig( 'company_name' ), 12 );
-		// $pdf->ezText( dPgetConfig( 'company_name' ).' :: '.dPgetConfig( 'page_title' ), 12 );
 
 		$date = new CDate();
 		$pdf->ezText( "\n" . $date->format( $df ) , 8 );
@@ -304,10 +318,10 @@ if ($do_report) {
 	        
 		$pdf->ezTable( $pdfdata,'','',$options );
 
-		if ($fp = fopen( "$temp_dir/temp$AppUI->user_id.pdf", 'wb' )) {
+		if ($fp = fopen( $temp_dir.'/temp'.$AppUI->user_id.'.pdf', 'wb' )) {
 			fwrite( $fp, $pdf->ezOutput() );
 			fclose( $fp );
-			echo "<a href=\"$base_url/files/temp/temp$AppUI->user_id.pdf\" target=\"pdf\">";
+			echo '<a href="'.DP_BASE_URL.'/files/temp/temp'.$AppUI->user_id.'.pdf" target="pdf">';
 			echo $AppUI->_( "View PDF File" );
 			echo "</a>";
 		} else {

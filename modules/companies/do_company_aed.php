@@ -1,4 +1,8 @@
-<?php /* COMPANIES $Id: do_company_aed.php,v 1.9 2005/04/26 06:55:42 ajdonnison Exp $ */
+<?php /* COMPANIES $Id: do_company_aed.php,v 1.9.2.3 2007/03/06 00:34:40 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $del = dPgetParam( $_POST, 'del', 0 );
 $obj = new CCompany();
 $msg = '';
@@ -8,7 +12,7 @@ if (!$obj->bind( $_POST )) {
 	$AppUI->redirect();
 }
 
-require_once("./classes/CustomFields.class.php");
+require_once($AppUI->getSystemClass( 'CustomFields' ));
 
 // prepare (and translate) the module name ready for the suffix
 $AppUI->setMsg( 'Company' );
@@ -24,7 +28,8 @@ if ($del) {
 		$AppUI->setMsg( 'deleted', UI_MSG_ALERT, true );
 		$AppUI->redirect( 'm=companies' );
 	}
-} else {
+} 
+else {
 	if (($msg = $obj->store())) {
 		$AppUI->setMsg( $msg, UI_MSG_ERROR );
 	} else {

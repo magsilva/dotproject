@@ -1,4 +1,8 @@
-<?php /* CONTACTS $Id: addedit.php,v 1.35.2.1 2005/11/21 04:37:54 pedroix Exp $ */
+<?php /* CONTACTS $Id: addedit.php,v 1.35.2.7 2007/09/19 13:45:54 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $contact_id = intval( dPgetParam( $_GET, 'contact_id', 0 ) );
 $company_id = intval( dPgetParam( $_REQUEST, 'company_id', 0 ) );
 $company_name = dPgetParam( $_REQUEST, 'company_name', null );
@@ -12,7 +16,11 @@ if (! ($canEdit = $perms->checkModuleItem( 'contacts', 'edit', $contact_id )) ) 
 // load the record data
 $msg = '';
 $row = new CContact();
+
 $canDelete = $row->canDelete( $msg, $contact_id );
+if($msg == $AppUI->_('contactsDeleteUserError', UI_OUTPUT_JS)) {
+	$userDeleteProtect=true;
+}
 
 if (!$row->load( $contact_id ) && $contact_id > 0) {
 	$AppUI->setMsg( 'Contact' );
@@ -28,9 +36,10 @@ if (!$row->load( $contact_id ) && $contact_id > 0) {
 $ttl = $contact_id > 0 ? "Edit Contact" : "Add Contact";
 $titleBlock = new CTitleBlock( $ttl, 'monkeychat-48.png', $m, "$m.$a" );
 $titleBlock->addCrumb( "?m=contacts", "contacts list" );
-if ($canEdit && $contact_id) {
+if ($canDelete && $contact_id) {
 	$titleBlock->addCrumbDelete( 'delete contact', $canDelete, $msg );
 }
+
 $titleBlock->show();
 $company_detail = $row->getCompanyDetails();
 $dept_detail = $row->getDepartmentDetails();
@@ -94,11 +103,21 @@ function setCompany( key, val ){
 }
 
 function delIt(){
+<?php
+if ($userDeleteProtect) {
+?>
+	alert( "<?php echo $AppUI->_('contactsDeleteUserError', UI_OUTPUT_JS);?>" );
+<?php
+} else {
+?>
 	var form = document.changecontact;
 	if(confirm( "<?php echo $AppUI->_('contactsDelete', UI_OUTPUT_JS);?>" )) {
 		form.del.value = "<?php echo $contact_id;?>";
 		form.submit();
 	}
+<?php
+} 
+?>
 }
 
 function orderByName( x ){
@@ -152,9 +171,9 @@ function companyChange() {
 			</td>
 		</tr>
 		<tr>
-			<td align="right" width="100"><?php echo $AppUI->_('Private Entry');?>: </td>
+			<td align="right" width="100"><label for="contact_private"><?php echo $AppUI->_('Private Entry');?>:</label> </td>
 			<td>
-				<input type="checkbox" value="1" name="contact_private" <?php echo (@$row->contact_private ? 'checked' : '');?> />
+				<input type="checkbox" value="1" name="contact_private" id="contact_private" <?php echo (@$row->contact_private ? 'checked="checked"' : '');?> />
 			</td>
 		</tr>
 		</table>
@@ -215,6 +234,10 @@ function companyChange() {
 		<tr>
 			<td align="right"><?php echo $AppUI->_('Postcode').' / '.$AppUI->_('Zip');?>:</td>
 			<td><input type="text" class="text" name="contact_zip" value="<?php echo @$row->contact_zip;?>" maxlength="11" size="25" /></td>
+		</tr>
+		<tr>
+			<td align="right"><?php echo $AppUI->_('Country');?>:</td>
+			<td><input type="text" class="text" name="contact_country" value="<?php echo @$row->contact_country;?>" maxlength="30" size="25" /></td>
 		</tr>
 		<tr>
 			<td align="right" width="100"><?php echo $AppUI->_('Phone');?>:</td>

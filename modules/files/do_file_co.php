@@ -1,6 +1,11 @@
-<?php /* FILES $Id: do_file_co.php,v 1.4 2005/03/29 00:01:18 ajdonnison Exp $ */
+<?php /* FILES $Id: do_file_co.php,v 1.4.6.5 2007/05/21 00:36:07 caseydk Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 //addfile sql
 $file_id = intval( dPgetParam( $_POST, 'file_id', 0 ) );
+$coReason = dPgetParam( $_POST, 'file_co_reason', '' );
 
 $obj = new CFile();
 if ($file_id) { 
@@ -18,39 +23,30 @@ if (!$obj->bind( $_POST )) {
 	$AppUI->redirect();
 }
 
-// prepare (and translate) the module name ready for the suffix
-//$AppUI->setMsg( 'File' );
-
 set_time_limit( 600 );
 ignore_user_abort( 1 );
 
-$q  = new DBQuery;
-$q->addTable('files');
-$q->addUpdate('file_checkout', "{$AppUI->user_id}");
-$q->addUpdate('file_co_reason', "{$_POST['file_co_reason']}" );
-$q->addWhere("file_id = $file_id");
-$q->exec();
-$q->clear();
+$obj->checkout($AppUI->user_id, $file_id, $coReason);
 
-	// We now have to display the required page
-	// Destroy the post stuff, and allow the page to display index.php again.
-	$a = 'index';
-	unset($_GET['a']);
+// We now have to display the required page
+// Destroy the post stuff, and allow the page to display index.php again.
+$a = 'index';
+unset($_GET['a']);
 
-        $params = 'file_id=' . $file_id;
-        $session_id = SID;
-                                                                                
-        session_write_close();
-        // are the params empty
-                // Fix to handle cookieless sessions
-        if ($session_id != "")
-                $params .= "&" . $session_id;
-        
+$params = 'file_id=' . $file_id;
+$session_id = SID;
+                                                                      
+session_write_close();
+// are the params empty
+// Fix to handle cookieless sessions
+if ($session_id != "") {
+    $params .= "&" . $session_id;
+}
 //        header( "Refresh: 0; URL=fileviewer.php?$params" );
-	echo '<script type="text/javascript">
-	fileloader = window.open("fileviewer.php?'.$params.'", "mywindow",
-    "location=1,status=1,scrollbars=0,width=20,height=20");
-	fileloader.moveTo(0,0);
-	</script>';
+echo '<script type="text/javascript">
+fileloader = window.open("fileviewer.php?'.$params.'", "mywindow",
+"location=1,status=1,scrollbars=0,width=20,height=20");
+fileloader.moveTo(0,0);
+</script>';
 
 ?>

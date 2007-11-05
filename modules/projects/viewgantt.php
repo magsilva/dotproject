@@ -1,6 +1,9 @@
-<?php /* TASKS $Id: viewgantt.php,v 1.7.4.3 2006/03/08 21:07:24 gregorerhardt Exp $gantt.php,v 1.30 2004/08/06 22:56:54 gregorerhardt Exp $ */
-GLOBAL  $AppUI, $company_id, $dept_ids, $department, $min_view, $m, $a, $user_id, $tab;
-//Secho dPgetConfig( 'jpLocale' );
+<?php /* TASKS $Id: viewgantt.php,v 1.7.4.14 2007/09/19 13:45:52 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
+global $AppUI,$company_id, $dept_ids, $department, $min_view, $m, $a, $user_id, $tab;
 ini_set('memory_limit', $dPconfig['reset_memory_limit']);
 
 $min_view = defVal( @$min_view, false);
@@ -11,20 +14,22 @@ $sdate = dPgetParam( $_POST, 'sdate', 0 );
 $edate = dPgetParam( $_POST, 'edate', 0 );
 $showInactive = dPgetParam( $_POST, 'showInactive', '0' );
 $showLabels = dPgetParam( $_POST, 'showLabels', '0' );
-
+$sortTasksByName = dPgetParam( $_POST, 'sortTasksByName', '0' );
 $showAllGantt = dPgetParam( $_POST, 'showAllGantt', '0' );
 $showTaskGantt = dPgetParam( $_POST, 'showTaskGantt', '0' );
+$addPwOiD = dPgetParam($_POST, 'add_pwoid', isset($addPwOiD) ? $addPwOiD : 0);
 
 //if set GantChart includes user labels as captions of every GantBar
 if ($showLabels!='0') {
-    $showLabels='1';
+	$showLabels='1';
 }
 if ($showInactive!='0') {
-    $showInactive='1';
+	$showInactive='1';
 }
 
-if ($showAllGantt!='0')
-     $showAllGantt='1';
+if ($showAllGantt!='0') {
+	$showAllGantt='1';
+}
 
 $projectStatus = dPgetSysVal( 'ProjectStatus' );
 
@@ -40,6 +45,7 @@ if ($AppUI->user_id == $user_id) {
 } else {
 	$projFilter = arrayMerge( array( '-3' => 'User\'s projects'), $projFilter);
 }
+
 natsort($projFilter);
 
 
@@ -60,7 +66,7 @@ if ($display_option == 'custom') {
 	$start_date = new CDate();
 	$start_date->day = 1;
    	$end_date = new CDate($start_date);
-    	$end_date->addMonths( $scroll_date );
+    $end_date->addMonths( $scroll_date );
 }
 
 // setup the title block
@@ -69,14 +75,16 @@ if (!@$min_view) {
 	$titleBlock->addCrumb( "?m=$m", "projects list" );
 	$titleBlock->show();
 }
+
 ?>
+
 <script language="javascript">
 var calendarField = '';
 
 function popCalendar( field ){
 	calendarField = field;
 	idate = eval( 'document.editFrm.' + field + '.value' );
-	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=250, height=220, scollbars=false' );
+	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'width=250, height=220, scrollbars=no' );
 }
 
 /**
@@ -93,12 +101,12 @@ function setCalendar( idate, fdate ) {
 function scrollPrev() {
 	f = document.editFrm;
 <?php
-	$new_start = $start_date;	
+	$new_start = new CDate($start_date);	
 	$new_start->day = 1;
-	$new_end = $end_date;
+	$new_end = new CDate($end_date);
 	$new_start->addMonths( -$scroll_date );
 	$new_end->addMonths( -$scroll_date );
-	
+
 	echo "f.sdate.value='".$new_start->format( FMT_TIMESTAMP_DATE )."';";
 	echo "f.edate.value='".$new_end->format( FMT_TIMESTAMP_DATE )."';";
 ?>
@@ -109,9 +117,9 @@ function scrollPrev() {
 function scrollNext() {
 	f = document.editFrm;
 <?php
-	$new_start = $start_date;
+	$new_start = new CDate($start_date);
 	$new_start->day = 1;
-	$new_end = $end_date;	
+	$new_end = new CDate($end_date);	
 	$new_start->addMonths( $scroll_date );
 	$new_end->addMonths( $scroll_date );
 	echo "f.sdate.value='" . $new_start->format( FMT_TIMESTAMP_DATE ) . "';";
@@ -165,13 +173,16 @@ function showFullProject() {
                                 <?php echo arraySelect( $projFilter, 'proFilter', 'size=1 class=text', $proFilter, true );?>
                         </td>
                         <td valign="top">
-                                <input type="checkbox" name="showLabels" value='1' <?php echo (($showLabels==1) ? "checked=true" : "");?>><?php echo $AppUI->_( 'Show captions' );?>
+                                <input type="checkbox" name="showLabels" id="showLabels" value='1' <?php echo (($showLabels==1) ? 'checked="checked"' : "");?> /><label for="showLabels"><?php echo $AppUI->_( 'Show captions' );?></label>
                         </td>
                         <td valign="top">
-                                <input type="checkbox" value='1' name="showInactive" <?php echo (($showInactive==1) ? "checked=true" : "");?>><?php echo $AppUI->_( 'Show Inactive' );?>
+                                <input type="checkbox" value='1' name="showInactive" id="showInactive" <?php echo (($showInactive==1) ? 'checked="checked"' : "");?> /><label for="showInactive"><?php echo $AppUI->_( 'Show Archived' );?></label>
                         </td>
                         <td valign="top">
-                                <input type="checkbox" value='1' name="showAllGantt" <?php echo (($showAllGantt==1) ? "checked=true" : "");?>><?php echo $AppUI->_( 'Show Tasks' );?>
+                                <input type="checkbox" value='1' name="showAllGantt" id="showAllGantt" <?php echo (($showAllGantt==1) ? 'checked="checked"' : "");?> /><label for="showAllGantt"><?php echo $AppUI->_( 'Show Tasks' );?></label>
+                        </td>
+												<td valign="top">
+                                <input type="checkbox" value='1' name="sortTasksByName" id="sortTasksByName" <?php echo (($sortTasksByName==1) ? 'checked="checked"' : "");?> /><label for="sortTasksByName"><?php echo $AppUI->_( 'Sort Tasks By Name' );?></label>
                         </td>
                         <td align="left">
                                 <input type="button" class="button" value="<?php echo $AppUI->_( 'submit' );?>" onclick='document.editFrm.display_option.value="custom";submit();'>
@@ -200,11 +211,10 @@ function showFullProject() {
                 <tr>
                         <td>
                 <?php
-                $src =
-                "?m=projects&a=gantt&suppressHeaders=1" .
+                $src = "?m=projects&a=gantt&suppressHeaders=1" .
                 ( $display_option == 'all' ? '' :
-                        '&start_date=' . $start_date->format( "%Y-%m-%d" ) . '&end_date=' . $end_date->format( "%Y-%m-%d" ) ) .
-                "&width=' + ((navigator.appName=='Netscape'?window.innerWidth:document.body.offsetWidth)*0.95) + '&showLabels=$showLabels&proFilter=$proFilter&showInactive=$showInactive&company_id=$company_id&department=$department&dept_ids=$dept_ids&showAllGantt=$showAllGantt&user_id=$user_id";
+                  '&start_date=' . $start_date->format( "%Y-%m-%d" ) . '&end_date=' . $end_date->format( "%Y-%m-%d" ) ) .
+                "&width=' + ((navigator.appName=='Netscape'?window.innerWidth:document.body.offsetWidth)*0.95) + '&showLabels=$showLabels&sortTasksByName=$sortTasksByName&proFilter=$proFilter&showInactive=$showInactive&company_id=$company_id&department=$department&dept_ids=$dept_ids&showAllGantt=$showAllGantt&user_id=$user_id&addPwOiD=$addPwOiD";
                 echo "<script>document.write('<img src=\"$src\">')</script>";
                 ?>
                         </td>

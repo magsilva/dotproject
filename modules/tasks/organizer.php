@@ -1,4 +1,7 @@
-<?php /* TASKS $Id: organizer.php,v 1.17 2003/12/11 20:30:21 gregorerhardt Exp $ */
+<?php /* TASKS $Id: organizer.php,v 1.17.12.3 2007/09/19 13:45:53 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
 /*
  * Dynamic Tasks Organizer - by J. Christopher Pereira
@@ -329,9 +332,9 @@ function checkbox($name, $descr, $default = 0, $show = true) {
 	global $$name;
 	if(!isset($$name)) $$name=$default;
 	if($show) {
-		echo "<input type=checkbox name=$name value=1 " . ($$name?"checked":"") . ">".$AppUI->_($descr)."<br />";
+		echo '<input type="checkbox" name="'.$name.'" id="'.$name.'" value="1"' . ($$name?'checked="checked"':'') . ' /><label for="'.$name.'">'.$AppUI->_($descr).'</label><br />';
 	} else {
-		echo "<input type=hidden name=$name value=" . ($$name?"1":"") . ">";
+		echo '<input type="hidden" name="'.$name.'" value="' . ($$name?'1':'') . '" />';
 	}
 }
 
@@ -399,8 +402,8 @@ if($do != "conf") {
 			$row["task_end_date"] = $end_date->getDate();
 			if($do=="ask" && $option_no_end_date_warning) {
 				log_warning("Task " . task_link($row) . " has no end date. Using tasks duration instead.",
-					"<input type=checkbox name='set_end_date[" . $row["task_id"] . "]' value=1> "
-					."Set end date to " . $row["task_end_date"]
+					'<input type="checkbox" name="set_end_date[' . $row['task_id'] . ']" id="set_end_date[' . $row['task_id'] . ']" value="1" /> '
+					.'<label for="set_end_date[' . $row['task_id'] . ']">Set end date to ' . $row["task_end_date"] . '</label>'
 				);
 			}
 		}
@@ -413,8 +416,8 @@ if($do != "conf") {
 				if($end_time < time()) {
 					if($option_check_delayed_tasks) {
 						log_warning("Task " .task_link($row) . " started on " . $row["task_start_date"] . " and ended on " . formatTime($end_time) . "." ,
-							"<input type=checkbox name=set_dynamic[" . $row["task_id"] . "] value=1 checked> Set as dynamic task and reorganize<br />" .
-							"<input type=checkbox name=set_priority[" . $row["task_id"] . "] value=1 checked> Set priority to high<br />"
+							'<input type="checkbox" name="set_dynamic[' . $row["task_id"] . ']" id="set_dynamic[' . $row["task_id"] . ']" value="1" checked="checked" /> <label for="set_dynamic[' . $row["task_id"] . ']">Set as dynamic task and reorganize</label><br />' .
+							'<input type="checkbox" name="set_priority[' . $row["task_id"] . ']" id="set_priority[' . $row["task_id"] . ']" value="1" checked="checked" /> <label for="set_priority[' . $row["task_id"] . ']">Set priority to high</label><br />'
 						);
 					}
 				}

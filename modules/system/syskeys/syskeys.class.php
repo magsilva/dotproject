@@ -1,4 +1,7 @@
-<?php /* SYSKEYS $Id: syskeys.class.php,v 1.3 2003/04/16 04:56:44 eddieajau Exp $ */
+<?php /* SYSKEYS $Id: syskeys.class.php,v 1.3.12.3 2007/03/06 00:34:44 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
 include_once( $AppUI->getSystemClass ('dp' ) );
 
@@ -33,6 +36,13 @@ class CSysVal extends CDpObject {
 	var $sysval_key_id = NULL;
 	var $sysval_title = NULL;
 	var $sysval_value = NULL;
+
+	function check() {
+		if ($this->sysval_key_id == 0)
+			return 'Key Type cannot be empty';
+		
+		return null;
+	}
 
 	function CSysVal( $key=null, $title=null, $value=null ) {
 		$this->CDpObject( 'sysvals', 'sysval_id' );

@@ -1,4 +1,8 @@
-<?php /* CONTACTS $Id: view.php,v 1.14.4.3 2005/11/26 02:11:35 cyberhorse Exp $ */
+<?php /* CONTACTS $Id: view.php,v 1.14.4.8 2007/06/21 02:06:17 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $contact_id = intval( dPgetParam( $_GET, 'contact_id', 0 ) );
 $AppUI->savePlace();
 
@@ -124,10 +128,16 @@ function delIt(){
 		<tr>
 			<td align="right" valign="top" width="100"><?php echo $AppUI->_('Address');?>:</td>
 			<td>
-                                <?php echo @$row->contact_address1;?><br />
+                    <?php echo @$row->contact_address1;?><br />
 			        <?php echo @$row->contact_address2;?><br />
-			        <?php echo @$row->contact_city . ', ' . @$row->contact_state . ' ' . @$row->contact_zip;?>
-                        </td>
+			        <?php echo @$row->contact_city . ', ' . @$row->contact_state . ' ' . @$row->contact_zip;?><br />
+			        <?php echo @$row->contact_country;?><br />
+			        
+           </td>
+		</tr>
+		<tr>
+			<td align="right" width="100"><?php echo $AppUI->_('Map Address');?>:</td>
+			<td><input type="image" src="./images/googlemaps.gif" width="55" height="22" alt="Find It on Google" onClick="window.open('http://maps.google.com/maps?q=<?php echo @$row->contact_address1;?>+<?php echo @$row->contact_address2;?>+<?php echo @$row->contact_city;?>+<?php echo @$row->contact_state;?>+<?php echo @$row->contact_zip;?>+<?php echo @$row->contact_country;?>')"></td>
 		</tr>
 		<tr>
 			<td align="right" width="100"><?php echo $AppUI->_('Phone');?>:</td>

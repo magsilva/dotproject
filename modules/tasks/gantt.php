@@ -1,15 +1,21 @@
-<?php /* TASKS $Id: gantt.php,v 1.48.2.13 2006/06/05 12:58:57 gregorerhardt Exp $ */
+<?php /* TASKS $Id: gantt.php,v 1.48.2.30 2007/07/14 14:35:11 caseydk Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
 
 /*
  * Gantt.php - by J. Christopher Pereira
- * TASKS $Id: gantt.php,v 1.48.2.13 2006/06/05 12:58:57 gregorerhardt Exp $
+ * TASKS $Id: gantt.php,v 1.48.2.30 2007/07/14 14:35:11 caseydk Exp $
  */
 
-include ($dPconfig['root_dir'].'/lib/jpgraph/src/jpgraph.php');
-include ($dPconfig['root_dir'].'/lib/jpgraph/src/jpgraph_gantt.php');
+include ($AppUI->getLibraryClass( 'jpgraph/src/jpgraph'));
+include ($AppUI->getLibraryClass( 'jpgraph/src/jpgraph_gantt'));
 
-global $caller, $locale_char_set, $showLabels, $showWork, $showLabels, $showPinned, $showArcProjs, $showHoldProjs, $showDynTasks, $showLowTasks, $user_id;
+global $caller, $locale_char_set, $showWork, $sortByName, $showLabels, $showPinned, 
+	$showArcProjs, $showHoldProjs, $showDynTasks, $showLowTasks, $user_id;
 
+$showLabels = dPgetParam( $_REQUEST, 'showLabels', false );
+$sortByName = dPgetParam( $_REQUEST, 'sortByName', false );
 $project_id = defVal( @$_REQUEST['project_id'], 0 );
 $f = defVal( @$_REQUEST['f'], 0 );
 
@@ -68,7 +74,7 @@ if ($caller == 'todo') {
 	$q->addWhere("ta.task_status = '0'");
 	$q->addWhere("pr.project_id = ta.task_project");
 	if (!$showArcProjs)
-		$q->addWhere('project_active = 1');
+		$q->addWhere('project_status <> 7');
 	if (!$showLowTasks)
 		$q->addWhere('task_priority >= 0');
 	if (!$showHoldProjs)
@@ -77,10 +83,16 @@ if ($caller == 'todo') {
 		$q->addWhere('task_dynamic != 1');
 	if ($showPinned)
 		$q->addWhere('task_pinned = 1');
-
+	
 	$q->addGroup('ta.task_id');
-	$q->addOrder('ta.task_end_date');
-	$q->addOrder('task_priority DESC');
+
+	if ($sortByName) {
+		$q->addOrder('ta.task_name, ta.task_end_date');
+		$q->addOrder('task_priority DESC');
+	} else {
+			$q->addOrder('ta.task_end_date');
+			$q->addOrder('task_priority DESC');
+	}
 ##############################################################
 } else {
 	// pull tasks
@@ -89,7 +101,12 @@ if ($caller == 'todo') {
 	$q->addQuery('t.task_id, task_parent, task_name, task_start_date, task_end_date, task_duration, task_duration_type, task_priority, task_percent_complete, task_order, task_project, task_milestone, project_name, task_dynamic');
 	$q->addJoin('projects', 'p', 'project_id = t.task_project');
 	$q->addWhere('project_status != 7');
-	$q->addOrder('project_id, task_start_date');
+
+	if ($sortByName)
+		$q->addOrder('project_id, t.task_name, task_start_date');
+	else 	
+		$q->addOrder('project_id, task_start_date');
+
 	if ($project_id) {
 	        $q->addWhere('task_project = '.$project_id);
 	}
@@ -182,14 +199,17 @@ $graph->SetBox(true, array(0,0,0), 2);
 $graph->scale->week->SetStyle(WEEKSTYLE_FIRSTDAY);
 //$graph->scale->day->SetStyle(DAYSTYLE_SHORTDATE2);
 
-$graph->scale->SetDateLocale( $AppUI->user_lang[0] );
+$pLocale = setlocale(LC_TIME, 0); // get current locale for LC_TIME
+$res = @setlocale(LC_TIME, $AppUI->user_lang[2]);
+if ($res) { // Setting locale doesn't fail
+	$graph->scale->SetDateLocale( $AppUI->user_lang[2] );
+}
+setlocale(LC_TIME, $pLocale);
 
 if ($start_date && $end_date) {
         $graph->SetDateRange( $start_date, $end_date );
 }
-if (is_file( TTF_DIR.'arialbd.ttf' )){
-        $graph->scale->actinfo->SetFont(FF_ARIAL);
-}
+$graph->scale->actinfo->SetFont(FF_CUSTOM, FS_NORMAL, 8);
 $graph->scale->actinfo->vgrid->SetColor('gray');
 $graph->scale->actinfo->SetColor('darkgray');
 
@@ -211,8 +231,7 @@ $graph->scale->tableTitle->Set($projects[$project_id]['project_name']);
 
 // Use TTF font if it exists
 // try commenting out the following two lines if gantt charts do not display
-if (is_file( TTF_DIR.'arialbd.ttf' ))
-        $graph->scale->tableTitle->SetFont(FF_ARIAL,FS_BOLD,12);
+$graph->scale->tableTitle->SetFont(FF_CUSTOM, FS_BOLD, 12);
 $graph->scale->SetTableTitleBackground('#'.$projects[$project_id]['project_color_identifier']);
 $graph->scale->tableTitle->Show(true);
 
@@ -331,13 +350,18 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
         $name = strlen( $name ) > 34 ? substr( $name, 0, 33 ).'.' : $name ;
         $name = str_repeat(' ', $level).$name;
 		
-		if ($caller == 'todo') { 
-			$pname = $a['project_name'];
-	        if ( $locale_char_set=='utf-8' && function_exists('utf8_decode') ) {
-	                $pname = utf8_decode($pname);
-	        }
-	        $pname = strlen( $pname ) > 14 ? substr( $pname, 0, 5 ).'...'.substr( $pname, -5, 5 ): $pname ;
+	if ($caller == 'todo') {
+		$pname = $a['project_name'];
+		if ( $locale_char_set=='utf-8' ) {
+			if (function_exists("mb_substr")) {
+				$pname = mb_strlen( $pname ) > 14 ? mb_substr( $pname, 0, 5 ).'...'.mb_substr( $pname, -5, 5 ): $pname ;
+			}  elseif (function_exists("utf8_decode")) {
+				$pname = utf8_decode($pname);
+			}
+		} else {
+			$pname = strlen( $pname ) > 14 ? substr( $pname, 0, 5 ).'...'.substr( $pname, -5, 5 ): $pname ;
 		}
+	}
         //using new jpGraph determines using Date object instead of string
         $start = $a['task_start_date'];
         $end_date = $a['task_end_date'];
@@ -403,7 +427,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
                 	$bar  = new MileStone ($row++,array($name, $pname, '', substr($s, 0, 10), substr($s, 0, 10)) , $a['task_start_date'], $s);
 				else 
 					$bar  = new MileStone ($row++,array($name, '', substr($s, 0, 10), substr($s, 0, 10)) , $a['task_start_date'], $s);
-                $bar->title->SetFont(FF_ARIAL,FS_NORMAL,8);
+                $bar->title->SetFont(FF_CUSTOM, FS_NORMAL, 8);
                 //caption of milestone should be date
                 if ($showLabels=='1') {
                         $caption = $start->format($df);
@@ -441,14 +465,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
                         $work_hours += $wh2;
                         $q->clear();
                         //due to the round above, we don't want to print decimals unless they really exist
-                        //$work_hours = rtrim($work_hours, '0');
                         $dur = $work_hours;
-
-                        /*
-                        $handle = fopen ( 'c:\a.txt', 'a+');
-                        fwrite($handle, $_days_sql);
-                        fclose($handle);
-                        */
                 }
 
 
@@ -459,32 +476,30 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 					$bar = new GanttBar($row++, array($name, $pname, $dur, $startdate->format($df), $enddate->format($df)), substr($start, 2, 8), substr($end, 2, 8), $cap, $a['task_dynamic'] == 1 ? 0.1 : 0.6);
 				else
 					$bar = new GanttBar($row++, array($name, $dur, $startdate->format($df), $enddate->format($df)), substr($start, 2, 8), substr($end, 2, 8), $cap, $a['task_dynamic'] == 1 ? 0.1 : 0.6);
-                $bar->progress->Set(min(($progress/100),1));
-                if (is_file( TTF_DIR.'arialbd.ttf' )) {
-                        $bar->title->SetFont(FF_ARIAL,FS_NORMAL,8);
-                }
+            $bar->progress->Set(min(($progress/100),1));
+						$bar->title->SetFont(FF_CUSTOM, FS_NORMAL, 8);
+
             if($a['task_dynamic'] == 1){
-                    if (is_file( TTF_DIR.'arialbd.ttf' )){
-                        $bar->title->SetFont(FF_ARIAL,FS_BOLD, 8);
-                }
-                    $bar->rightMark->Show();
-            $bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
-            $bar->rightMark->SetWidth(3);
-            $bar->rightMark->SetColor('black');
-            $bar->rightMark->SetFillColor('black');
+							$bar->title->SetFont(FF_CUSTOM,FS_BOLD, 8);
+							$bar->rightMark->Show();
+							$bar->rightMark->SetType(MARK_RIGHTTRIANGLE);
+							$bar->rightMark->SetWidth(3);
+							$bar->rightMark->SetColor('black');
+							$bar->rightMark->SetFillColor('black');
 
-            $bar->leftMark->Show();
-            $bar->leftMark->SetType(MARK_LEFTTRIANGLE);
-            $bar->leftMark->SetWidth(3);
-            $bar->leftMark->SetColor('black');
-            $bar->leftMark->SetFillColor('black');
-
-            $bar->SetPattern(BAND_SOLID,'black');
+							$bar->leftMark->Show();
+							$bar->leftMark->SetType(MARK_LEFTTRIANGLE);
+							$bar->leftMark->SetWidth(3);
+							$bar->leftMark->SetColor('black');
+							$bar->leftMark->SetFillColor('black');
+ 
+							$bar->SetPattern(BAND_SOLID,'black');
             }
         }
         //adding captions
         $bar->caption = new TextProperty($caption);
         $bar->caption->Align('left','center');
+        $bar->caption->SetFont(FF_CUSTOM, FS_NORMAL, 8);
 
         // show tasks which are both finished and past in (dark)gray
         if ($progress >= 100 && $end_date->isPast() && get_class($bar) == 'ganttbar') {
@@ -500,7 +515,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
         $q->addTable('task_dependencies');
         $q->addQuery('dependencies_task_id');
         $q->addWhere('dependencies_req_task_id=' . $a['task_id']);
-        $query = $q->loadHashList(1);
+        $query = $q->loadList();
 
         foreach($query as $dep) {
                 // find row num of dependencies
@@ -515,9 +530,7 @@ for($i = 0; $i < count(@$gantt_arr); $i ++ ) {
 }
 $today = date('y-m-d');
 $vline = new GanttVLine($today, $AppUI->_('Today', UI_OUTPUT_RAW));
-if (is_file( TTF_DIR.'arialbd.ttf' )) {
-        $vline->title->SetFont(FF_ARIAL,FS_BOLD,10);
-}
+$vline->title->SetFont(FF_CUSTOM, FS_BOLD, 10);
 $graph->Add($vline);
 $graph->Stroke();
 ?>

@@ -1,4 +1,8 @@
-<?php /* COMPANIES $Id: view.php,v 1.48 2005/03/30 14:11:01 gregorerhardt Exp $ */
+<?php /* COMPANIES $Id: view.php,v 1.48.6.3 2007/08/05 20:22:29 nybod Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 $company_id = intval( dPgetParam( $_GET, "company_id", 0 ) );
 
 // check permissions for this record
@@ -122,7 +126,9 @@ function delIt() {
 		</tr>
 		<tr valign=top>
 			<td align="right" nowrap="nowrap"><?php echo $AppUI->_('Address');?>:</td>
-			<td class="hilite"><?php
+			<td class="hilite">
+			<a href='http://maps.google.com/maps?q=<?php echo @$obj->company_address1;?>+<?php echo @$obj->company_address2;?>+<?php echo @$obj->company_city;?>+<?php echo @$obj->company_state;?>+<?php echo @$obj->company_zip;?>+<?php echo @$obj->company_country;?>' target='_blank'><image align="right" border="0" src="./images/googlemaps.gif" width="55" height="22" alt="Find It on Google" /></a>
+			<?php
 						echo @$obj->company_address1
 							.( ($obj->company_address2) ? '<br />'.$obj->company_address2 : '' )
 							.( ($obj->company_city) ? '<br />'.$obj->company_city : '' )
@@ -155,7 +161,7 @@ function delIt() {
 		
 		</table>
 		<?php
-			require_once("./classes/CustomFields.class.php");
+			require_once($AppUI->getSystemClass( 'CustomFields' ));
 			$custom_fields = New CustomFields( $m, $a, $obj->company_id, "view" );
 			$custom_fields->printHTML();
 		?>
@@ -165,7 +171,7 @@ function delIt() {
 
 <?php
 // tabbed information boxes
-$moddir = $dPconfig['root_dir'] . '/modules/companies/';
+$moddir = DP_BASE_DIR . '/modules/companies/';
 $tabBox = new CTabBox( "?m=companies&a=view&company_id=$company_id", "", $tab );
 $tabBox->add( $moddir . 'vw_active', 'Active Projects' );
 $tabBox->add( $moddir . 'vw_archived', 'Archived Projects' );

@@ -1,4 +1,8 @@
-<?php  /* PROJECTS $Id: index.php,v 1.84.6.5 2006/04/06 08:35:09 cyberhorse Exp $ */
+<?php  /* PROJECTS $Id: index.php,v 1.84.6.16 2007/09/18 02:27:31 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 $AppUI->savePlace();
 
 // load the companies class to retrieved denied companies
@@ -18,12 +22,13 @@ if(isset($_GET["update_project_status"]) && isset($_GET["project_status"]) && is
 	}
 }
 // End of project status update
-
 // retrieve any state parameters
 if (isset( $_GET['tab'] )) {
 	$AppUI->setState( 'ProjIdxTab', $_GET['tab'] );
 }
-$tab = $AppUI->getState( 'ProjIdxTab' ) !== NULL ? $AppUI->getState( 'ProjIdxTab' ) : 0;
+
+$tab = $AppUI->getState( 'ProjIdxTab' ) !== NULL ? $AppUI->getState( 'ProjIdxTab' ) : 500;
+$currentTabId = $tab;
 $active = intval( !$AppUI->getState( 'ProjIdxTab' ) );
 
 if (isset( $_POST['company_id'] )) {
@@ -49,19 +54,51 @@ if(!(strpos($department, $company_prefix)===false)){
 	unset($department);
 }
 
+$orderdir = $AppUI->getState('ProjIdxOrderDir') ? $AppUI->getState('ProjIdxOrderDir') : 'asc';
 if (isset( $_GET['orderby'] )) {
-    $orderdir = $AppUI->getState( 'ProjIdxOrderDir' ) ? ($AppUI->getState( 'ProjIdxOrderDir' )== 'asc' ? 'desc' : 'asc' ) : 'desc';    
-    $AppUI->setState( 'ProjIdxOrderBy', $_GET['orderby'] );
-    $AppUI->setState( 'ProjIdxOrderDir', $orderdir);
+    if ($AppUI->getState('ProjIdxOrderDir') == 'asc') {
+		$orderdir = 'desc';
+    } else {
+    	$orderdir = 'asc';
+    }
+    $AppUI->setState('ProjIdxOrderBy', $_GET['orderby']);
 }
-$orderby  = $AppUI->getState( 'ProjIdxOrderBy' ) ? $AppUI->getState( 'ProjIdxOrderBy' ) : 'project_end_date';
-$orderdir = $AppUI->getState( 'ProjIdxOrderDir' ) ? $AppUI->getState( 'ProjIdxOrderDir' ) : 'asc';
+$orderby  = $AppUI->getState('ProjIdxOrderBy') ? $AppUI->getState('ProjIdxOrderBy') : 'project_end_date';
+$AppUI->setState( 'ProjIdxOrderDir', $orderdir);
+
+// prepare the users filter
+if (isset( $_POST['show_owner'] ))
+	$AppUI->setState( 'ProjIdxowner', intval( $_POST['show_owner'] ) );
+$owner = $AppUI->getState( 'ProjIdxowner' ) !== NULL ? $AppUI->getState( 'ProjIdxowner' ) : 0;
+
+
+$bufferUser = '<select name="show_owner" onchange="document.pickUser.submit()" class="text">';
+$bufferUser .= "<OPTION VALUE='0'>".$AppUI->_('All Users');
+
+$usersql = "
+SELECT user_id, user_username, contact_first_name, contact_last_name
+FROM users, contacts
+WHERE user_contact = contact_id
+ORDER BY contact_last_name";
+
+if (($rows = db_loadList( $usersql, NULL )))
+{
+  foreach ($rows as $row)
+  {
+    if ( $owner == $row["user_id"])
+      $bufferUser .= "<OPTION VALUE='".$row["user_id"]."' SELECTED>".$row["contact_last_name"].', '.$row["contact_first_name"]. ' ('. $row["user_username"]. ')';
+    else
+      $bufferUser .= "<OPTION VALUE='".$row["user_id"]."'>".$row["contact_last_name"].', '.$row["contact_first_name"]. ' ('. $row["user_username"]. ')';
+  }
+}
 
 // collect the full projects list data via function in projects.class.php
 projects_list_data();
 
 // setup the title block
 $titleBlock = new CTitleBlock( 'Projects', 'applet3-48.png', $m, "$m.$a" );
+$titleBlock->addCell( $AppUI->_('Owner') . ':');
+$titleBlock->addCell( $bufferUser, '', '<form action="?m=projects" method="post" name="pickUser">', '</form>');
 $titleBlock->addCell( $AppUI->_('Company') . '/' . $AppUI->_('Division') . ':');
 $titleBlock->addCell( $buffer, '', '<form action="?m=projects" method="post" name="pickCompany">', '</form>');
 $titleBlock->addCell();
@@ -85,10 +122,9 @@ foreach($project_types as $key=>$value)
         $counter[$key] = 0;
 	if (is_array($projects)) {
 		foreach ($projects as $p)
-			if ($p['project_status'] == $key && $p['project_active'] > 0)
+			if ($p['project_status'] == $key)
 				++$counter[$key];
 	}
-                
         $project_types[$key] = $AppUI->_($project_types[$key], UI_OUTPUT_RAW) . ' (' . $counter[$key] . ')';
 }
 
@@ -96,12 +132,10 @@ foreach($project_types as $key=>$value)
 if (is_array($projects)) {
         foreach ($projects as $p)
         {
-                if ($p['project_active'] > 0 && $p['project_status'] == 3)
+                if ($p['project_status'] == 3)
                         ++$active;
-                else if ($p['project_active'] > 0 && $p['project_status'] == 5)
+                else if ($p['project_status'] == 5)
                         ++$complete;
-                else if ($p['project_active'] < 1)
-                        ++$archive;
                 else
                         ++$proposed;
         }
@@ -110,20 +144,7 @@ if (is_array($projects)) {
 $fixed_project_type_file = array(
         $AppUI->_('In Progress', UI_OUTPUT_RAW) . ' (' . $active . ')' => "vw_idx_active",
         $AppUI->_('Complete', UI_OUTPUT_RAW) . ' (' . $complete . ')'    => "vw_idx_complete",
-        $AppUI->_('Archived', UI_OUTPUT_RAW) . ' (' . $archive . ')'    => "vw_idx_archived");
-// we need to manually add Archived project type because this status is defined by 
-// other field (Active) in the project table, not project_status
-$project_types[] = $AppUI->_('Archived', UI_OUTPUT_RAW) . ' (' . $archive . ')';
-
-// Only display the All option in tabbed view, in plain mode it would just repeat everything else
-// already in the page
-$tabBox = new CTabBox( "?m=projects", "{$dPconfig['root_dir']}/modules/projects/", $tab );
-if ( $tabBox->isTabbed() ) {
-	// This will overwrited the initial tab, so we need to add that separately.
-	if (isset($project_types[0]))
-		$project_types[] = $project_types[0];
-	$project_types[0] = $AppUI->_('All Projects', UI_OUTPUT_RAW) . ' (' . count($projects) . ')';
-}
+				$AppUI->_('Archived', UI_OUTPUT_RAW). ' (' . $counter['7'] . ')' => 'vw_idx_archived');
 
 /**
 * Now, we will figure out which vw_idx file are available
@@ -136,13 +157,16 @@ foreach($project_types as $project_type){
 	if(isset($fixed_project_type_file[$project_type])){
 		$project_file_type[$project_type] = $fixed_project_type_file[$project_type];
 	} else { // if there is no fixed vw_idx file, we will use vw_idx_proposed
-		$project_file_type[$project_type] = "vw_idx_proposed";
+		$project_file_type[$project_type] = 'vw_idx_proposed';
 	}
 }
 
 // tabbed information boxes
-foreach($project_types as $project_type) {
-	$tabBox->add($project_file_type[$project_type], $project_type, true);
+$tabBox = new CTabBox( "?m=projects", DP_BASE_DIR.'/modules/projects/', $tab );
+
+$tabBox->add( 'vw_idx_proposed', $AppUI->_('All', UI_OUTPUT_RAW). ' (' . count($projects) . ')' , true,  500);
+foreach($project_types as $ptk=>$project_type) {
+		$tabBox->add($project_file_type[$project_type], $project_type, true, $ptk);
 }
 $min_view = true;
 $tabBox->add("viewgantt", "Gantt");

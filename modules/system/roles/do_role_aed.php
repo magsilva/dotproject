@@ -1,4 +1,8 @@
-<?php /* ROLES $Id: do_role_aed.php,v 1.2 2004/10/15 01:32:55 ajdonnison Exp $ */
+<?php /* ROLES $Id: do_role_aed.php,v 1.2.10.2 2007/03/06 00:34:44 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $del = isset($_POST['del']) ? $_POST['del'] : 0;
 
 $role =& new CRole();

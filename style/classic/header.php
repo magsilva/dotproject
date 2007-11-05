@@ -1,4 +1,8 @@
-<?php /* STYLE/CLASSIC $Id: header.php,v 1.13.10.1 2005/08/30 16:25:51 pedroix Exp $ */
+<?php /* STYLE/CLASSIC $Id: header.php,v 1.13.10.4 2007/07/03 11:04:37 pedroix Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly');
+}
+
 
 $dialog = dPgetParam( $_GET, 'dialog', 0 );
 
@@ -85,8 +89,11 @@ $dialog = dPgetParam( $_GET, 'dialog', 0 );
 	</script>
 
 </head>
-
+<?php if (!$dialog): ?>
 <body class="mainpage" background="style/classic/images/bground.gif">
+<?php else: ?>
+<body class="mainpage">
+<?php endif; ?>
 
 <table class="nav" width="100%" cellpadding="0" cellspacing="2">
 
@@ -126,7 +133,7 @@ $dialog = dPgetParam( $_GET, 'dialog', 0 );
 
 	echo '<td>';
 
-	$newItem = array( ""=>'- New Item -' );
+	$newItem = array( 0=>'- New Item -' );
 
 	if ($perms->checkModule( 'companies', 'add' )) $newItem["companies"] = "Company";
 	if ($perms->checkModule( 'contacts', 'add' )) $newItem["contacts"] = "Contact";

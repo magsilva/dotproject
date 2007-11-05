@@ -1,4 +1,7 @@
-<?php /* TICKETSMITH $Id: comment.php,v 1.18 2004/11/18 14:41:57 gregorerhardt Exp $ */
+<?php /* TICKETSMITH $Id: comment.php,v 1.18.10.3 2007/05/09 15:11:01 caseydk Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
 if (!$canEdit) {
 	$AppUI->redirect( "m=public&a=access_denied" );
@@ -13,8 +16,8 @@ $titleBlock->addCrumb( "?m=ticketsmith", "tickets list" );
 $titleBlock->addCrumb( "?m=ticketsmith&a=view&ticket=$ticket", "view this ticket" );
 $titleBlock->show();
 
-require("modules/ticketsmith/config.inc.php");
-require("modules/ticketsmith/common.inc.php");
+require(DP_BASE_DIR.'/modules/ticketsmith/config.inc.php');
+require(DP_BASE_DIR.'/modules/ticketsmith/common.inc.php');
 
 /* set title */
 $title = "Post Comment";

@@ -1,10 +1,14 @@
-<?php /* TASKS $Id: gantt.php,v 1.20.4.6 2006/05/30 17:57:14 nybod Exp $ */
-include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph.php");
-include ("{$dPconfig['root_dir']}/lib/jpgraph/src/jpgraph_gantt.php");
+<?php /* TASKS $Id: gantt.php,v 1.20.4.21 2007/10/03 15:21:59 caseydk Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
+include ($AppUI->getLibraryClass( 'jpgraph/src/jpgraph'));
+include ($AppUI->getLibraryClass( 'jpgraph/src/jpgraph_gantt'));
 
 ini_set('max_execution_time', 180);
 
-global $AppUI, $company_id, $dept_ids, $department, $locale_char_set, $proFilter, $projectStatus, $showInactive, $showLabels, $showAllGantt, $user_id;
+global $AppUI, $company_id, $dept_ids, $department, $locale_char_set, $proFilter, $projectStatus, $showInactive, $showLabels, $showAllGantt, $sortTasksByName, $user_id;
 
 // get the prefered date format
 $df = $AppUI->getPref('SHDATEFORMAT');
@@ -22,9 +26,27 @@ $company_id = dPgetParam($_REQUEST, 'company_id', 0);
 $department = dPgetParam($_REQUEST, 'department', 0);
 $showLabels = dPgetParam($_REQUEST, 'showLabels', 0);
 $showInactive = dPgetParam($_REQUEST, 'showInactive', 0);
+$sortTasksByName = dPgetParam($_REQUEST, 'sortTasksByName', 0);
+$addPwOiD = dPgetParam($_REQUEST, 'addPwOiD', 0);
 
 $pjobj =& new CProject;
 $working_hours = $dPconfig['daily_working_hours'];
+
+/* 
+** Load department info for the case where one
+** wants to see the ProjectsWithOwnerInDeparment (PwOiD)
+** instead of the projects related to the given department.
+*/
+if ($addPwOiD && $department>0) {
+	$owner_ids = array();	
+	$q = new DBQuery;
+	$q->addTable('users');
+	$q->addQuery('user_id');
+	$q->addJoin('contacts', 'c', 'c.contact_id = user_contact');
+	$q->addWhere('c.contact_department = '.$department);
+	$owner_ids = $q->loadColumn();	
+	$q->clear();
+}
 
 // pull valid projects and their percent complete information
 // GJB: Note that we have to special case duration type 24 and this refers to the hours in a day, NOT 24 hours
@@ -39,6 +61,8 @@ $q->addJoin('tasks', 't1', 'p.project_id = t1.task_project');
 $q->addJoin('companies', 'c1', 'p.project_company = c1.company_id');
 if ($department > 0) {
 	$q->addJoin('project_departments', 'pd', 'pd.project_id = p.project_id');
+}
+if ($department > 0 && !$addPwOiD) {
 	$q->addWhere('pd.department_id = '.$department);
 }
 if ($proFilter == '-3'){
@@ -48,15 +72,21 @@ if ($proFilter == '-3'){
 } else if ($proFilter != '-1') {
          $q->addWhere('project_status = '.$proFilter);
 }
-if (!($department > 0) && $company_id != 0) {
+if (!($department > 0) && $company_id != 0 && !$addPwOiD) {
         $q->addWhere('project_company = '.$company_id);
 }
+// Show Projects where the Project Owner is in the given department
+if ($addPwOiD && !empty($owner_ids))
+	$q->addWhere('p.project_owner IN ('.implode(',', $owner_ids).')');
+
 if ($showInactive != '1') {
         $q->addWhere('project_status != 7');
 }
 $pjobj->setAllowedSQL($AppUI->user_id, $q);
 $q->addGroup('project_id');
 $q->addOrder('project_name, task_end_date DESC');
+echo $q->prepare();
+die();
 $projects = $q->loadList();
 $q->clear();
 
@@ -74,20 +104,18 @@ $graph->SetFrame(false);
 $graph->SetBox(true, array(0,0,0), 2);
 $graph->scale->week->SetStyle(WEEKSTYLE_FIRSTDAY);
 
-/*$jpLocale = dPgetConfig( 'jpLocale' );
-if ($jpLocale) {
-        $graph->scale->SetDateLocale( $jpLocale );
+$pLocale = setlocale(LC_TIME, 0); // get current locale for LC_TIME
+$res = @setlocale(LC_TIME, $AppUI->user_lang[2]);
+if ($res) { // Setting locale doesn't fail
+	$graph->scale->SetDateLocale( $AppUI->user_lang[2] );
 }
-** the jpgraph date locale is now set
-** automatically by the user's locale settings
-*/
-$graph->scale->SetDateLocale( $AppUI->user_lang[0] );
+setlocale(LC_TIME, $pLocale);
 
 if ($start_date && $end_date) {
 	$graph->SetDateRange( $start_date, $end_date );
 }
 
-//$graph->scale->actinfo->SetFont(FF_ARIAL);
+//$graph->scale->actinfo->SetFont(FF_CUSTOM);
 $graph->scale->actinfo->vgrid->SetColor('gray');
 $graph->scale->actinfo->SetColor('darkgray');
 $graph->scale->actinfo->SetColTitles(array( $AppUI->_('Project name', UI_OUTPUT_RAW), $AppUI->_('Start Date', UI_OUTPUT_RAW), $AppUI->_('Finish', UI_OUTPUT_RAW), $AppUI->_('Actual End', UI_OUTPUT_RAW)),array(160,10, 70,70));
@@ -98,9 +126,10 @@ $graph->scale->tableTitle->Set($tableTitle);
 
 // Use TTF font if it exists
 // try commenting out the following two lines if gantt charts do not display
-if (is_file( TTF_DIR."arialbd.ttf" ))
-	$graph->scale->tableTitle->SetFont(FF_ARIAL,FS_BOLD,12);
-$graph->scale->SetTableTitleBackground("#eeeeee");
+if (is_file( TTF_DIR."FreeSansBold.ttf" )) {
+	$graph->scale->tableTitle->SetFont(FF_CUSTOM,FS_BOLD,12);
+}	
+$graph->scale->SetTableTitleBackground('#eeeeee');
 $graph->scale->tableTitle->Show(true);
 
 //-----------------------------------------
@@ -171,9 +200,8 @@ foreach($projects as $p) {
 	}
 
 	//using new jpGraph determines using Date object instead of string
-	$start = ($p["project_start_date"] > "0000-00-00 00:00:00") ? $p["project_start_date"] : date("Y-m-d H:i:s");
-	$end_date   = $p["project_end_date"];
-
+  $start = ($p["project_start_date"] > '0000-00-00 00:00:00') ? $p['project_start_date'] : date('Y-m-d H:i:s');
+  $end_date = ($p["project_end_date"] > '0000-00-00 00:00:00') ? $p['project_end_date'] : date('Y-m-d H:i:s', time());
 
 	$end_date = new CDate($end_date);
 //	$end->addDays(0);
@@ -211,13 +239,15 @@ foreach($projects as $p) {
         $bar = new GanttBar($row++, array($name, $startdate->format($df), $enddate->format($df), $actual_enddate->format($df)), $start, $actual_end, $cap, 0.6);
         $bar->progress->Set(min(($progress/100), 1));
 
-        $bar->title->SetFont(FF_FONT1,FS_NORMAL,10);
+        if (is_file( TTF_DIR."FreeSans.ttf" )) {
+        	$bar->title->SetFont(FF_CUSTOM, FS_NORMAL, 10);
+        }
         $bar->SetFillColor("#".$p['project_color_identifier']);
         $bar->SetPattern(BAND_SOLID,"#".$p['project_color_identifier']);
 
 	//adding captions
 	$bar->caption = new TextProperty($caption);
-	$bar->caption->Align("left","center");
+	$bar->caption->Align('left','center');
 
         // gray out templates, completes, on ice, on hold
         if ($p['project_status'] != '3' || $p['project_status'] == '7') {
@@ -236,7 +266,6 @@ foreach($projects as $p) {
  	if ($showAllGantt)
  	{
  		// insert tasks into Gantt Chart
- 		
  		// select for tasks for each project	
 		
  		$q  = new DBQuery;
@@ -244,7 +273,10 @@ foreach($projects as $p) {
 		$q->addQuery('DISTINCT tasks.task_id, tasks.task_name, tasks.task_start_date, tasks.task_end_date, tasks.task_milestone, tasks.task_dynamic');
 		$q->addJoin('projects', 'p', 'p.project_id = tasks.task_project');
 		$q->addWhere('p.project_id = '. $p['project_id']);
-		$q->addOrder('tasks.task_end_date ASC');
+		if ($sortTasksByName)
+			$q->addOrder('tasks.task_name');
+		else
+			$q->addOrder('tasks.task_end_date ASC');
  		$tasks = $q->loadList();
 		$q->clear();
  		foreach($tasks as $t)
@@ -272,26 +304,26 @@ foreach($projects as $p) {
  				$graph->Add($bar2);
  			}				
  				
- 				// Insert workers for each task into Gantt Chart 
- 				$q  = new DBQuery;
-				$q->addTable('user_tasks', 't');
-				$q->addQuery('DISTINCT user_username, t.task_id');
-				$q->addJoin('users', 'u', 'u.user_id = t.user_id');
-				$q->addWhere("t.task_id = ".$t["task_id"]);
-				$q->addOrder('user_username ASC');
- 				$workers = $q->loadList();
-				$q->clear();
- 				$workersName = "";
- 				foreach($workers as $w)
- 				{	
- 					$workersName .= " ".$w["user_username"];
- 				
- 					$bar3 = new GanttBar($row++, array("   * ".$w["user_username"], " ", " "," "), "0", "0;", 0.6);							
- 					$bar3->title->SetColor(bestColor( '#ffffff', '#'.$p['project_color_identifier'], '#000000' ));
- 					$bar3->SetFillColor("#".$p['project_color_identifier']);		
- 					$graph->Add($bar3);
- 				}
- 				// End of insert workers for each task into Gantt Chart  				
+			// Insert workers for each task into Gantt Chart 
+			$q  = new DBQuery;
+			$q->addTable('user_tasks', 't');
+			$q->addQuery('DISTINCT user_username, t.task_id');
+			$q->addJoin('users', 'u', 'u.user_id = t.user_id');
+			$q->addWhere("t.task_id = ".$t["task_id"]);
+			$q->addOrder('user_username ASC');
+			$workers = $q->loadList();
+			$q->clear();
+			$workersName = "";
+			foreach($workers as $w)
+			{	
+				$workersName .= " ".$w["user_username"];
+			
+				$bar3 = new GanttBar($row++, array("   * ".$w["user_username"], " ", " "," "), $tStartObj->format(FMT_DATETIME_MYSQL), $tEndObj->format(FMT_DATETIME_MYSQL), 0.6);							
+				$bar3->title->SetColor(bestColor( '#ffffff', '#'.$p['project_color_identifier'], '#000000' ));
+				$bar3->SetFillColor("#".$p['project_color_identifier']);		
+				$graph->Add($bar3);
+			}
+			// End of insert workers for each task into Gantt Chart  				
  		}
  		// End of insert tasks into Gantt Chart 
  	}			

@@ -1,18 +1,22 @@
-<?php /* INCLUDES $Id: db_connect.php,v 1.42.4.1 2006/03/22 08:32:55 cyberhorse Exp $ */
+<?php /* INCLUDES $Id: db_connect.php,v 1.42.4.7 2007/09/11 03:22:59 cyberhorse Exp $ */
 /**
 * Generic functions based on library function (that is, non-db specific)
 *
 * @todo Encapsulate into a database object
 */
 
+if (!defined('DP_BASE_DIR')) {
+	die('You should not access this file directly.');
+}
+
 // load the db specific handlers
-//require_once( "{$dPconfig['root_dir']}/includes/db_{$dPconfig['dbtype']}.php" );
+//require_once( DP_BASE_DIR."/includes/db_{$dPconfig['dbtype']}.php" );
 //require_once( "./includes/db_adodb.php" );
-require_once "$baseDir/includes/db_adodb.php";
+require_once DP_BASE_DIR.'/includes/db_adodb.php';
 
 // make the connection to the db
-db_connect( $dPconfig['dbhost'], $dPconfig['dbname'],
-	$dPconfig['dbuser'], $dPconfig['dbpass'], $dPconfig['dbpersist'] );
+db_connect(dPgetConfig('dbhost'), dPgetConfig('dbname'),
+	dPgetConfig('dbuser'), dPgetConfig('dbpass'), dPgetConfig('dbpersist'));
 
 	
 /*
@@ -20,7 +24,7 @@ db_connect( $dPconfig['dbhost'], $dPconfig['dbname'],
 * we will hurry up to load the system configuration details from the database.
 */
 
-$sql = "SELECT config_name, config_value, config_type FROM config";
+$sql = 'SELECT config_name, config_value, config_type FROM config';
 $rs = $db->Execute($sql);
 
 if ($rs) { // Won't work in install mode.
@@ -30,10 +34,9 @@ if ($rs) { // Won't work in install mode.
 		if ($c['config_type'] == 'checkbox') {
 			$c['config_value'] = ($c['config_value'] == 'true') ? true : false;
 		}
-		$dPconfig["{$c['config_name']}"] = $c['config_value'];
+		$dPconfig[$c['config_name']] = $c['config_value'];
 	}
 }
-
 
 
 /**
@@ -224,7 +227,7 @@ function db_insertArray( $table, &$hash, $verbose=false ) {
 			continue;
 		}
 		$fields[] = $k;
-		$values[] = "'" . db_escape(htmlspecialchars( $v )) . "'";
+		$values[] = "'" . db_escape($v) . "'";
 	}
 	$sql = sprintf( $fmtsql, implode( ",", $fields ) ,  implode( ",", $values ) );
 
@@ -257,7 +260,7 @@ function db_updateArray( $table, &$hash, $keyName, $verbose=false ) {
 		if ($v == '') {
 			$val = 'NULL';
 		} else {
-			$val = "'" . db_escape(htmlspecialchars( $v )) . "'";
+			$val = "'" . db_escape($v) . "'";
 		}
 		$tmp[] = "$k=$val";
 	}
@@ -299,7 +302,7 @@ function db_insertObject( $table, &$object, $keyName = NULL, $verbose=false ) {
 			continue;
 		}
 		$fields[] = $k;
-		$values[] = "'" . db_escape(htmlspecialchars( $v )) . "'";
+		$values[] = "'" . db_escape($v) . "'";
 	}
 	$sql = sprintf( $fmtsql, implode( ",", $fields ) ,  implode( ",", $values ) );
 	($verbose) && print "$sql<br />\n";
@@ -333,10 +336,10 @@ function db_updateObject( $table, &$object, $keyName, $updateNulls=true ) {
 		if ($v === NULL && !$updateNulls) {
 			continue;
 		}
-		if( $v == '' ) {
+		if( $v === '' ) {
 			$val = "''";
 		} else {
-			$val = "'" . db_escape(htmlspecialchars( $v )). "'";
+			$val = "'" . db_escape($v). "'";
 		}
 		$tmp[] = "$k=$val";
 	}
@@ -396,6 +399,7 @@ function db_dateTime2locale( $dateTime, $format ) {
 /*
 * copy the hash array content into the object as properties
 * only existing properties of object are filled. when undefined in hash, properties wont be deleted
+* only non-object hash values accepted or function dies
 * @param array the input array
 * @param obj byref the object to fill of any class
 * @param string
@@ -403,8 +407,23 @@ function db_dateTime2locale( $dateTime, $format ) {
 * @param boolean
 */
 function bindHashToObject( $hash, &$obj, $prefix=NULL, $checkSlashes=true, $bindAll=false ) {
-	is_array( $hash ) or die( "bindHashToObject : hash expected" );
-	is_object( $obj ) or die( "bindHashToObject : object expected" );
+	is_array( $hash ) or die( 'bindHashToObject : hash expected' );
+	is_object( $obj ) or die( 'bindHashToObject : object expected' );
+	
+	/* 
+	 * checking that all hash values are non-objects so that stripslashes() and other such 
+	 * functions are correctly used as well as making sure that we actually create new values and 
+	 * not just copy a reference to an object. bind() already filters non-objects but we still need 
+	 * to check on this should the funtion be called independently of bind()
+	 */
+	$go_on = true;
+    foreach ($hash as $k => $v) {
+		if (is_object( $hash[$k] )) {
+			$error_str .= 'bindHashToObject : non-object expected for hash value with key '.$k . "\n";
+			$go_on = false;
+		}
+	}
+	$go_on or die ( $error_str );
 
 	if ($bindAll) {
 		foreach ($hash as $k => $v) {

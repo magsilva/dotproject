@@ -1,4 +1,8 @@
-<?php /* PROJECTS $Id: view.php,v 1.94.4.3 2006/02/07 11:34:28 cyberhorse Exp $ */
+<?php /* PROJECTS $Id: view.php,v 1.94.4.11 2007/08/10 00:30:31 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 $project_id = intval( dPgetParam( $_GET, "project_id", 0 ) );
 
 // check permissions for this record
@@ -35,24 +39,44 @@ $criticalTasks = ($project_id > 0) ? $obj->getCriticalTasks($project_id) : NULL;
 $projectPriority = dPgetSysVal( 'ProjectPriority' );
 $projectPriorityColor = dPgetSysVal( 'ProjectPriorityColor' );
 
-$working_hours = $dPconfig['daily_working_hours'];
+$working_hours = ($dPconfig['daily_working_hours']?$dPconfig['daily_working_hours']:8);
+
+$q  = new DBQuery;
+//check that project has tasks; otherwise run seperate query
+$q->addTable('tasks');
+$q->addQuery("COUNT(distinct tasks.task_id) AS total_tasks");
+$q->addWhere('task_project = '.$project_id);
+$hasTasks = $q->loadResult();
+$q->clear();
 
 // load the record data
 // GJB: Note that we have to special case duration type 24 and this refers to the hours in a day, NOT 24 hours
-$q  = new DBQuery;
-$q->addTable('projects');
-$q->addQuery("company_name,
-	CONCAT_WS(' ',contact_first_name,contact_last_name) user_name,
-	projects.*,
-	SUM(t1.task_duration * t1.task_percent_complete * IF(t1.task_duration_type = 24, ".$working_hours.", t1.task_duration_type))/
-		SUM(t1.task_duration * IF(t1.task_duration_type = 24, ".$working_hours.", t1.task_duration_type)) AS project_percent_complete");
-$q->addJoin('companies', 'com', 'company_id = project_company');
-$q->addJoin('users', 'u', 'user_id = project_owner');
-$q->addJoin('contacts', 'con', 'contact_id = user_contact');
-$q->addJoin('tasks', 't1', 'projects.project_id = t1.task_project');
-$q->addWhere('project_id = '.$project_id);
-$q->addGroup('project_id');
-$sql = $q->prepare();
+if ($hasTasks) { 
+    $q->addTable('projects');
+    $q->addQuery("company_name, CONCAT_WS(', ',contact_last_name,contact_first_name) user_name, projects.*,"
+                 ." SUM(t1.task_duration * t1.task_percent_complete"
+                 ." * IF(t1.task_duration_type = 24, {$working_hours}, t1.task_duration_type))"
+                 ." / SUM(t1.task_duration * IF(t1.task_duration_type = 24, {$working_hours}, t1.task_duration_type))"
+                 ." AS project_percent_complete");
+    $q->addJoin('companies', 'com', 'company_id = project_company');
+    $q->addJoin('users', 'u', 'user_id = project_owner');
+    $q->addJoin('contacts', 'con', 'contact_id = user_contact');
+    $q->addJoin('tasks', 't1', 'projects.project_id = t1.task_project');
+    $q->addWhere('project_id = '.$project_id .' AND t1.task_id = t1.task_parent');
+    $q->addGroup('project_id');
+    $sql = $q->prepare();
+}
+else {
+    $q->addTable('projects');
+    $q->addQuery("company_name, CONCAT_WS(' ',contact_first_name,contact_last_name) user_name, projects.*, "
+                 ."(0.0) AS project_percent_complete");
+    $q->addJoin('companies', 'com', 'company_id = project_company');
+    $q->addJoin('users', 'u', 'user_id = project_owner');
+    $q->addJoin('contacts', 'con', 'contact_id = user_contact');
+    $q->addWhere('project_id = '.$project_id);
+    $q->addGroup('project_id');
+    $sql = $q->prepare();
+}
 $q->clear();
 
 $obj = null;
@@ -69,52 +93,57 @@ if (!db_loadObject( $sql, $obj )) {
 // now milestones are summed up, too, for consistence with the tasks duration sum
 // the sums have to be rounded to prevent the sum form having many (unwanted) decimals because of the mysql floating point issue
 // more info on http://www.mysql.com/doc/en/Problems_with_float.html
-$q->addTable('task_log');
-$q->addTable('tasks');
-$q->addQuery('ROUND(SUM(task_log_hours),2)');
-$q->addWhere("task_log_task = task_id AND task_project = $project_id");
-$sql = $q->prepare();
-$q->clear();
-$worked_hours = db_loadResult($sql);
-$worked_hours = rtrim($worked_hours, '.');
-
-// total hours
-// same milestone comment as above, also applies to dynamic tasks
-$q->addTable('tasks');
-$q->addQuery('ROUND(SUM(task_duration),2)');
-$q->addWhere("task_project = $project_id AND task_duration_type = 24 AND task_dynamic != 1");
-$sql = $q->prepare();
-$q->clear();
-$days = db_loadResult($sql);
-
-$q->addTable('tasks');
-$q->addQuery('ROUND(SUM(task_duration),2)');
-$q->addWhere("task_project = $project_id AND task_duration_type = 1 AND task_dynamic != 1");
-$sql = $q->prepare();
-$q->clear();
-$hours = db_loadResult($sql);
-$total_hours = $days * $dPconfig['daily_working_hours'] + $hours;
-
-$total_project_hours = 0;
-
-$q->addTable('tasks', 't');
-$q->addQuery('ROUND(SUM(t.task_duration*u.perc_assignment/100),2)');
-$q->addJoin('user_tasks', 'u', 't.task_id = u.task_id');
-$q->addWhere("t.task_project = $project_id AND t.task_duration_type = 24 AND t.task_dynamic != 1");
-$total_project_days_sql = $q->prepare();
-$q->clear();
-
-$q->addTable('tasks', 't');
-$q->addQuery('ROUND(SUM(t.task_duration*u.perc_assignment/100),2)');
-$q->addJoin('user_tasks', 'u', 't.task_id = u.task_id');
-$q->addWhere("t.task_project = $project_id AND t.task_duration_type = 1 AND t.task_dynamic != 1");
-$total_project_hours_sql = $q->prepare();
-$q->clear();
-
-$total_project_hours = db_loadResult($total_project_days_sql) * $dPconfig['daily_working_hours'] + db_loadResult($total_project_hours_sql);
-//due to the round above, we don't want to print decimals unless they really exist
-//$total_project_hours = rtrim($total_project_hours, "0");
-
+if($hasTasks) {
+    $q->addTable('task_log');
+    $q->addTable('tasks');
+    $q->addQuery('ROUND(SUM(task_log_hours),2)');
+    $q->addWhere("task_log_task = task_id AND task_project = $project_id");
+    $sql = $q->prepare();
+    $q->clear();
+    $worked_hours = db_loadResult($sql);
+    $worked_hours = rtrim($worked_hours, '.');
+    
+    // total hours
+    // same milestone comment as above, also applies to dynamic tasks
+    $q->addTable('tasks');
+    $q->addQuery('ROUND(SUM(task_duration),2)');
+    $q->addWhere("task_project = $project_id AND task_duration_type = 24 AND task_dynamic != 1");
+    $sql = $q->prepare();
+    $q->clear();
+    $days = db_loadResult($sql);
+    
+    $q->addTable('tasks');
+    $q->addQuery('ROUND(SUM(task_duration),2)');
+    $q->addWhere("task_project = $project_id AND task_duration_type = 1 AND task_dynamic != 1");
+    $sql = $q->prepare();
+    $q->clear();
+    $hours = db_loadResult($sql);
+    $total_hours = $days * $dPconfig['daily_working_hours'] + $hours;
+    
+    $total_project_hours = 0;
+    
+    $q->addTable('tasks', 't');
+    $q->addQuery('ROUND(SUM(t.task_duration*u.perc_assignment/100),2)');
+    $q->addJoin('user_tasks', 'u', 't.task_id = u.task_id');
+    $q->addWhere("t.task_project = $project_id AND t.task_duration_type = 24 AND t.task_dynamic != 1");
+    $total_project_days_sql = $q->prepare();
+    $q->clear();
+    
+    $q->addTable('tasks', 't');
+    $q->addQuery('ROUND(SUM(t.task_duration*u.perc_assignment/100),2)');
+    $q->addJoin('user_tasks', 'u', 't.task_id = u.task_id');
+    $q->addWhere("t.task_project = $project_id AND t.task_duration_type = 1 AND t.task_dynamic != 1");
+    $total_project_hours_sql = $q->prepare();
+    $q->clear();
+    
+    $total_project_hours = db_loadResult($total_project_days_sql) * $dPconfig['daily_working_hours'] 
+        + db_loadResult($total_project_hours_sql);
+    //due to the round above, we don't want to print decimals unless they really exist
+    //$total_project_hours = rtrim($total_project_hours, "0");
+}
+else { //no tasks in project so "fake" project data
+    $worked_hours = $total_hours = $total_project_hours = 0.00;
+}
 // get the prefered date format
 $df = $AppUI->getPref('SHDATEFORMAT');
 
@@ -257,7 +286,7 @@ function delIt() {
 		<tr>
 			<td colspan="2">
 			<?php
-				require_once("./classes/CustomFields.class.php");
+				require_once($AppUI->getSystemClass( 'CustomFields' ));
 				$custom_fields = New CustomFields( $m, $a, $obj->project_id, "view" );
 				$custom_fields->printHTML();
 			?>
@@ -295,10 +324,6 @@ function delIt() {
 		<tr>
 			<td align="right" nowrap><?php echo $AppUI->_('Progress');?>:</td>
 			<td class="hilite" width="100%"><?php printf( "%.1f%%", $obj->project_percent_complete );?></td>
-		</tr>
-		<tr>
-			<td align="right" nowrap><?php echo $AppUI->_('Active');?>:</td>
-			<td class="hilite" width="100%"><?php echo $obj->project_active ? $AppUI->_('Yes') : $AppUI->_('No');?></td>
 		</tr>
 		<tr>
 			<td align="right" nowrap><?php echo $AppUI->_('Worked Hours');?>:</td>
@@ -358,7 +383,7 @@ function delIt() {
 			    <tr>
 			    	<td colspan='3' class="hilite">
 			    		<?php
-			    			echo "<table cellspacing='1' cellpadding='2' border='0' width='100%' bgcolor='black'>";
+			    			echo "<table cellspacing='1' cellpadding='2' border='0' width='100%' class='tbl'>";
 			    			echo "<tr><th>".$AppUI->_("Name")."</th><th>".$AppUI->_("Email")."</th><th>".$AppUI->_("Phone")."</th><th>".$AppUI->_("Department")."</th></tr>";
 			    			foreach($contacts as $contact_id => $contact_data){
 			    				echo "<tr>";
@@ -393,17 +418,21 @@ $query_string = "?m=projects&a=view&project_id=$project_id";
 // tabbed information boxes
 // Note that we now control these based upon module requirements.
 $canViewTask = $perms->checkModule('tasks', 'view');
+$canViewTaskLog = $perms->checkModule('task_log', 'view');
+
 if ($canViewTask) {
-	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks' );
-	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/tasks", 'Tasks (Inactive)' );
+	$tabBox->add( DP_BASE_DIR.'/modules/tasks/tasks', 'Tasks' );
+	$tabBox->add( DP_BASE_DIR.'/modules/tasks/tasks', 'Tasks (Inactive)' );
 }
 if ($perms->checkModule('forums', 'view'))
-	$tabBox->add( dPgetConfig('root_dir')."/modules/projects/vw_forums", 'Forums' );
+	$tabBox->add( DP_BASE_DIR.'/modules/projects/vw_forums', 'Forums' );
 //if ($perms->checkModule('files', 'view'))
-//	$tabBox->add( dPgetConfig('root_dir')."/modules/projects/vw_files", 'Files' );
+//	$tabBox->add( DP_BASE_DIR.'/modules/projects/vw_files', 'Files' );
 if ($canViewTask) {
-	$tabBox->add( dPgetConfig('root_dir')."/modules/tasks/viewgantt", 'Gantt Chart' );
-	$tabBox->add( dPgetConfig('root_dir')."/modules/projects/vw_logs", 'Task Logs' );
+	$tabBox->add( DP_BASE_DIR.'/modules/tasks/viewgantt', 'Gantt Chart' );
+	if ($canViewTaskLog) {
+		$tabBox->add( DP_BASE_DIR.'/modules/projects/vw_logs', 'Task Logs' );
+	}
 }
 $tabBox->loadExtras($m);
 $f = 'all';

@@ -1,4 +1,8 @@
-<?php /* FILES $Id: index.php,v 1.1.1.1.2.2 2005/09/13 14:11:33 pedroix Exp $ */
+<?php /* FILES $Id: index.php,v 1.1.1.1.2.5 2007/06/07 14:19:52 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 $AppUI->savePlace();
 
 // retrieve any state parameters
@@ -48,10 +52,11 @@ $titleBlock->show();
 
 $link_types = dPgetSysVal("LinkType");
 if ( $tab != -1 ) {
-        array_unshift($link_types, "All Links");
+	array_unshift($link_types, "All Links");
 }
+array_map(array($AppUI, '_'), $link_types);
 
-$tabBox = new CTabBox( "?m=links", "{$dPconfig['root_dir']}/modules/links/", $tab );
+$tabBox = new CTabBox( "?m=links", DP_BASE_DIR.'/modules/links/', $tab );
 
 $i = 0;
 

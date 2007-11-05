@@ -1,8 +1,23 @@
-<?php /* CALENDAR $Id: day_view.php,v 1.34.4.3 2006/01/28 16:32:54 pedroix Exp $ */
+<?php /* CALENDAR $Id: day_view.php,v 1.34.4.8 2007/07/26 14:16:28 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 global $tab, $locale_char_set, $date;
 $AppUI->savePlace();
 
 require_once( $AppUI->getModuleClass( 'tasks' ) );
+
+
+/* Kludge: Backward compatible function to address php5 and php4 date issue */
+function php4_clone($object) {
+	if (version_compare(phpversion(), '5.0') < 0) {
+   	return $object;
+  	} else {
+   	return @clone($object);
+  }
+ }
+
 
 // retrieve any state parameters
 if (isset( $_REQUEST['company_id'] )) {
@@ -32,20 +47,31 @@ $yy = $this_day->getYear();
 $this_week = Date_calc::beginOfWeek ($dd, $mm, $yy, FMT_TIMESTAMP_DATE, LOCALE_FIRST_DAY );
 
 // prepare time period for 'events'
-$first_time = $this_day;
+$first_time = php4_clone($this_day);
 $first_time->setTime( 0, 0, 0 );
 $first_time->subtractSeconds( 1 );
 
-$last_time = $this_day;
+$last_time = php4_clone($this_day);
 $last_time->setTime( 23, 59, 59 );
 
 $prev_day = new CDate( Date_calc::prevDay( $dd, $mm, $yy, FMT_TIMESTAMP_DATE ) );
 $next_day = new CDate( Date_calc::nextDay( $dd, $mm, $yy, FMT_TIMESTAMP_DATE ) );
 
+// get the list of visible companies
+$company = new CCompany();
+global $companies;
+$companies = $company->getAllowedRecords( $AppUI->user_id, 'company_id,company_name', 'company_name' );
+$companies = arrayMerge( array( '0'=>$AppUI->_('All') ), $companies );
+
 // setup the title block
 $titleBlock = new CTitleBlock( 'Day View', 'myevo-appointments.png', $m, "$m.$a" );
 $titleBlock->addCrumb( "?m=calendar&date=".$this_day->format( FMT_TIMESTAMP_DATE ), "month view" );
 $titleBlock->addCrumb( "?m=calendar&a=week_view&date=".$this_week, "week view" );
+$titleBlock->addCell( $AppUI->_('Company').':' );
+$titleBlock->addCell(
+	arraySelect( $companies, 'company_id', 'onChange="document.pickCompany.submit()" class="text"', $company_id ), '',
+	'<form action="' . $_SERVER['REQUEST_URI'] . '" method="post" name="pickCompany">', '</form>'
+);
 $titleBlock->addCell(
         '<input type="submit" class="button" value="'.$AppUI->_('new event').'">', '',
         '<form action="?m=calendar&a=addedit&date=' . $this_day->format( FMT_TIMESTAMP_DATE )  . '" method="post">', '</form>'
@@ -54,7 +80,7 @@ $titleBlock->show();
 ?>
 <script language="javascript">
 function clickDay( idate, fdate ) {
-        window.location = './index.php?m=calendar&a=day_view&date='+idate;
+        window.location = './index.php?m=calendar&a=day_view&date='+idate+'&tab=0';
 }
 </script>
 
@@ -78,7 +104,7 @@ function clickDay( idate, fdate ) {
 <?php
 // tabbed information boxes
 $tabBox = new CTabBox( "?m=calendar&a=day_view&date=" . $this_day->format( FMT_TIMESTAMP_DATE ),
-        "{$dPconfig['root_dir']}/modules/calendar/", $tab );
+        DP_BASE_DIR.'/modules/calendar/', $tab );
 $tabBox->add( 'vw_day_events', 'Events' );
 $tabBox->add( 'vw_day_tasks', 'Tasks' );
 $tabBox->show();

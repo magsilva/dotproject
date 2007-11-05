@@ -1,7 +1,12 @@
-<?php /* $Id: viewer.php,v 1.25 2005/03/31 01:50:57 ajdonnison Exp $ */
+<?php /* $Id: viewer.php,v 1.25.6.4 2007/03/28 15:00:52 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 //view posts
-$forum_id = isset($_GET["forum_id"]) ? $_GET["forum_id"] : 0;
-$message_id = isset($_GET["message_id"]) ? $_GET["message_id"] : 0;
+$forum_id = isset($_GET["forum_id"]) ? (int)$_GET["forum_id"] : 0;
+
+$message_id = isset($_GET["message_id"]) ? (int)$_GET["message_id"] : 0;
 $post_message = isset($_GET["post_message"]) ? $_GET["post_message"] : 0;
 $f = dpGetParam( $_POST, 'f', 0 );
 
@@ -75,10 +80,10 @@ $titleBlock->show();
 
 <?php
 if($post_message){
-	include("./modules/forums/post_message.php");
+	include(DP_BASE_DIR . '/modules/forums/post_message.php');
 } else if($message_id == 0) {
-	include("./modules/forums/view_topics.php");
+	include(DP_BASE_DIR . '/modules/forums/view_topics.php');
 } else {
-	include("./modules/forums/view_messages.php");
+	include(DP_BASE_DIR . '/modules/forums/view_messages.php');
 }
 ?>

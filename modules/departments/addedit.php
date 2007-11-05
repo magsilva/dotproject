@@ -1,4 +1,8 @@
-<?php /* DEPARTMENTS $Id: addedit.php,v 1.24 2005/04/08 13:41:51 gregorerhardt Exp $ */
+<?php /* DEPARTMENTS $Id: addedit.php,v 1.24.4.2 2007/03/06 00:34:40 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 // Add / Edit Company
 $dept_id = isset($_GET['dept_id']) ? $_GET['dept_id'] : 0;
 $company_id = isset($_GET['company_id']) ? $_GET['company_id'] : 0;

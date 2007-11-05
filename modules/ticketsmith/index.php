@@ -1,4 +1,7 @@
-<?php  /* TICKETSMITH $Id: index.php,v 1.23 2005/02/16 06:26:14 ajdonnison Exp $ */
+<?php  /* TICKETSMITH $Id: index.php,v 1.23.10.4 2007/06/09 13:26:35 caseydk Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
 
 if (!$canAccess) {
 	$AppUI->redirect( "m=public&a=access_denied" );
@@ -6,7 +9,7 @@ if (!$canAccess) {
 
 // setup the title block
 $titleBlock = new CTitleBlock( 'Trouble Ticket Management', 'gconf-app-icon.png', $m, "$m.$a" );
-if ($canEdit) {
+if ($canAuthor) {
 	$titleBlock->addCell(
 		'<input type="submit" class="button" value="'.$AppUI->_('new ticket').'">', '',
 		'<form name="ticketform" action="?m=ticketsmith&a=post_ticket" method="post">', '</form>'
@@ -14,8 +17,8 @@ if ($canEdit) {
 }
 $titleBlock->show();
 
-require("modules/ticketsmith/config.inc.php");
-require("modules/ticketsmith/common.inc.php");
+require(DP_BASE_DIR.'/modules/ticketsmith/config.inc.php');
+require(DP_BASE_DIR.'/modules/ticketsmith/common.inc.php');
 
 $column = $CONFIG["order_by"];
 $direction = $CONFIG["message_order"];

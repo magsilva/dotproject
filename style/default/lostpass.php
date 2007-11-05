@@ -1,4 +1,7 @@
-<?php /* STYLE/DEFAULT $Id: lostpass.php,v 1.5 2005/03/13 11:38:24 gregorerhardt Exp $ */
+<?php /* STYLE/DEFAULT $Id: lostpass.php,v 1.5.8.1 2007/02/18 03:06:27 ajdonnison Exp $ */
+if (!defined('DP_BASE_DIR')) {
+	die('You should not access this file directly');
+}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 	   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">

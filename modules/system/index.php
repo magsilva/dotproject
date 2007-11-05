@@ -1,4 +1,8 @@
-<?php /* SYSTEM $Id: index.php,v 1.18 2005/02/23 01:19:06 gregorerhardt Exp $ */
+<?php /* SYSTEM $Id: index.php,v 1.18.10.2 2007/03/06 00:34:44 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $AppUI->savePlace();
 
 $titleBlock = new CTitleBlock( 'System Administration', '48_my_computer.png', $m, "$m.$a" );

@@ -1,4 +1,8 @@
-<?php /* FILES $Id: links.class.php,v 1.2.2.3 2006/03/16 08:49:27 cyberhorse Exp $ */
+<?php /* FILES $Id: links.class.php,v 1.2.2.5 2007/03/06 00:34:42 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 require_once( $AppUI->getSystemClass( 'dp' ) );
 require_once( $AppUI->getModuleClass( 'tasks' ) );
 require_once( $AppUI->getModuleClass( 'projects' ) );

@@ -1,5 +1,8 @@
 <?php
-require_once( "$baseDir/classes/ui.class.php" );
+if (!defined('DP_BASE_DIR')) {
+	die('You should not call this file directly.');
+}
+require_once( $AppUI->getSystemClass( 'ui' ) );
 require_once ($AppUI->getSystemClass('date'));
 $df = $AppUI->getPref( 'SHDATEFORMAT' );;
 $date = $_GET['date'];

@@ -1,4 +1,7 @@
-<?php  // $Id: organize.php,v 1.10.4.3 2006/03/08 19:54:43 gregorerhardt Exp $
+<?php  // $Id: organize.php,v 1.10.4.7 2007/09/19 13:45:53 theideaman Exp $
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
 
 // Project status from sysval, defined as a constant
 $perms =& $AppUI->acl();
@@ -305,7 +308,7 @@ foreach ($tasks as $task)
 		$ts[$t['task_id']] = $t['task_name'];
 ?>
 
-<input type="checkbox" name="include_children" value='1' /><?php echo $AppUI->_('Include Children (doesn\'t apply to delete or move within the same project)');?><br />
+<input type="checkbox" name="include_children" id="include_children" value='1' /><label for="include_children"><?php echo $AppUI->_('IncludeChildren'); ?></label><br />
 <table>
   <tr>
     <th>Action: </th>

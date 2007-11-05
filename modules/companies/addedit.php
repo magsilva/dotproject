@@ -1,4 +1,8 @@
-<?php /* COMPANIES $Id: addedit.php,v 1.49.4.2 2005/11/07 04:44:49 pedroix Exp $ */
+<?php /* COMPANIES $Id: addedit.php,v 1.49.4.4 2007/03/06 00:34:40 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $company_id = intval( dPgetParam( $_GET, "company_id", 0 ) );
 
 // check permissions for this company
@@ -179,7 +183,7 @@ function testURL( x ) {
 </td>
 	<td align='left'>
 		<?php
- 			require_once("./classes/CustomFields.class.php");
+ 			require_once($AppUI->getSystemClass( 'CustomFields' ));
  			$custom_fields = New CustomFields( $m, $a, $obj->company_id, "edit" );
  			$custom_fields->printHTML();
 		?>		

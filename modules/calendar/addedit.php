@@ -1,4 +1,8 @@
-<?php /* CALENDAR $Id: addedit.php,v 1.48.4.5 2006/06/05 12:44:07 nybod Exp $ */
+<?php /* CALENDAR $Id: addedit.php,v 1.48.4.11 2007/09/19 13:45:54 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $event_id = intval( dPgetParam( $_GET, "event_id", 0 ) );
 $is_clash = isset($_SESSION['event_is_clash']) ? $_SESSION['event_is_clash'] : false;
 
@@ -162,11 +166,9 @@ $remind = array (
 $times = array();
 $t = new CDate();
 $t->setTime( 0,0,0 );
-if (!defined('LOCALE_TIME_FORMAT'))
-  define('LOCALE_TIME_FORMAT', '%I:%M %p');
 //$m clashes with global $m (module)
 for ($minutes=0; $minutes < ((24 * 60) / $inc); $minutes++) {
-	$times[$t->format( "%H%M%S" )] = $t->format( LOCALE_TIME_FORMAT );
+	$times[$t->format( "%H%M%S" )] = $t->format( $AppUI->getPref('TIMEFORMAT')  );
 	$t->addSeconds( $inc * 60 );
 }
 ?>
@@ -214,7 +216,7 @@ var calendarField = '';
 function popCalendar( field ){
 	calendarField = field;
 	idate = eval( 'document.editFrm.event_' + field + '.value' );
-	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'top=250,left=250,width=250, height=240, scollbars=false' );
+	window.open( 'index.php?m=public&a=calendar&dialog=1&callback=setCalendar&date=' + idate, 'calwin', 'top=250,left=250,width=250, height=240, scrollbars=no' );
 }
 
 /**
@@ -229,7 +231,7 @@ function setCalendar( idate, fdate ) {
 
 	// set end date automatically with start date if start date is after end date
 	if (calendarField == 'start_date') {
-		if( document.editFrm.end_date.value < idate) {
+		if( document.editFrm.event_end_date.value < idate) {
 			document.editFrm.event_end_date.value = idate;
 			document.editFrm.end_date.value = fdate;
 		}
@@ -314,9 +316,9 @@ function removeUser() {
 
 
 <tr>
-	<td align="right" nowrap="nowrap"><?php echo $AppUI->_( 'Private Entry' );?>:</td>
+	<td align="right" nowrap="nowrap"><label for="event_private"><?php echo $AppUI->_( 'Private Entry' ); ?>:</label></td>
 	<td>
-		<input type="checkbox" value="1" name="event_private" <?php echo (@$obj->event_private ? 'checked' : '');?>>
+		<input type="checkbox" value="1" name="event_private" id="event_private" <?php echo (@$obj->event_private ? 'checked="checked"' : '');?> />
 	</td>
 </tr>
 <tr>
@@ -385,12 +387,12 @@ function removeUser() {
 			</tr>
 		</table>
 	</td>
-	<td align="left"><?php echo $AppUI->_('Mail Attendees?'); ?> <input type='checkbox' name='mail_invited' checked=true></td>
+	<td align="left"><label for="mail_invited"><?php echo $AppUI->_('Mail Attendees?'); ?></label> <input type="checkbox" name="mail_invited" id="mail_invited" checked="checked" /></td>
 </tr>
 <tr>
-	<td align="right" nowrap="nowrap"><?php echo $AppUI->_( 'Show only on Working Days' );?>:</td>
+	<td align="right" nowrap="nowrap"><label for="event_cwd"><?php echo $AppUI->_( 'Show only on Working Days' );?>:</label></td>
 	<td>
-		<input type="checkbox" value="1" name="event_cwd" <?php echo (@$obj->event_cwd ? 'checked' : '');?>>
+		<input type="checkbox" value="1" name="event_cwd" id="event_cwd" <?php echo (@$obj->event_cwd ? 'checked="checked"' : '');?> />
 	</td>
 </tr>
 <tr>

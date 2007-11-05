@@ -1,4 +1,8 @@
-<?php /* TASKS $Id: vw_logs.php,v 1.10.6.1 2006/04/06 08:35:09 cyberhorse Exp $ */
+<?php /* TASKS $Id: vw_logs.php,v 1.10.6.7 2007/09/19 13:45:52 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 	global $AppUI, $project_id, $df, $canEdit, $m, $tab;
 
 	// Lets check which cost codes have been used before
@@ -11,9 +15,18 @@
 	$q->addTable('billingcode');
 	$q->addQuery('billingcode_id, billingcode_name');
 	$q->addOrder('billingcode_name');
+	$q->addWhere('billingcode_status = 0');
 	$q->addWhere('(company_id = 0 OR company_id = ' . $company_id . ')');
   $task_log_costcodes = $q->loadHashList();
   array_unshift($task_log_costcodes, '');
+  
+ 	// Show deleted codes separately (at the end)
+	$q->addTable('billingcode');
+	$q->addQuery('billingcode_id, billingcode_name');
+	$q->addOrder('billingcode_name');
+	$q->addWhere('billingcode_status = 1');
+	$q->addWhere('(company_id = 0 OR company_id = ' . $company_id . ')');
+	$task_log_costcodes = array_merge($task_log_costcodes, $q->loadHashList());
 	
 	$q  = new DBQuery;
 	$q->addTable('users');
@@ -63,8 +76,8 @@ function delIt2(id) {
 <form name="frmFilter" action="./index.php" method="get">
 <tr>
 	<td width="98%">&nbsp;</td>
-	<td width="1%" nowrap="nowrap"><input type="checkbox" name="hide_inactive" <?php echo $hide_inactive?"checked":""?> onchange="document.frmFilter.submit()"><?php echo $AppUI->_('Hide Inactive')?></td>
-	<td width="1%" nowrap="nowrap"><input type="checkbox" name="hide_complete" <?php echo $hide_complete?"checked":""?> onchange="document.frmFilter.submit()"><?php echo $AppUI->_('Hide 100% Complete')?></td>
+	<td width="1%" nowrap="nowrap"><input type="checkbox" name="hide_inactive" id="hide_inactive" <?php echo $hide_inactive?'checked="checked"':''?> onchange="document.frmFilter.submit()"><label for="hide_inactive"><?php echo $AppUI->_('Hide Inactive')?></label></td>
+	<td width="1%" nowrap="nowrap"><input type="checkbox" name="hide_complete" id="hide_complete" <?php echo $hide_complete?'checked="checked"':''?> onchange="document.frmFilter.submit()"><label for="hide_complete"><?php echo $AppUI->_('Hide 100% Complete')?></label></td>
 	<td width="1%" nowrap="nowrap"><?php echo $AppUI->_('User Filter')?></td>
 	<td width="1%"><?php echo arraySelect( $users, 'user_id', 'size="1" class="text" id="medium" onchange="document.frmFilter.submit()"',
                           $user_id )?></td>
@@ -129,7 +142,7 @@ foreach ($logs as $row) {
 
 	$s .= '<tr bgcolor="white" valign="top">';
 	$s .= "\n\t<td>";
-	if ($perms->checkModuleItem($m, 'edit', $row['task_id']) ) {
+	if ($perms->checkModuleItem('tasks', 'edit', $row['task_id']) ) {
 		$s .= "\n\t\t<a href=\"?m=tasks&a=view&task_id=".$row['task_id']."&tab=1&task_log_id=".@$row['task_log_id']."\">"
 			. "\n\t\t\t". dPshowImage( './images/icons/stock_edit-16.png', 16, 16, '' )
 			. "\n\t\t</a>";
@@ -159,7 +172,7 @@ foreach ($logs as $row) {
 			
 	$s .= '</td>';
 	$s .= "\n\t<td>";
-	if ($canEdit) {
+	if ($canDelete) {
 		$s .= "\n\t\t<a href=\"javascript:delIt2({$row['task_log_id']});\" title=\"".$AppUI->_('delete log')."\">"
 			. "\n\t\t\t". dPshowImage( './images/icons/stock_delete-16.png', 16, 16, '' )
 			. "\n\t\t</a>";

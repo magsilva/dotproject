@@ -1,4 +1,8 @@
-<?php /* $Id: addedit.php,v 1.11 2005/04/12 06:05:39 gregorerhardt Exp $ */
+<?php /* $Id: addedit.php,v 1.11.2.2 2007/03/06 00:34:41 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $history_id = defVal( @$_GET["history_id"], 0);
 
 /*

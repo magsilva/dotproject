@@ -1,4 +1,8 @@
-<?php /* CALENDAR $Id: view.php,v 1.20.10.1 2006/06/05 12:44:07 nybod Exp $ */
+<?php /* CALENDAR $Id: view.php,v 1.20.10.5 2007/07/26 14:16:28 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $event_id = intval( dPgetParam( $_GET, "event_id", 0 ) );
 
 // check permissions for this record
@@ -59,8 +63,8 @@ if ($canEdit) {
 </form>', '', '', '');
 }
 $titleBlock->addCrumb( '?m=calendar&amp;date='.$start_date->format( FMT_TIMESTAMP_DATE ), 'month view' );
+$titleBlock->addCrumb( '?m=calendar&amp;a=day_view&amp;date='.$start_date->format( FMT_TIMESTAMP_DATE ).'&amp;tab=0', 'day view' );
 if ($canEdit) {
-	$titleBlock->addCrumb( '?m=calendar&amp;a=day_view&amp;date='.$start_date->format( FMT_TIMESTAMP_DATE ), 'day view' );
 	$titleBlock->addCrumb( '?m=calendar&amp;a=addedit&amp;event_id='.$event_id, 'edit this event' );
 	if ($canDelete) {
 		$titleBlock->addCrumbDelete( 'delete event', $canDelete, $msg );

@@ -1,4 +1,8 @@
-<?php /* FUNCTIONS $Id: forums_func.php,v 1.6 2003/03/05 22:40:34 eddieajau Exp $ */
+<?php /* FUNCTIONS $Id: forums_func.php,v 1.6.12.2 2007/02/26 17:07:12 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $filters = array( '- Filters -' );
 
 if ($a == 'viewer') {

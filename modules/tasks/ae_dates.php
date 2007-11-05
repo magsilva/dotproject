@@ -1,5 +1,9 @@
 <?php
-// $Id: ae_dates.php,v 1.9.2.2 2005/11/17 10:27:32 cyberhorse Exp $
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
+// $Id: ae_dates.php,v 1.9.2.4 2007/03/06 00:34:44 merlinyoda Exp $
 
 global $AppUI, $dPconfig, $task_parent_options, $loadFromTab;
 global $can_edit_time_information, $locale_char_set, $obj;

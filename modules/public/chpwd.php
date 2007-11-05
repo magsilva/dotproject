@@ -1,4 +1,8 @@
-<?php /* PUBLIC $Id: chpwd.php,v 1.8.8.1 2006/03/04 13:32:33 gregorerhardt Exp $ */
+<?php /* PUBLIC $Id: chpwd.php,v 1.8.8.3 2007/03/06 00:34:43 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 if (! ($user_id = dPgetParam($_REQUEST, 'user_id', 0)) )
         $user_id = @$AppUI->user_id;
 
@@ -14,7 +18,7 @@ if ($user_id) {
 								$old_md5 = md5($old_pwd);
                 $sql = "SELECT user_id FROM users WHERE user_password = '$old_md5' AND user_id=$user_id";
                 if ($AppUI->user_type == 1 || db_loadResult( $sql ) == $user_id) {
-			require_once( "{$dPconfig['root_dir']}/modules/admin/admin.class.php" );
+			require_once( $AppUI->getModuleClass( 'admin' ) );
 			$user = new CUser();
 			$user->user_id = $user_id;
 			$user->user_password = $new_pwd1;

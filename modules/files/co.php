@@ -1,4 +1,8 @@
-<?php /* FILES $Id: co.php,v 1.8 2005/03/29 00:01:18 ajdonnison Exp $ */
+<?php /* FILES $Id: co.php,v 1.8.6.6 2007/09/19 13:45:53 theideaman Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 $file_id = intval( dPgetParam( $_GET, 'file_id', 0 ) );
 // check permissions for this record
 $perms =& $AppUI->acl();
@@ -49,12 +53,19 @@ if ($obj->file_task) {
 }
 
 $extra = array(
-	'where'=>'project_active <> 0'
+	'where'=>'project_status<>7'
 );
 $project = new CProject();
 $projects = $project->getAllowedRecords( $AppUI->user_id, 'project_id,project_name', 'project_name', null, $extra );
 $projects = arrayMerge( array( '0'=>$AppUI->_('All') ), $projects );
 ?>
+
+<script language='javascript'>
+function popFile( params ) {
+    fileloader = window.open("fileviewer.php?"+params,"mywindow","location=1,status=1,scrollbars=0,width=80,height=80");
+    fileloader.moveTo(0,0);
+}
+</script>
 
 <table width="100%" border="0" cellpadding="3" cellspacing="3" class="std">
 
@@ -62,8 +73,8 @@ $projects = arrayMerge( array( '0'=>$AppUI->_('All') ), $projects );
 	<input type="hidden" name="dosql" value="do_file_co" />
 	<input type="hidden" name="del" value="0" />
 	<input type="hidden" name="file_id" value="<?php echo $file_id;?>" />
-        <input type="hidden" name="file_checkout" value="<?php echo $AppUI->user_id; ?>">
-        <input type="hidden" name="file_version_id" value="<?php echo $obj->file_version_id; ?>">
+    <input type="hidden" name="file_checkout" value="<?php echo $AppUI->user_id; ?>">
+    <input type="hidden" name="file_version_id" value="<?php echo $obj->file_version_id; ?>">
         
 
 <tr>
@@ -96,7 +107,12 @@ $projects = arrayMerge( array( '0'=>$AppUI->_('All') ), $projects );
 
 		<tr>
 			<td align="right" nowrap="nowrap">&nbsp;</td>
-			<td align="left"><input type="checkbox" name="notify" checked="checked"><?php echo $AppUI->_('Notify Assignees of Task or Project Owner by Email'); ?></td>		
+			<td align="left"><input type="checkbox" name="notify" id="notify" checked="checked" /><label for="notify"><?php echo $AppUI->_('Notify Assignees of Task or Project Owner by Email'); ?></label></td>		
+		</tr>
+
+		<tr>
+			<td align="right" nowrap="nowrap">&nbsp;</td>
+			<td align="left"><input type="checkbox" name="notify_contacts" id="notify_contacts" checked="checked" /><label for="notify_contacts"><?php echo $AppUI->_('Notify Project and Task Contacts'); ?></label></td>		
 		</tr>
 		
 		</table>

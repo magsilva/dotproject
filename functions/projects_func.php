@@ -1,8 +1,25 @@
-<?php /* FUNCTIONS $Id: projects_func.php,v 1.6 2004/05/25 18:31:55 bloaterpaste Exp $ */
+<?php /* FUNCTIONS $Id: projects_func.php,v 1.6.12.3 2007/02/26 17:07:12 merlinyoda Exp $ */
+if (!defined('DP_BASE_DIR')){
+  die('You should not access this file directly.');
+}
+
 // project statii
 $pstatus = dPgetSysVal( 'ProjectStatus' );
 $ptype = dPgetSysVal( 'ProjectType' );
 
+$ppriority_name = dPgetSysVal( 'ProjectPriority' );
+$ppriority_color = dPgetSysVal( 'ProjectPriorityColor' );
+
+$priority = array();
+foreach ($ppriority_name as $key => $val) {
+    $priority[$key]['name'] = $val;
+}
+foreach ($ppriority_color as $key => $val) {
+    $priority[$key]['color'] = $val;
+}
+
+/*
+// kept for reference
 $priority = array(
  -1 => array(
  	'name' => 'low',
@@ -21,5 +38,6 @@ $priority = array(
  	'color' => '#FF887C'
  	)
 );
+*/
 
 ?>

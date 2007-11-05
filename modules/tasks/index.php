@@ -1,4 +1,8 @@
-<?php /* TASKS $Id: index.php,v 1.46.6.1 2006/03/12 16:03:57 cyberhorse Exp $ */
+<?php /* TASKS $Id: index.php,v 1.46.6.4 2007/03/06 13:57:51 cyberhorse Exp $ */
+if (!defined('DP_BASE_DIR')){
+	die('You should not access this file directly.');
+}
+
 $AppUI->savePlace();
 $perms =& $AppUI->acl();
 // retrieve any state parameters
@@ -43,13 +47,14 @@ if (isset( $_POST['searchtext'] )) {
 	$AppUI->setState( 'searchtext', $_POST['searchtext']);
 }
 
+
 $search_text = $AppUI->getState('searchtext') ? $AppUI->getState('searchtext'):'';
 $search_text = dPformSafe($search_text, true);
 
 $titleBlock->addCell( '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $AppUI->_('Search') . ':' );
 $titleBlock->addCell(
-	'<input type="text" class="text" SIZE="20" name="searchtext" onChange="document.searchfilter.submit();" value=' . "'$search_text'" .
-	'title="'. $AppUI->_('Search in name and description fields') . '"/>
+	'<input type="text" class="text" SIZE="20" name="searchtext" onChange="document.searchfilter.submit();" value="' . $search_text . '"
+	title="'. $AppUI->_('Search in name and description fields') . '"/>
        	<!--<input type="submit" class="button" value=">" title="'. $AppUI->_('Search in name and description fields') . '"/>-->', '',
 	'<form action="?m=tasks" method="post" id="searchfilter">', '</form>'
 );
@@ -112,6 +117,6 @@ $titleBlock->show();
 
 // include the re-usable sub view
 	$min_view = false;
-	include("{$dPconfig['root_dir']}/modules/tasks/tasks.php");
+	include(DP_BASE_DIR.'/modules/tasks/tasks.php');
 
 ?>
